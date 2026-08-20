@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "하나님의 말씀 찾기",
+  "nav.languages": "언어",
+  "nav.countries": "국가",
+  "search.ph": "언어, 코드 또는 국가로 검색…",
+
+  "home.eyebrow": "모든 언어로 만나는 성경",
+  "home.h1": "당신의 언어로 하나님의 말씀을 찾으세요.",
+  "home.lead": "읽고, 듣고, 보고, 휴대폰에서 사용할 수 있는 성경을 찾아보세요.",
+  "home.browseAll": "모든 언어 둘러보기",
+  "home.featured": "추천",
+  "home.startHere": "여기서 시작하기",
+  "home.seeAll": "모두 보기",
+  "results.heading": "검색 결과",
+
+  "stats.languages": "개 언어",
+  "stats.read": "읽기 자료",
+  "stats.listen": "듣기 자료",
+
+  "crumb.home": "홈",
+  "browse.crumb": "전체 둘러보기",
+  "catalog.eyebrow": "카탈로그",
+  "browse.h2": "모든 언어",
+  "browse.eyebrow": "둘러보기",
+  "facet.all": "전체",
+
+  "pill.read": "읽기",
+  "pill.listen": "듣기",
+  "pill.watch": "보기",
+  "pill.app": "앱",
+  "pill.buy": "구매",
+
+  "group.read": "읽기",
+  "group.listen": "듣기",
+  "group.watch": "보기",
+  "group.use": "앱 및 인쇄본",
+
+  "country.eyebrow": "국가",
+  "unit.languages": "개 언어",
+  "unit.countries": "개 국가",
+  "unit.entries": "개 항목",
+
+  "meta.iso": "ISO",
+  "meta.also": "기타:",
+  "meta.catalogentry": "카탈로그 항목",
+  "detail.onthispage": "이 페이지에서",
+  "detail.noresources": "이 언어에 대해 아직 등록된 자료가 없습니다.",
+
+  "action.readonline": "온라인으로 읽기",
+  "action.download": "다운로드",
+  "action.downloadpdf": "PDF 다운로드",
+  "action.play": "재생",
+  "action.watch": "보기",
+  "action.getapp": "앱 받기",
+  "action.order": "주문하기",
+  "action.openviewer": "뷰어 열기",
+  "action.open": "열기",
+
+  "footer.about": "소개",
+  "footer.ministry": "SIL Global의 사역",
+  "footer.note": "ScriptureEarth 탐색 사이트의 정적 재구축 버전입니다."
+}

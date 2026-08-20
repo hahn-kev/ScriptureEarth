@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Encontre a Palavra de Deus",
+  "nav.languages": "Idiomas",
+  "nav.countries": "Países",
+  "search.ph": "Pesquise por idioma, código ou país…",
+
+  "home.eyebrow": "As Escrituras em todos os idiomas",
+  "home.h1": "Encontre a Palavra de Deus no seu idioma.",
+  "home.lead": "Encontre as Escrituras para ler, ouvir, assistir ou usar no seu celular.",
+  "home.browseAll": "Ver todos os idiomas",
+  "home.featured": "Destaques",
+  "home.startHere": "Comece aqui",
+  "home.seeAll": "Ver tudo",
+  "results.heading": "Resultados",
+
+  "stats.languages": "idiomas",
+  "stats.read": "para ler",
+  "stats.listen": "para ouvir",
+
+  "crumb.home": "Início",
+  "browse.crumb": "Ver tudo",
+  "catalog.eyebrow": "O catálogo",
+  "browse.h2": "Todos os idiomas",
+  "browse.eyebrow": "Explorar",
+  "facet.all": "Todos",
+
+  "pill.read": "Ler",
+  "pill.listen": "Ouvir",
+  "pill.watch": "Assistir",
+  "pill.app": "App",
+  "pill.buy": "Comprar",
+
+  "group.read": "Ler",
+  "group.listen": "Ouvir",
+  "group.watch": "Assistir",
+  "group.use": "Apps e impressos",
+
+  "country.eyebrow": "País",
+  "unit.languages": "idiomas",
+  "unit.countries": "países",
+  "unit.entries": "entradas",
+
+  "meta.iso": "ISO",
+  "meta.also": "Também:",
+  "meta.catalogentry": "Ficha do catálogo",
+  "detail.onthispage": "Nesta página",
+  "detail.noresources": "Ainda não há recursos catalogados para este idioma.",
+
+  "action.readonline": "Ler online",
+  "action.download": "Baixar",
+  "action.downloadpdf": "Baixar PDF",
+  "action.play": "Reproduzir",
+  "action.watch": "Assistir",
+  "action.getapp": "Obter app",
+  "action.order": "Encomendar",
+  "action.openviewer": "Abrir visualizador",
+  "action.open": "Abrir",
+
+  "footer.about": "Sobre",
+  "footer.ministry": "Um ministério da SIL Global",
+  "footer.note": "Uma reconstrução estática do site de descoberta do ScriptureEarth."
+}

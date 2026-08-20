@@ -1,1 +1,62 @@
-{"read": "Leer", "listen": "Escuchar", "download": "Descargar", "search": "Búsqueda", "country": "País", "countries": "Países", "app": "App", "audio": "Audio", "video": "Video", "view": "Ver", "home": "Inicio", "langname": "Nombre del idioma", "langcode": "Código de idioma", "altnames": "Nombres alternativos del idioma"}
+{
+  "brand.tagline": "Encuentra la Palabra de Dios",
+  "nav.languages": "Idiomas",
+  "nav.countries": "Países",
+  "search.ph": "Busca por idioma, código o país…",
+
+  "home.eyebrow": "Las Escrituras en cada idioma",
+  "home.h1": "Encuentra la Palabra de Dios en tu idioma.",
+  "home.lead": "Encuentra las Escrituras para leer, escuchar, ver o usar en tu teléfono.",
+  "home.browseAll": "Ver todos los idiomas",
+  "home.featured": "Destacados",
+  "home.startHere": "Empieza aquí",
+  "home.seeAll": "Ver todo",
+  "results.heading": "Resultados",
+
+  "stats.languages": "idiomas",
+  "stats.read": "para leer",
+  "stats.listen": "para escuchar",
+
+  "crumb.home": "Inicio",
+  "browse.crumb": "Ver todo",
+  "catalog.eyebrow": "El catálogo",
+  "browse.h2": "Todos los idiomas",
+  "browse.eyebrow": "Explorar",
+  "facet.all": "Todos",
+
+  "pill.read": "Leer",
+  "pill.listen": "Escuchar",
+  "pill.watch": "Ver",
+  "pill.app": "App",
+  "pill.buy": "Comprar",
+
+  "group.read": "Leer",
+  "group.listen": "Escuchar",
+  "group.watch": "Ver",
+  "group.use": "Apps e impresos",
+
+  "country.eyebrow": "País",
+  "unit.languages": "idiomas",
+  "unit.countries": "países",
+  "unit.entries": "entradas",
+
+  "meta.iso": "ISO",
+  "meta.also": "También:",
+  "meta.catalogentry": "Ficha del catálogo",
+  "detail.onthispage": "En esta página",
+  "detail.noresources": "Aún no hay recursos catalogados para este idioma.",
+
+  "action.readonline": "Leer en línea",
+  "action.download": "Descargar",
+  "action.downloadpdf": "Descargar PDF",
+  "action.play": "Reproducir",
+  "action.watch": "Ver",
+  "action.getapp": "Obtener app",
+  "action.order": "Pedir",
+  "action.openviewer": "Abrir visor",
+  "action.open": "Abrir",
+
+  "footer.about": "Acerca de",
+  "footer.ministry": "Un ministerio de SIL Global",
+  "footer.note": "Una reconstrucción estática del sitio de descubrimiento de ScriptureEarth."
+}

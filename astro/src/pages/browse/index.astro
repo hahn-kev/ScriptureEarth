@@ -11,12 +11,12 @@ const langs = (await getCollection('languages')).map((l) => l.data)
 ---
 <Base title="ScriptureEarth — Browse all languages">
   <section class="block shell">
-    <nav class="crumbs"><a href="/">Home</a><span>›</span><span>Browse all</span></nav>
-    <div class="sec-head"><div><p class="eyebrow">The catalog</p><h2>All languages</h2></div>
-      <span class="facet-count tnum" id="count">{langs.length} languages</span></div>
+    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><span data-i18n="browse.crumb">Browse all</span></nav>
+    <div class="sec-head"><div><p class="eyebrow" data-i18n="catalog.eyebrow">The catalog</p><h2 data-i18n="browse.h2">All languages</h2></div>
+      <span class="facet-count"><span class="tnum" id="count">{langs.length}</span> <span data-i18n="stats.languages">languages</span></span></div>
     <div class="facets" id="facets" aria-label="Filters">
-      <button class="facet on" type="button" data-r="all" data-i18n="all">All</button>
-      {PILLS.map((p) => <button class="facet" type="button" data-r={p.key} data-i18n={p.key}>{p.label}</button>)}
+      <button class="facet on" type="button" data-r="all" data-i18n="facet.all">All</button>
+      {PILLS.map((p) => <button class="facet" type="button" data-r={p.key} data-i18n={`pill.${p.key}`}>{p.label}</button>)}
     </div>
     <div class="lang-grid" id="grid">{langs.map((d) => <LangCard d={d} />)}</div>
   </section>
@@ -25,7 +25,7 @@ const langs = (await getCollection('languages')).map((l) => l.data)
     const grid=document.getElementById('grid'),cards=[...grid.children],count=document.getElementById('count');
     let facet='all';
     function apply(){ let n=0; for(const c of cards){ const okF=facet==='all'||(' '+c.dataset.r+' ').includes(' '+facet+' ');
-      if(okF){c.hidden=false;n++}else c.hidden=true; } count.textContent=n.toLocaleString()+' languages'; }
+      if(okF){c.hidden=false;n++}else c.hidden=true; } count.textContent=n.toLocaleString(); }
     document.getElementById('facets').addEventListener('click',e=>{const b=e.target.closest('.facet');if(!b)return;
       facet=b.dataset.r;document.querySelectorAll('#facets .facet').forEach(f=>f.classList.toggle('on',f===b));apply();});
   </script>

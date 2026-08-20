@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Find God’s Word",
+  "nav.languages": "Languages",
+  "nav.countries": "Countries",
+  "search.ph": "Search by language, code, or country…",
+
+  "home.eyebrow": "Scripture in every language",
+  "home.h1": "Find God’s Word in your language.",
+  "home.lead": "Find Scripture to read, listen, watch, or use on your phone.",
+  "home.browseAll": "Browse all languages",
+  "home.featured": "Featured",
+  "home.startHere": "Start here",
+  "home.seeAll": "See all",
+  "results.heading": "Results",
+
+  "stats.languages": "languages",
+  "stats.read": "to read",
+  "stats.listen": "to listen",
+
+  "crumb.home": "Home",
+  "browse.crumb": "Browse all",
+  "catalog.eyebrow": "The catalog",
+  "browse.h2": "All languages",
+  "browse.eyebrow": "Browse",
+  "facet.all": "All",
+
+  "pill.read": "Read",
+  "pill.listen": "Listen",
+  "pill.watch": "Watch",
+  "pill.app": "App",
+  "pill.buy": "Buy",
+
+  "group.read": "Read",
+  "group.listen": "Listen",
+  "group.watch": "Watch",
+  "group.use": "Apps & Print",
+
+  "country.eyebrow": "Country",
+  "unit.languages": "language(s)",
+  "unit.countries": "countries",
+  "unit.entries": "entries",
+
+  "meta.iso": "ISO",
+  "meta.also": "Also:",
+  "meta.catalogentry": "Catalog entry",
+  "detail.onthispage": "On this page",
+  "detail.noresources": "No resources catalogued yet for this language.",
+
+  "action.readonline": "Read online",
+  "action.download": "Download",
+  "action.downloadpdf": "Download PDF",
+  "action.play": "Play",
+  "action.watch": "Watch",
+  "action.getapp": "Get app",
+  "action.order": "Order",
+  "action.openviewer": "Open viewer",
+  "action.open": "Open",
+
+  "footer.about": "About",
+  "footer.ministry": "A ministry of SIL Global",
+  "footer.note": "A static rebuild of the ScriptureEarth discovery site."
+}

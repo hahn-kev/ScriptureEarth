@@ -15,6 +15,6 @@ const where = d.countries.map((c: any) => c.name_eng).join(', ');
   <div class="top"><span class="code">{d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
   {where && <div class="where">{where}</div>}
   <div class="pills">{PILLS.filter((p) => d.availability[p.key]).map((p) => (
-    <span class="pill" data-r={p.key}><span class="dot"></span>{p.label}</span>
+    <span class="pill" data-r={p.key}><span class="dot"></span><span data-i18n={`pill.${p.key}`}>{p.label}</span></span>
   ))}</div>
 </a>

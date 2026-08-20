@@ -1,72 +1,54 @@
 #!/usr/bin/env python3
 """
-THROWAWAY — i18n localizer prototype (ticket 14).
+Seed the per-locale LOCALIZED-NAME catalogs (public/i18n/names.<loc>.json) from the DB's
+LN_<Locale> tables, for the client-side localizer to swap language names by idx. Also emits
+a small locales registry.
 
-Emits the per-locale catalogs the client-side localizer consumes, proving the
-"single English shell + client-side enhancement" model (ticket 13):
+NOTE: UI *chrome* catalogs (public/i18n/chrome.<loc>.json) are code-owned and live from
+scripts/i18n/en.json (translated per locale) — this script does NOT touch them.
 
-    astro/public/i18n/chrome.<loc>.json   {slug: phrase}   UI chrome (finite set)
-    astro/public/i18n/names.<loc>.json    {idx: name}      localized language names
-
-Chrome slugs map to REAL `translations_eng` ids so translations are genuine
-(`translations_<loc>` id-matched); slugs with no DB translation are simply omitted
-=> the runtime keeps the baked English text (the English-fallback path from ticket 09).
-Names come from the `LN_<Locale>` tables.
+Names are localized-language-name DATA seeded once from the dump; committed (code-owned),
+reused across builds. English names are baked into the pages, so no names.eng.json.
 """
 import json, os, sqlite3, sys
 
-HERE = os.path.dirname(os.path.abspath(__file__))               # astro/scripts/
+HERE = os.path.dirname(os.path.abspath(__file__))                # astro/scripts/
 DB   = os.environ.get("SE_DB") or os.path.join(HERE, "..", "data", "scripture.db")
 OUT  = os.path.join(HERE, "..", "public", "i18n")
 os.makedirs(OUT, exist_ok=True)
 
-# locale 3-letter -> (translations_<loc> table suffix, LN_<Locale> column)
+# 3-letter locale -> LN_<Locale> column (localized language names). English excluded (baked).
 LOCALES = {
-    "spa": ("translations_spa", "LN_Spanish"),
-    "rus": ("translations_rus", "LN_Russian"),
-    "arb": ("translations_arb", "LN_Arabic"),
+    "spa": "LN_Spanish", "por": "LN_Portuguese", "fra": "LN_French", "nld": "LN_Dutch",
+    "deu": "LN_German", "cmn": "LN_Chinese", "kor": "LN_Korean", "rus": "LN_Russian", "arb": "LN_Arabic",
+}
+REGISTRY = {
+    "eng": {"label": "English",    "dir": "ltr", "bcp": "en"},
+    "spa": {"label": "Español",    "dir": "ltr", "bcp": "es"},
+    "por": {"label": "Português",  "dir": "ltr", "bcp": "pt"},
+    "fra": {"label": "Français",   "dir": "ltr", "bcp": "fr"},
+    "nld": {"label": "Nederlands", "dir": "ltr", "bcp": "nl"},
+    "deu": {"label": "Deutsch",    "dir": "ltr", "bcp": "de"},
+    "cmn": {"label": "中文",        "dir": "ltr", "bcp": "zh"},
+    "kor": {"label": "한국어",       "dir": "ltr", "bcp": "ko"},
+    "rus": {"label": "Русский",    "dir": "ltr", "bcp": "ru"},
+    "arb": {"label": "العربية",     "dir": "rtl", "bcp": "ar"},
 }
 
-# chrome slug -> translations_eng.id  (only slugs with a real DB phrase; the rest
-# are tagged in the HTML but absent here, so they fall back to baked English).
-SLUG_TO_ID = {
-    "read": 47, "listen": 56, "download": 61, "search": 38,
-    "country": 16, "countries": 250, "app": 293, "audio": 291,
-    "video": 292, "view": 73, "home": 29,
-    "langname": 39, "langcode": 42, "altnames": 40,
-}
-
-db = sqlite3.connect(DB); db.row_factory = sqlite3.Row
-
-def phrases(table):
-    out = {}
-    for r in db.execute(f"SELECT id, phrase FROM {table}"):
-        if r["phrase"] and r["phrase"].strip() and r["phrase"].strip() != "�":
-            out[r["id"]] = r["phrase"].strip()
-    return out
+db = sqlite3.connect(DB)
+db.row_factory = sqlite3.Row
 
 def dump(name, obj):
     p = os.path.join(OUT, name)
     json.dump(obj, open(p, "w", encoding="utf-8"), ensure_ascii=False)
     print(f"  {name:20} {len(obj):>5} entries  {os.path.getsize(p)//1024 or 1} KB", file=sys.stderr)
 
-print("writing per-locale i18n catalogs ->", OUT, file=sys.stderr)
-for loc, (ttable, lncol) in LOCALES.items():
-    tp = phrases(ttable)
-    chrome = {slug: tp[i] for slug, i in SLUG_TO_ID.items() if i in tp}
-    dump(f"chrome.{loc}.json", chrome)
+print("seeding per-locale name catalogs ->", OUT, file=sys.stderr)
+for loc, col in LOCALES.items():
     names = {}
-    for r in db.execute(f"SELECT ISO_ROD_index idx, {lncol} nm FROM {lncol} WHERE ISO_ROD_index IS NOT NULL"):
-        if r["nm"] and r["nm"].strip():
-            names[str(r["idx"])] = r["nm"].strip()
+    for r in db.execute(f"SELECT ISO_ROD_index i, {col} n FROM {col} WHERE ISO_ROD_index IS NOT NULL"):
+        if r["n"] and r["n"].strip():
+            names[str(r["i"])] = r["n"].strip()
     dump(f"names.{loc}.json", names)
-
-# tiny locale registry the picker + head script read (label in its own language)
-registry = {
-    "eng": {"label": "English",  "dir": "ltr", "bcp": "en"},
-    "spa": {"label": "Español",  "dir": "ltr", "bcp": "es"},
-    "rus": {"label": "Русский",  "dir": "ltr", "bcp": "ru"},
-    "arb": {"label": "العربية",  "dir": "rtl", "bcp": "ar"},
-}
-dump("locales.json", registry)
+dump("locales.json", REGISTRY)
 print("done", file=sys.stderr)

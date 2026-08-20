@@ -11,8 +11,8 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
        non-English visitor never sees an English flash. No service worker. -->
   <script is:inline>
     (function () {
-      var LOCS = { eng: 'en', spa: 'es', rus: 'ru', arb: 'ar' };
-      var BCP2 = { en: 'eng', es: 'spa', ru: 'rus', ar: 'arb' };
+      var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar' };
+      var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb' };
       var q = new URLSearchParams(location.search).get('lang');
       var loc = (q && LOCS[q]) ? q
         : localStorage.getItem('se-loc')
@@ -43,16 +43,22 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <header class="site"><div class="shell site-inner">
     <a class="brand" href="/">
       <img class="silmark" src="/sil-logo.webp" alt="SIL" width="80" height="34" />
-      <span class="lock"><span class="name">ScriptureEarth</span><span class="sub">Find God’s Word</span></span>
+      <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
     </a>
-    <nav class="main"><a href="/browse/" data-i18n="languages">Languages</a><a href="/countries/" data-i18n="countries">Countries</a></nav>
+    <nav class="main"><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></nav>
     <form class="site-search" role="search" action="/">
       <span class="mag" aria-hidden="true">⌕</span>
-      <input type="search" name="q" placeholder="Search language, code, country…" data-i18n-ph="search" />
+      <input type="search" name="q" placeholder="Search by language, code, or country…" data-i18n-ph="search.ph" />
     </form>
     <select class="locale-pick" id="locale-picker" aria-label="Language">
       <option value="eng">English</option>
       <option value="spa">Español</option>
+      <option value="por">Português</option>
+      <option value="fra">Français</option>
+      <option value="nld">Nederlands</option>
+      <option value="deu">Deutsch</option>
+      <option value="cmn">中文</option>
+      <option value="kor">한국어</option>
       <option value="rus">Русский</option>
       <option value="arb">العربية</option>
     </select>
@@ -62,10 +68,10 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 
   <footer class="site"><div class="shell">
     <div class="fin">
-      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="languages">Languages</a><a href="/countries/" data-i18n="countries">Countries</a></div>
-      <div class="fcol"><b>About</b><span class="muted">A ministry of SIL Global</span><span class="muted">Static rewrite prototype</span></div>
+      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></div>
+      <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span></div>
     </div>
-    <div class="cc">Bake-off prototype · i18n localizer spike (ticket 14) · content from ScriptureEarth database snapshot.</div>
+    <div class="cc" data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</div>
   </div></footer>
 </body>
 </html>

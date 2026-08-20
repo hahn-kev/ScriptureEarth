@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Trouvez la Parole de Dieu",
+  "nav.languages": "Langues",
+  "nav.countries": "Pays",
+  "search.ph": "Rechercher par langue, code ou pays…",
+
+  "home.eyebrow": "Les Écritures dans chaque langue",
+  "home.h1": "Trouvez la Parole de Dieu dans votre langue.",
+  "home.lead": "Trouvez les Écritures à lire, écouter, regarder ou utiliser sur votre téléphone.",
+  "home.browseAll": "Parcourir toutes les langues",
+  "home.featured": "À la une",
+  "home.startHere": "Commencer ici",
+  "home.seeAll": "Tout voir",
+  "results.heading": "Résultats",
+
+  "stats.languages": "langues",
+  "stats.read": "à lire",
+  "stats.listen": "à écouter",
+
+  "crumb.home": "Accueil",
+  "browse.crumb": "Tout parcourir",
+  "catalog.eyebrow": "Le catalogue",
+  "browse.h2": "Toutes les langues",
+  "browse.eyebrow": "Parcourir",
+  "facet.all": "Toutes",
+
+  "pill.read": "Lire",
+  "pill.listen": "Écouter",
+  "pill.watch": "Regarder",
+  "pill.app": "Appli",
+  "pill.buy": "Acheter",
+
+  "group.read": "Lire",
+  "group.listen": "Écouter",
+  "group.watch": "Regarder",
+  "group.use": "Applis et imprimés",
+
+  "country.eyebrow": "Pays",
+  "unit.languages": "langues",
+  "unit.countries": "pays",
+  "unit.entries": "entrées",
+
+  "meta.iso": "ISO",
+  "meta.also": "Aussi :",
+  "meta.catalogentry": "Fiche du catalogue",
+  "detail.onthispage": "Sur cette page",
+  "detail.noresources": "Aucune ressource cataloguée pour cette langue pour le moment.",
+
+  "action.readonline": "Lire en ligne",
+  "action.download": "Télécharger",
+  "action.downloadpdf": "Télécharger le PDF",
+  "action.play": "Lire",
+  "action.watch": "Regarder",
+  "action.getapp": "Obtenir l’appli",
+  "action.order": "Commander",
+  "action.openviewer": "Ouvrir la visionneuse",
+  "action.open": "Ouvrir",
+
+  "footer.about": "À propos",
+  "footer.ministry": "Un ministère de SIL Global",
+  "footer.note": "Une reconstruction statique du site de découverte ScriptureEarth."
+}

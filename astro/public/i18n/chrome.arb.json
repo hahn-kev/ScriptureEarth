@@ -1,1 +1,62 @@
-{"read": "اقرأ", "listen": "استمع", "download": "تنزيل", "search": "بحث", "country": "الدولة", "countries": "الدول", "app": "تطبيق", "audio": "تسجيل", "video": "فيديو", "view": "عرض", "home": "الصفحة الرئيسية", "langname": "اسم اللغة", "langcode": "كود اللغة", "altnames": "الأسماء البديلة لهذه اللغة:"}
+{
+  "brand.tagline": "اكتشف كلمة الله",
+  "nav.languages": "اللغات",
+  "nav.countries": "البلدان",
+  "search.ph": "ابحث حسب اللغة أو الرمز أو البلد…",
+
+  "home.eyebrow": "الكتاب المقدس بكل لغة",
+  "home.h1": "اكتشف كلمة الله بلغتك.",
+  "home.lead": "اعثر على الكتاب المقدس لتقرأه أو تستمع إليه أو تشاهده أو تستخدمه على هاتفك.",
+  "home.browseAll": "تصفح جميع اللغات",
+  "home.featured": "مميّز",
+  "home.startHere": "ابدأ من هنا",
+  "home.seeAll": "عرض الكل",
+  "results.heading": "النتائج",
+
+  "stats.languages": "لغة",
+  "stats.read": "للقراءة",
+  "stats.listen": "للاستماع",
+
+  "crumb.home": "الرئيسية",
+  "browse.crumb": "تصفح الكل",
+  "catalog.eyebrow": "الفهرس",
+  "browse.h2": "جميع اللغات",
+  "browse.eyebrow": "تصفح",
+  "facet.all": "الكل",
+
+  "pill.read": "اقرأ",
+  "pill.listen": "استمع",
+  "pill.watch": "شاهد",
+  "pill.app": "تطبيق",
+  "pill.buy": "اشترِ",
+
+  "group.read": "قراءة",
+  "group.listen": "استماع",
+  "group.watch": "مشاهدة",
+  "group.use": "التطبيقات والنسخ المطبوعة",
+
+  "country.eyebrow": "البلد",
+  "unit.languages": "لغة/لغات",
+  "unit.countries": "بلدان",
+  "unit.entries": "مدخلات",
+
+  "meta.iso": "ISO",
+  "meta.also": "أيضًا:",
+  "meta.catalogentry": "مدخل في الفهرس",
+  "detail.onthispage": "في هذه الصفحة",
+  "detail.noresources": "لا توجد موارد مفهرسة بعد لهذه اللغة.",
+
+  "action.readonline": "اقرأ عبر الإنترنت",
+  "action.download": "تنزيل",
+  "action.downloadpdf": "تنزيل PDF",
+  "action.play": "تشغيل",
+  "action.watch": "مشاهدة",
+  "action.getapp": "احصل على التطبيق",
+  "action.order": "اطلب",
+  "action.openviewer": "افتح العارض",
+  "action.open": "افتح",
+
+  "footer.about": "حول",
+  "footer.ministry": "خدمة تابعة لـ SIL Global",
+  "footer.note": "إعادة بناء ثابتة لموقع ScriptureEarth الاستكشافي."
+}

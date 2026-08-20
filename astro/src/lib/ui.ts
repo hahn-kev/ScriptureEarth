@@ -14,9 +14,16 @@ export const PILLS = [
 ];
 
 export function actionLabel(group: string, kind: string): string {
-  if (group === 'read')   return kind === 'pdf' ? 'Download PDF' : kind === 'viewer' ? 'Open viewer →' : 'Read online →';
-  if (group === 'listen') return kind === 'audio' ? 'Play →' : 'Download →';
-  if (group === 'watch')  return 'Watch →';
-  if (group === 'use')    return kind === 'buy' ? 'Order →' : kind === 'app' ? 'Get app →' : 'Open →';
-  return 'Open →';
+  if (group === 'read')   return kind === 'pdf' ? 'Download PDF' : kind === 'viewer' ? 'Open viewer' : 'Read online';
+  if (group === 'listen') return kind === 'audio' ? 'Play' : 'Download';
+  if (group === 'watch')  return 'Watch';
+  if (group === 'use')    return kind === 'buy' ? 'Order' : kind === 'app' ? 'Get app' : 'Open';
+  return 'Open';
+}
+export function actionSlug(group: string, kind: string): string {
+  if (group === 'read')   return kind === 'pdf' ? 'action.downloadpdf' : kind === 'viewer' ? 'action.openviewer' : 'action.readonline';
+  if (group === 'listen') return kind === 'audio' ? 'action.play' : 'action.download';
+  if (group === 'watch')  return 'action.watch';
+  if (group === 'use')    return kind === 'buy' ? 'action.order' : kind === 'app' ? 'action.getapp' : 'action.open';
+  return 'action.open';
 }

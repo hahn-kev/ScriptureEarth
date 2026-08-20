@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "寻找神的话语",
+  "nav.languages": "语言",
+  "nav.countries": "国家",
+  "search.ph": "按语言、代码或国家搜索…",
+
+  "home.eyebrow": "各种语言的圣经",
+  "home.h1": "用你的语言寻找神的话语。",
+  "home.lead": "查找可阅读、收听、观看或在手机上使用的圣经。",
+  "home.browseAll": "浏览所有语言",
+  "home.featured": "精选",
+  "home.startHere": "从这里开始",
+  "home.seeAll": "查看全部",
+  "results.heading": "搜索结果",
+
+  "stats.languages": "种语言",
+  "stats.read": "可阅读",
+  "stats.listen": "可收听",
+
+  "crumb.home": "首页",
+  "browse.crumb": "浏览全部",
+  "catalog.eyebrow": "目录",
+  "browse.h2": "所有语言",
+  "browse.eyebrow": "浏览",
+  "facet.all": "全部",
+
+  "pill.read": "阅读",
+  "pill.listen": "收听",
+  "pill.watch": "观看",
+  "pill.app": "应用",
+  "pill.buy": "购买",
+
+  "group.read": "阅读",
+  "group.listen": "收听",
+  "group.watch": "观看",
+  "group.use": "应用与印刷品",
+
+  "country.eyebrow": "国家",
+  "unit.languages": "种语言",
+  "unit.countries": "个国家",
+  "unit.entries": "个条目",
+
+  "meta.iso": "ISO",
+  "meta.also": "另有：",
+  "meta.catalogentry": "目录条目",
+  "detail.onthispage": "本页内容",
+  "detail.noresources": "尚未为该语言编入任何资源。",
+
+  "action.readonline": "在线阅读",
+  "action.download": "下载",
+  "action.downloadpdf": "下载 PDF",
+  "action.play": "播放",
+  "action.watch": "观看",
+  "action.getapp": "获取应用",
+  "action.order": "订购",
+  "action.openviewer": "打开查看器",
+  "action.open": "打开",
+
+  "footer.about": "关于",
+  "footer.ministry": "SIL Global 的一项事工",
+  "footer.note": "ScriptureEarth 探索网站的静态重建版本。"
+}

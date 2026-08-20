@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Gottes Wort finden",
+  "nav.languages": "Sprachen",
+  "nav.countries": "Länder",
+  "search.ph": "Nach Sprache, Code oder Land suchen…",
+
+  "home.eyebrow": "Die Bibel in jeder Sprache",
+  "home.h1": "Finde Gottes Wort in deiner Sprache.",
+  "home.lead": "Finde die Bibel zum Lesen, Hören, Ansehen oder Nutzen auf deinem Handy.",
+  "home.browseAll": "Alle Sprachen durchsuchen",
+  "home.featured": "Empfohlen",
+  "home.startHere": "Hier beginnen",
+  "home.seeAll": "Alle ansehen",
+  "results.heading": "Ergebnisse",
+
+  "stats.languages": "Sprachen",
+  "stats.read": "zum Lesen",
+  "stats.listen": "zum Hören",
+
+  "crumb.home": "Startseite",
+  "browse.crumb": "Alle ansehen",
+  "catalog.eyebrow": "Der Katalog",
+  "browse.h2": "Alle Sprachen",
+  "browse.eyebrow": "Durchsuchen",
+  "facet.all": "Alle",
+
+  "pill.read": "Lesen",
+  "pill.listen": "Hören",
+  "pill.watch": "Ansehen",
+  "pill.app": "App",
+  "pill.buy": "Kaufen",
+
+  "group.read": "Lesen",
+  "group.listen": "Hören",
+  "group.watch": "Ansehen",
+  "group.use": "Apps & Druck",
+
+  "country.eyebrow": "Land",
+  "unit.languages": "Sprache(n)",
+  "unit.countries": "Länder",
+  "unit.entries": "Einträge",
+
+  "meta.iso": "ISO",
+  "meta.also": "Auch:",
+  "meta.catalogentry": "Katalogeintrag",
+  "detail.onthispage": "Auf dieser Seite",
+  "detail.noresources": "Für diese Sprache sind noch keine Ressourcen katalogisiert.",
+
+  "action.readonline": "Online lesen",
+  "action.download": "Herunterladen",
+  "action.downloadpdf": "PDF herunterladen",
+  "action.play": "Abspielen",
+  "action.watch": "Ansehen",
+  "action.getapp": "App holen",
+  "action.order": "Bestellen",
+  "action.openviewer": "Viewer öffnen",
+  "action.open": "Öffnen",
+
+  "footer.about": "Über uns",
+  "footer.ministry": "Ein Dienst von SIL Global",
+  "footer.note": "Ein statischer Neuaufbau der ScriptureEarth-Entdeckungsseite."
+}

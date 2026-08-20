@@ -3,7 +3,7 @@
    catalogs in localStorage so repeat visits apply synchronously with no English flash. Plain JS.
    Exposes window.__seApplyI18n(root) so dynamically-rendered nodes (search results) get localized. */
 (function () {
-  var LOCS = { eng: 'en', spa: 'es', rus: 'ru', arb: 'ar' };
+  var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar' };
   var orig = new WeakMap();
   function baked(n, attr) {
     var key = attr || 'text', m = orig.get(n) || {};

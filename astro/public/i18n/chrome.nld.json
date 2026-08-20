@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Vind Gods Woord",
+  "nav.languages": "Talen",
+  "nav.countries": "Landen",
+  "search.ph": "Zoek op taal, code of land…",
+
+  "home.eyebrow": "De Bijbel in elke taal",
+  "home.h1": "Vind Gods Woord in jouw taal.",
+  "home.lead": "Vind de Bijbel om te lezen, te beluisteren, te bekijken of te gebruiken op je telefoon.",
+  "home.browseAll": "Alle talen bekijken",
+  "home.featured": "Uitgelicht",
+  "home.startHere": "Begin hier",
+  "home.seeAll": "Alles bekijken",
+  "results.heading": "Resultaten",
+
+  "stats.languages": "talen",
+  "stats.read": "om te lezen",
+  "stats.listen": "om te beluisteren",
+
+  "crumb.home": "Home",
+  "browse.crumb": "Alles bekijken",
+  "catalog.eyebrow": "De catalogus",
+  "browse.h2": "Alle talen",
+  "browse.eyebrow": "Bladeren",
+  "facet.all": "Alle",
+
+  "pill.read": "Lezen",
+  "pill.listen": "Luisteren",
+  "pill.watch": "Bekijken",
+  "pill.app": "App",
+  "pill.buy": "Kopen",
+
+  "group.read": "Lezen",
+  "group.listen": "Luisteren",
+  "group.watch": "Bekijken",
+  "group.use": "Apps & print",
+
+  "country.eyebrow": "Land",
+  "unit.languages": "taal/talen",
+  "unit.countries": "landen",
+  "unit.entries": "vermeldingen",
+
+  "meta.iso": "ISO",
+  "meta.also": "Ook:",
+  "meta.catalogentry": "Catalogusvermelding",
+  "detail.onthispage": "Op deze pagina",
+  "detail.noresources": "Nog geen bronnen gecatalogiseerd voor deze taal.",
+
+  "action.readonline": "Online lezen",
+  "action.download": "Downloaden",
+  "action.downloadpdf": "PDF downloaden",
+  "action.play": "Afspelen",
+  "action.watch": "Bekijken",
+  "action.getapp": "App downloaden",
+  "action.order": "Bestellen",
+  "action.openviewer": "Viewer openen",
+  "action.open": "Openen",
+
+  "footer.about": "Over ons",
+  "footer.ministry": "Een bediening van SIL Global",
+  "footer.note": "Een statische herbouw van de ScriptureEarth-ontdekkingssite."
+}

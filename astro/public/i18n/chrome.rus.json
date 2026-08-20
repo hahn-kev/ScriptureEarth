@@ -1,1 +1,62 @@
-{"read": "Читать", "listen": "Слушать", "download": "Скачать", "search": "Поиск", "country": "Страна", "countries": "Страны", "app": "Приложение", "audio": "Аудио", "video": "Видео", "view": "Вид", "home": "Домой", "langname": "Название языка", "langcode": "Код языка", "altnames": "Альтернативные названия языка"}
+{
+  "brand.tagline": "Найдите Слово Божье",
+  "nav.languages": "Языки",
+  "nav.countries": "Страны",
+  "search.ph": "Поиск по языку, коду или стране…",
+
+  "home.eyebrow": "Священное Писание на всех языках",
+  "home.h1": "Найдите Слово Божье на вашем языке.",
+  "home.lead": "Найдите Священное Писание, чтобы читать, слушать, смотреть или пользоваться им на телефоне.",
+  "home.browseAll": "Просмотреть все языки",
+  "home.featured": "Рекомендуемое",
+  "home.startHere": "Начните здесь",
+  "home.seeAll": "Смотреть все",
+  "results.heading": "Результаты",
+
+  "stats.languages": "языков",
+  "stats.read": "для чтения",
+  "stats.listen": "для прослушивания",
+
+  "crumb.home": "Главная",
+  "browse.crumb": "Все языки",
+  "catalog.eyebrow": "Каталог",
+  "browse.h2": "Все языки",
+  "browse.eyebrow": "Обзор",
+  "facet.all": "Все",
+
+  "pill.read": "Читать",
+  "pill.listen": "Слушать",
+  "pill.watch": "Смотреть",
+  "pill.app": "Приложение",
+  "pill.buy": "Купить",
+
+  "group.read": "Читать",
+  "group.listen": "Слушать",
+  "group.watch": "Смотреть",
+  "group.use": "Приложения и печать",
+
+  "country.eyebrow": "Страна",
+  "unit.languages": "язык(и/ов)",
+  "unit.countries": "стран",
+  "unit.entries": "записей",
+
+  "meta.iso": "ISO",
+  "meta.also": "Также:",
+  "meta.catalogentry": "Запись в каталоге",
+  "detail.onthispage": "На этой странице",
+  "detail.noresources": "Для этого языка пока нет каталогизированных ресурсов.",
+
+  "action.readonline": "Читать онлайн",
+  "action.download": "Скачать",
+  "action.downloadpdf": "Скачать PDF",
+  "action.play": "Воспроизвести",
+  "action.watch": "Смотреть",
+  "action.getapp": "Установить приложение",
+  "action.order": "Заказать",
+  "action.openviewer": "Открыть просмотрщик",
+  "action.open": "Открыть",
+
+  "footer.about": "О проекте",
+  "footer.ministry": "Служение SIL Global",
+  "footer.note": "Статическая перестройка сайта ScriptureEarth."
+}

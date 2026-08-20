@@ -1,7 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
-import { GROUPS, PILLS, actionLabel } from '../../lib/ui';
+import { GROUPS, PILLS, actionLabel, actionSlug } from '../../lib/ui';
 
 // Route keyed by the vanity SLUG (ticket 08): /language/<iso[-rod[-var]]>/. idx stays the internal key.
 export async function getStaticPaths() {
@@ -12,29 +12,34 @@ const { d } = Astro.props;
 const name = d.names.localized.eng;
 const where = d.countries.map((c: any) => c.name_eng).join(' · ');
 const activeGroups = GROUPS.filter((g) => (d.resources[g.key] || []).length > 0);
+const avail = PILLS.filter((p) => d.availability[p.key]);
 ---
 <Base title={`${name} — ScriptureEarth`}>
   <section class="block shell">
-    <nav class="crumbs"><a href="/">Home</a><span>›</span><a href="/browse/">Languages</a><span>›</span><span>{name}</span></nav>
+    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><a href="/browse/" data-i18n="nav.languages">Languages</a><span>›</span><span>{name}</span></nav>
     <div class="with-side">
       <div>
         <div class="rec-head"><h1 data-i18n-name={String(d.idx)}>{name}</h1>{d.identity.variant_name && <span class="muted">{d.identity.variant_name}</span>}</div>
         <div class="rec-meta">
-          <span class="chip">ISO <code>{d.identity.iso}</code></span>
+          <span class="chip"><span data-i18n="meta.iso">ISO</span> <code>{d.identity.iso}</code></span>
           {where && <span class="chip">{where}</span>}
-          {d.names.alt_names.length > 0 && <span class="chip">Also: {d.names.alt_names.slice(0,4).join(', ')}</span>}
-          <span class="chip">{PILLS.filter((p) => d.availability[p.key]).map((p) => p.label).join(' · ') || 'Catalog entry'}</span>
+          {d.names.alt_names.length > 0 && <span class="chip"><span data-i18n="meta.also">Also:</span> {d.names.alt_names.slice(0,4).join(', ')}</span>}
+          {avail.length
+            ? <span class="chip">{avail.map((p, i) => (<Fragment>{i > 0 ? ' · ' : ''}<span data-i18n={`pill.${p.key}`}>{p.label}</span></Fragment>))}</span>
+            : <span class="chip" data-i18n="meta.catalogentry">Catalog entry</span>}
         </div>
 
-        {activeGroups.length === 0 && <p class="muted">No resources catalogued yet for this language.</p>}
+        {activeGroups.length === 0 && <p class="muted" data-i18n="detail.noresources">No resources catalogued yet for this language.</p>}
         {activeGroups.map((g) => (
           <div class="res-group" id={g.key}>
-            <div class="rg-head"><span class="lead-dot" style={`background:${g.color}`}></span><h3 data-i18n={g.key}>{g.label}</h3><span class="n">{d.resources[g.key].length}</span></div>
+            <div class="rg-head"><span class="lead-dot" style={`background:${g.color}`}></span><h3 data-i18n={`group.${g.key}`}>{g.label}</h3><span class="n">{d.resources[g.key].length}</span></div>
             {d.resources[g.key].map((r: any) => (
               <div class="res-row">
                 <span class="fmt">{r.format}</span>
                 <div><div class="rr-name">{r.name}</div>{r.source && <div class="rr-src">{r.source}</div>}</div>
-                {r.url ? <a class="act" href={r.url} rel="noopener">{actionLabel(g.key, r.kind)}</a> : <span class="act muted">—</span>}
+                {r.url
+                  ? <a class="act" href={r.url} rel="noopener"><span data-i18n={actionSlug(g.key, r.kind)}>{actionLabel(g.key, r.kind)}</span> →</a>
+                  : <span class="act muted">—</span>}
               </div>
             ))}
           </div>
@@ -42,12 +47,12 @@ const activeGroups = GROUPS.filter((g) => (d.resources[g.key] || []).length > 0)
       </div>
 
       <aside class="side">
-        <h4>On this page</h4>
+        <h4 data-i18n="detail.onthispage">On this page</h4>
         <div class="toc">
-          {activeGroups.map((g) => (<a href={`#${g.key}`}><span data-i18n={g.key}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
+          {activeGroups.map((g) => (<a href={`#${g.key}`}><span data-i18n={`group.${g.key}`}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
         </div>
         {d.countries.length > 0 && (
-          <><h4 style="margin-top:1.5rem" data-i18n="countries">Countries</h4><div class="toc">
+          <><h4 style="margin-top:1.5rem" data-i18n="nav.countries">Countries</h4><div class="toc">
             {d.countries.map((c: any) => (<a href={`/country/${c.code}/`}>{c.name_eng}<span class="c">{c.code}</span></a>))}
           </div></>
         )}
