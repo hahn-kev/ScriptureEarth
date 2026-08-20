@@ -6,6 +6,21 @@
   var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
   var RTL = { arb:1, fas:1 };
   var orig = new WeakMap();
+  // Content-version token from our own <script src="/i18n.js?v=HASH"> (Base.astro stamps it
+  // from a hash of i18n.js + the catalogs). Threaded onto catalog fetches so a new deploy busts
+  // them, and used to invalidate stale localStorage catalogs — the fix for returning visitors
+  // getting an old i18n.js/catalog after a redeploy.
+  var VER = (function () {
+    try { var s = document.querySelector('script[src*="/i18n.js"]'); var m = s && s.src.match(/[?&]v=([^&]+)/); return m ? m[1] : ''; }
+    catch (e) { return ''; }
+  })();
+  var Q = VER ? ('?v=' + VER) : '';
+  try {
+    if (localStorage.getItem('se-ver') !== VER) {
+      Object.keys(localStorage).forEach(function (k) { if (/^se-(chrome|names|autonyms)/.test(k)) localStorage.removeItem(k); });
+      localStorage.setItem('se-ver', VER);
+    }
+  } catch (e) {}
   // Locale-independent autonym fallback (SLDR): each language's name in its OWN language.
   // Fallback chain for names is  locale name -> autonym -> baked English.
   var AUTO = cacheGet('se-autonyms') || null;
@@ -53,9 +68,9 @@
     // are shared across all locales (locale-independent), so they're fetched here too.
     var okjson = function (r) { return r.ok ? r.json() : {}; };
     Promise.all([
-      c  ? Promise.resolve(c)  : fetch('/i18n/chrome.' + loc + '.json').then(okjson),
-      nm ? Promise.resolve(nm) : fetch('/i18n/names.' + loc + '.json').then(okjson),
-      au ? Promise.resolve(au) : fetch('/i18n/autonyms.json').then(okjson)
+      c  ? Promise.resolve(c)  : fetch('/i18n/chrome.' + loc + '.json' + Q).then(okjson),
+      nm ? Promise.resolve(nm) : fetch('/i18n/names.' + loc + '.json' + Q).then(okjson),
+      au ? Promise.resolve(au) : fetch('/i18n/autonyms.json' + Q).then(okjson)
     ]).then(function (a) {
       try {
         localStorage.setItem('se-chrome-' + loc, JSON.stringify(a[0]));

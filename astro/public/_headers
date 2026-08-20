@@ -1,0 +1,8 @@
+# The localizer script and i18n catalogs are content-hash busted via ?v=<hash>
+# (Base.astro / i18nVersion.ts), so a given URL's bytes never change — cache them
+# immutably. A new deploy that changes their content changes the ?v, so returning
+# visitors fetch the new version instead of a stale cached copy.
+/i18n.js
+  Cache-Control: public, max-age=31536000, immutable
+/i18n/*
+  Cache-Control: public, max-age=31536000, immutable

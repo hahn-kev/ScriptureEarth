@@ -1,4 +1,5 @@
 ---
+import { I18N_VERSION } from '../lib/i18nVersion';
 interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
 const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 ---
@@ -41,7 +42,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <title>{title}</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="stylesheet" href="/site.css" />
-  <script is:inline src="/i18n.js" defer></script>
+  <script is:inline src={`/i18n.js?v=${I18N_VERSION}`} defer></script>
 </head>
 <body>
   <div class="hairline"></div>
