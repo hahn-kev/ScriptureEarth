@@ -106,4 +106,11 @@ footer.site .fcol{display:flex;flex-direction:column;gap:.4rem;font-size:.9rem} 
 footer.site .cc{border-top:1px solid rgba(255,255,255,.15);padding-block:var(--s4);font-size:.82rem;color:#9fb3c4}
 [hidden]{display:none!important}
 @media (max-width:900px){.with-side{grid-template-columns:1fr} aside.side{position:static}}
-@media (max-width:760px){nav.main{display:none}}
+@media (max-width:760px){
+  nav.main{display:none}
+  /* stop the header overflowing: brand + locale picker on row 1, search wraps full-width to row 2 */
+  .site-inner{flex-wrap:wrap; gap:var(--s3) var(--s4)}
+  .brand{order:0; min-width:0}
+  .locale-pick{order:1; margin-inline-start:auto}
+  .site-search{order:2; flex:1 1 100%; min-width:0; margin-inline-start:0}
+}

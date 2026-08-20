@@ -19,14 +19,14 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     <p class="eyebrow">Scripture in every language</p>
     <h1>Find God’s Word in your language.</h1>
     <p class="lead">Search {langs.length.toLocaleString()} languages — to read, listen, watch, or use on your phone.</p>
-    <div class="searchbig" role="search"><span class="mag" aria-hidden="true">⌕</span>
-      <input id="q" type="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search" /></div>
-    <div class="stats">
+    <form class="searchbig" role="search" id="hero-form"><span class="mag" aria-hidden="true">⌕</span>
+      <input id="q" type="search" enterkeyhint="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search" /></form>
+    <div class="stats" id="hero-stats">
       <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span>languages</span></div>
       <div class="stat"><b class="tnum">{withRead.toLocaleString()}</b><br /><span>to read</span></div>
       <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span>to listen</span></div>
     </div>
-    <p style="margin-top:1rem"><a href="/browse/">Browse all languages →</a></p>
+    <p style="margin-top:1rem" id="browse-link"><a href="/browse/">Browse all languages →</a></p>
   </div></section>
 
   <section class="block shell">
@@ -58,7 +58,9 @@ const withListen = langs.filter((l) => l.availability.listen).length;
       `<span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>${r.where?`<div class="where">${esc(r.where)}</div>`:''}`+
       `<div class="pills">${(r.r||[]).map(k=>`<span class="pill" data-r="${k}"><span class="dot"></span>${RL[k]}</span>`).join('')}</div></a>`;
     const q=document.getElementById('q'), results=document.getElementById('results'),
-          rhead=document.getElementById('rhead'), rcount=document.getElementById('rcount'), featured=document.getElementById('featured');
+          rhead=document.getElementById('rhead'), rcount=document.getElementById('rcount'),
+          featured=document.getElementById('featured'), heroStats=document.getElementById('hero-stats'),
+          browseLink=document.getElementById('browse-link'), form=document.getElementById('hero-form');
     let ms=null;
     async function index(){
       if (ms) return ms;
@@ -73,15 +75,26 @@ const withListen = langs.filter((l) => l.availability.listen).length;
       });
       ms.addAll(data); return ms;
     }
-    let t; q.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(async ()=>{
-      const term=q.value.trim();
-      if (!term) { results.hidden=rhead.hidden=true; featured.hidden=false; return; }
+    // when searching, show ONLY the results (hide stats + browse + featured) so results are front-and-centre on mobile
+    function setSearching(on){
+      [heroStats, browseLink, featured].forEach(el=>{ if(el) el.hidden=on; });
+      results.hidden = rhead.hidden = !on;
+    }
+    async function search(term){
+      if (!term) { setSearching(false); return []; }
       const engine = await index();
       const hits = engine.search(term, { prefix:true, fuzzy:0.2, combineWith:'AND' }).slice(0,300);
       results.innerHTML = hits.map(card).join('');
       rcount.textContent = hits.length + ' languages';
-      featured.hidden=true; results.hidden=rhead.hidden=false;
+      setSearching(true);
       window.__seApplyI18n && window.__seApplyI18n(results);   // localize dynamically-rendered cards
-    },120); });
+      return hits;
+    }
+    let t; q.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>search(q.value.trim()), 120); });
+    // Enter / mobile "search" key → open the first result
+    form.addEventListener('submit', async (e)=>{ e.preventDefault();
+      const hits = await search(q.value.trim());
+      if (hits[0]) location.href = `/language/${hits[0].slug}/`;
+    });
   </script>
 </Base>

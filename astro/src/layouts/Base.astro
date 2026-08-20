@@ -45,7 +45,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       <img class="silmark" src="/sil-logo.webp" alt="SIL" width="80" height="34" />
       <span class="lock"><span class="name">ScriptureEarth</span><span class="sub">Find God’s Word</span></span>
     </a>
-    <nav class="main"><a href="/" aria-current="page" data-i18n="languages">Languages</a><a href="/#countries" data-i18n="countries">Countries</a></nav>
+    <nav class="main"><a href="/browse/" data-i18n="languages">Languages</a><a href="/countries/" data-i18n="countries">Countries</a></nav>
     <form class="site-search" role="search" action="/">
       <span class="mag" aria-hidden="true">⌕</span>
       <input type="search" name="q" placeholder="Search language, code, country…" data-i18n-ph="search" />
@@ -62,7 +62,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 
   <footer class="site"><div class="shell">
     <div class="fin">
-      <div class="fcol"><b>ScriptureEarth</b><a href="/">Find Scripture</a><a href="/#countries" data-i18n="countries">Countries</a></div>
+      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="languages">Languages</a><a href="/countries/" data-i18n="countries">Countries</a></div>
       <div class="fcol"><b>About</b><span class="muted">A ministry of SIL Global</span><span class="muted">Static rewrite prototype</span></div>
     </div>
     <div class="cc">Bake-off prototype · i18n localizer spike (ticket 14) · content from ScriptureEarth database snapshot.</div>

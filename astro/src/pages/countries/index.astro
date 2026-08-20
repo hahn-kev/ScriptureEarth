@@ -1,0 +1,23 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+
+const countries = (await getCollection('countries')).map((c) => c.data)
+  .filter((c) => c.languages.length > 0)
+  .sort((a, b) => a.name.eng.localeCompare(b.name.eng));
+const totalLangs = countries.reduce((n, c) => n + c.languages.length, 0);
+---
+<Base title="Countries — ScriptureEarth">
+  <section class="block shell">
+    <nav class="crumbs"><a href="/">Home</a><span>›</span><span data-i18n="countries">Countries</span></nav>
+    <div class="sec-head">
+      <div><p class="eyebrow">Browse</p><h2 data-i18n="countries">Countries</h2></div>
+      <span class="facet-count tnum">{countries.length} countries · {totalLangs.toLocaleString()} entries</span>
+    </div>
+    <div class="facets">
+      {countries.map((c) => (
+        <a class="facet" href={`/country/${c.code}/`}>{c.name.eng} <span class="x tnum">{c.languages.length}</span></a>
+      ))}
+    </div>
+  </section>
+</Base>
