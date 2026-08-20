@@ -4,7 +4,7 @@ Implements the resolved URL-scheme decision (`issues/08-url-scheme-redirect-map.
 `research/08-url-redirects.md`). Two files:
 
 - **`public/_redirects`** — path-only redirects (Cloudflare copies it to the deploy root).
-- **`functions/_middleware.js`** — the one Function, for query-string deep links `_redirects` can't read.
+- **`functions/index.php.js`** — the one Function (scoped to `/index.php`), for query-string deep links `_redirects` can't read.
 
 Assumes **slug strategy (B)**: the language-detail slug *is* the legacy vanity string
 `<iso>[-<rod>][-<var>]`, so `/language/kek/`, `/language/abt-3053/`, `/language/acr-00000-a/`.
@@ -20,7 +20,7 @@ This is what collapses ~3,779 legacy rows to 3 rules and removes the iso→idx l
 | L3/L4/L5 homepages + aliases | 17 | 10 `00<loc>.php` + 6 localized alias index files → `/?lang=<loc>` (301); `/index.php` → `/` (302, provisional). |
 | L2 vanity → detail | 3 | `/:iso-:rod-:var`, `/:iso-:rod`, `/:iso` → `/language/<same>/` (301). Most-specific first. Replaces all 3,779 legacy `Redirect 301` lines 1:1, no lookup. |
 
-### `functions/_middleware.js` (query-string deep links)
+### `functions/index.php.js` (query-string deep links)
 Bails out (`next()`) on any non-`.php` request. On a `.php` path it maps:
 - `?sortby=country&name=<CC>` → `/country/<CC>/` (301); `name=all`/empty → `/browse/` (301).  *(L7)*
 - `?idx=` / `?ISO_ROD_index=<n>` → `/language/?idx=<n>` (302) for a **client resolver** to finish.  *(L6 idx-form)*
@@ -67,9 +67,9 @@ Pages); with no deep-link query it calls `next()` and the static `.php` rules fi
    the dashed `/:iso-:rod[-var]` forms can stay as placeholders.
 4. **Landing target** for the homepage redirects is `/` pending the ticket-04 landing decision; flip to
    `/browse/` in one place. `/index.php` is 302 until that target is final, then make it 301.
-5. **Root `_middleware.js` runs on every request.** The `.php` guard makes non-`.php` requests a string
-   check + `next()`, but every hit is still a Functions invocation. If that cost matters on a mostly
-   static site, narrow to `functions/index.php.js` (primary deep-link target) per caveat in the file.
+5. **Scoped to `functions/index.php.js`** (not a root `_middleware.js`) so Pages invokes Functions only on
+   `/index.php` — home/pages/assets are pure static and not counted as Functions invocations. Residual:
+   query-bearing `00<loc>.php` deep links aren't handled (add per-locale files sharing the handler if needed).
 6. **`?st=<iso>`** ("start at", L4) and niche `.php` (`iso_direct.php`, `00<loc>-CTPHC.php`) are not
    mapped; they fall to the `.php`→`/`+`?lang=` rules. Add a final `/*.php / 302` safety net only if
    server-log sweep shows meaningful traffic (§5.6).

@@ -35,10 +35,10 @@ project: `npx wrangler pages project create se-proto-en --production-branch main
 ## What ships alongside the pages
 - **`public/_redirects`** (in `dist/`) — legacy path redirects: `00<loc>.php` → `/?lang=<loc>`, and the
   vanity `/‹iso›[-rod[-var]]` → `/language/‹slug›/` collapse (see `REDIRECTS.md`).
-- **`functions/_middleware.js`** — handles the legacy **query-string** deep links (`?iso=`, `?idx=`,
-  `?sortby=country`) that `_redirects` can't read. It only acts on `.php` paths; every other request
-  (index, pages, assets) falls straight through. *(It is still invoked per-request as a root middleware;
-  scope it to named `.php` function files if you want Functions off the static hot path.)*
+- **`functions/index.php.js`** — handles the legacy **query-string** deep links (`?iso=`, `?idx=`,
+  `?sortby=country`) that `_redirects` can't read. It is **scoped to `/index.php` only** (named-file
+  routing), so Pages invokes Functions solely on that path — home, pages, and assets are served as pure
+  static files and are **not** counted as Functions invocations.
 
 ## Notes
 - The URL is **public to anyone who has it** (ScriptureEarth catalog data — already public upstream).
