@@ -11,26 +11,30 @@ this `astro/` dir** so Wrangler picks up `functions/` alongside `dist/`.
 
 ## Steps
 
-**1. Build** — pick the data source (same output schema either way):
-```bash
-npm run build:api      # from the API harvest cache (scripts/harvest/data) — fresher, no buy links
-```
-```bash
-npm run build:dump     # from data/scripture.db — full parity (incl. buy links)
-```
-
-**2. Authenticate** — only if not already logged in (opens a browser for Cloudflare OAuth):
+**1. Authenticate** — one-time, only if not already logged in (opens a browser for Cloudflare OAuth):
 ```bash
 npx wrangler login
 ```
 
-**3. Deploy** (project exists → this just publishes a new production deployment):
+**2. Build + deploy** — one command; pick the data source (same output schema either way):
 ```bash
-npx wrangler pages deploy dist --project-name se-proto-en --branch main
+npm run deploy:api      # API harvest cache -> build -> deploy   (fresher, no buy links)
 ```
-Wrangler uploads `dist/`, compiles `functions/index.php.js`, and prints the deployment URL;
-**https://se-proto-en.pages.dev/** refreshes within ~30 s. (First-time only, if recreating the
-project: `npx wrangler pages project create se-proto-en --production-branch main`.)
+```bash
+npm run deploy:dump     # data/scripture.db -> build -> deploy   (full parity, incl. buy links)
+```
+Or deploy the current `dist/` as-is (no rebuild): `npm run deploy`.
+
+Each publishes a new production deployment to **https://se-proto-en.pages.dev/** (~30 s), uploading
+`dist/` and compiling `functions/index.php.js`. (First-time only, if recreating the project:
+`npx wrangler pages project create se-proto-en --production-branch main`.)
+
+### npm scripts
+| script | does |
+|---|---|
+| `npm run deploy` | deploy current `dist/` (assumes you've built) |
+| `npm run deploy:api` | `build:api` then deploy |
+| `npm run deploy:dump` | `build:dump` then deploy |
 
 ## What ships alongside the pages
 - **`public/_redirects`** (in `dist/`) — legacy path redirects: `00<loc>.php` → `/?lang=<loc>`, and the

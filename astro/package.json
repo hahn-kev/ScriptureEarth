@@ -12,7 +12,10 @@
     "build": "astro build",
     "build:dump": "npm run extract && astro build",
     "build:api": "npm run extract:api && astro build",
-    "preview": "astro preview"
+    "preview": "astro preview",
+    "deploy": "npx wrangler pages deploy dist --project-name se-proto-en --branch main",
+    "deploy:api": "npm run build:api && npm run deploy",
+    "deploy:dump": "npm run build:dump && npm run deploy"
   },
   "dependencies": {
     "astro": "^5.13.0",
