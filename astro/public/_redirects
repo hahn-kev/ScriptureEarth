@@ -28,7 +28,6 @@
 # Known top-level static assets (contain '.'/'-', would otherwise be eaten by /:iso)
 /favicon.ico       /favicon.ico              200
 /site.css          /site.css                 200
-/i18n.js           /i18n.js                  200
 /search-index.json /search-index.json        200
 /sil-logo.webp     /sil-logo.webp            200
 

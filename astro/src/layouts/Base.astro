@@ -10,8 +10,9 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <!-- i18n rendering model (ticket 13): baked English is default; this synchronous
        head script picks the locale and sets a hide-guard BEFORE paint so a cached
        non-English visitor never sees an English flash. No service worker. -->
-  <script is:inline>
+  <script is:inline define:vars={{ i18nVer: I18N_VERSION }}>
     (function () {
+      window.__seI18nVer = i18nVer;   // consumed by the bundled localizer to bust catalog fetches
       var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
       var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb', id:'ind', hi:'hin', sw:'swa', tl:'fil', fa:'fas' };
       var RTL  = { arb:1, fas:1 };
@@ -42,7 +43,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <title>{title}</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
   <link rel="stylesheet" href="/site.css" />
-  <script is:inline src={`/i18n.js?v=${I18N_VERSION}`} defer></script>
+  <script>import '../scripts/i18n.js';</script>
 </head>
 <body>
   <div class="hairline"></div>

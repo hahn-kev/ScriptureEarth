@@ -6,14 +6,11 @@
   var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
   var RTL = { arb:1, fas:1 };
   var orig = new WeakMap();
-  // Content-version token from our own <script src="/i18n.js?v=HASH"> (Base.astro stamps it
-  // from a hash of i18n.js + the catalogs). Threaded onto catalog fetches so a new deploy busts
-  // them, and used to invalidate stale localStorage catalogs — the fix for returning visitors
-  // getting an old i18n.js/catalog after a redeploy.
-  var VER = (function () {
-    try { var s = document.querySelector('script[src*="/i18n.js"]'); var m = s && s.src.match(/[?&]v=([^&]+)/); return m ? m[1] : ''; }
-    catch (e) { return ''; }
-  })();
+  // Content-version token set on window by Base.astro's head script (a hash of this file + the
+  // catalogs; see src/lib/i18nVersion.ts). This bundled script is itself content-hashed by Astro,
+  // so the token is only needed to bust the CATALOG fetches and invalidate stale localStorage
+  // catalogs on redeploy.
+  var VER = (typeof window !== 'undefined' && window.__seI18nVer) || '';
   var Q = VER ? ('?v=' + VER) : '';
   try {
     if (localStorage.getItem('se-ver') !== VER) {
