@@ -12,14 +12,23 @@ client-side search, built from the ScriptureEarth database. Proof-of-concept pro
   - Override the DB path with `SE_DB=/path/to.db`.
 
 ## Build & run
+Two mutually-exclusive data sources produce the **same** `content/` schema (ticket 12):
 ```bash
 npm install
-npm run extract        # DB -> content/ + public/search-index.json  (also runs automatically before build)
-npm run dev            # local dev server
-npm run build          # -> dist/   (runs extract first via prebuild)
-npm run preview        # serve dist/
+
+# (A) DUMP build — full parity. Needs data/scripture.db (or SE_DB=/path).
+npm run build:dump           # extract.py (DB -> content/) then astro build -> dist/
+
+# (B) API build — from the JSON API. Needs a harvest first (your key):
+node scripts/harvest/harvest.mjs        # SE_KEY=… ; -> scripts/harvest/data/  (throttled, resumable)
+npm run build:api                        # project.mjs (harvest cache -> content/) then astro build
+
+npm run dev                  # dev server (build content once first: npm run extract | extract:api)
+npm run preview              # serve dist/
 ```
-`npm run extract:i18n` regenerates the per-locale UI catalogs — but see the note below; you rarely need it.
+- `npm run extract` / `npm run extract:api` regenerate `content/` without building.
+- **DUMP** = complete (incl. `buy` links); **API** = fresher but no `buy` links (no buy endpoint) — see `RESULTS-datasource.md`.
+- `npm run extract:i18n` regenerates the per-locale UI catalogs — rarely needed (see note below).
 
 ## Layout
 - `src/pages/` — routes: `/` (lean search-first home), `/browse/` (full grid), `/language/<slug>/`

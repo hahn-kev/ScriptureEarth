@@ -122,6 +122,7 @@ async function main() {
   let i = 0;
   for (const entry of entries) {
     const rel = entry.relationships;
+    rel.iso = entry.attributes?.iso ?? rel.iso;   // iso lives in attributes, not relationships
     const idx = rel.idx;
     const a = rel; // availability flags live on relationships
     const detail = {};
