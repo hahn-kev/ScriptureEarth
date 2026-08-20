@@ -99,6 +99,13 @@ def res(group, kind, fmt, name, source, url, external, **meta):
             "source": source, "url": url, "external": external,
             "meta": {k: v for k, v in meta.items() if v not in (None, "")}}
 
+def strip_prefix(title, prefix):
+    """Pull the version name out of a links.company_title (e.g. 'Bible.com (YouVersion) - Reina Valera 1960')."""
+    t = (title or "").strip()
+    if t.startswith(prefix):
+        t = t[len(prefix):]
+    return t.lstrip(" -–—:").strip()
+
 def build_resources(idx, iso, flags):
     R = {"read": [], "listen": [], "watch": [], "use": []}
 
@@ -117,11 +124,12 @@ def build_resources(idx, iso, flags):
     for l in links.get(idx, []):
         u, ext = resolve(l["URL"])
         if l["YouVersion"]:
-            R["read"].append(res("read","web","Web","YouVersion","Bible.com", u, ext))
+            ver = strip_prefix(l["company_title"], "Bible.com (YouVersion)")
+            R["read"].append(res("read","web","Web", ver or "YouVersion", "Bible.com (YouVersion)", u, ext))
         elif l["Bibles_org"]:
-            R["read"].append(res("read","web","Web","Bibles.org", l["company"] or "Bibles.org", u, ext))
+            R["read"].append(res("read","web","Web", l["company_title"] or l["company"] or "Bibles.org edition", "Bibles.org", u, ext))
         elif l["BibleIs"] in (2,3,4):
-            R["read"].append(res("read","web","Web","Bible.is", l["company_title"] or "Faith Comes By Hearing", u, ext))
+            R["read"].append(res("read","web","Web", l["company_title"] or "Bible.is edition", "Bible.is", u, ext))
 
     # LISTEN -------------------------------------------------------------
     if idx in ot_aud:
@@ -137,9 +145,9 @@ def build_resources(idx, iso, flags):
     for l in links.get(idx, []):
         u, ext = resolve(l["URL"])
         if l["GRN"]:
-            R["listen"].append(res("listen","audio","MP3","GRN recordings","Global Recordings Network", u, ext))
+            R["listen"].append(res("listen","audio","MP3", l["company_title"] or "GRN recordings","Global Recordings Network", u, ext))
         elif l["BibleIs"] in (1,3,4):
-            R["listen"].append(res("listen","audio","Audio","Bible.is audio","Faith Comes By Hearing", u, ext))
+            R["listen"].append(res("listen","audio","Audio", l["company_title"] or "Bible.is audio","Bible.is", u, ext))
 
     # WATCH --------------------------------------------------------------
     for w in watch.get(idx, []):
