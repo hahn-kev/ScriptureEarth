@@ -6,6 +6,9 @@
   var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
   var RTL = { arb:1, fas:1 };
   var orig = new WeakMap();
+  // Locale-independent autonym fallback (SLDR): each language's name in its OWN language.
+  // Fallback chain for names is  locale name -> autonym -> baked English.
+  var AUTO = cacheGet('se-autonyms') || null;
   function baked(n, attr) {
     var key = attr || 'text', m = orig.get(n) || {};
     if (!(key in m)) { m[key] = attr ? n.getAttribute(attr) : n.textContent; orig.set(n, m); }
@@ -28,8 +31,8 @@
       n.setAttribute('placeholder', (chrome && chrome[n.getAttribute('data-i18n-ph')]) || b);
     });
     root.querySelectorAll('[data-i18n-name]').forEach(function (n) {
-      var b = baked(n);
-      n.textContent = (names && names[n.getAttribute('data-i18n-name')]) || b;
+      var b = baked(n), k = n.getAttribute('data-i18n-name');
+      n.textContent = (names && names[k]) || (AUTO && AUTO[k]) || b;
     });
     document.documentElement.removeAttribute('data-i18n-pending');
   }
@@ -43,16 +46,23 @@
 
   function localize(loc, root) {
     if (loc === 'eng') { toEnglish(root); return; }
-    var c = cacheGet('se-chrome-' + loc), nm = cacheGet('se-names-' + loc);
-    if (c && nm) { apply(c, nm, root); return; }
-    // Tolerate a missing names/chrome file (e.g. a locale with UI chrome but no name catalog):
-    // a 404 must not abort the whole localize — fall back to {} for that half.
+    var c = cacheGet('se-chrome-' + loc), nm = cacheGet('se-names-' + loc), au = AUTO || cacheGet('se-autonyms');
+    if (c && nm && au) { AUTO = au; apply(c, nm, root); return; }
+    // Tolerate a missing file (e.g. a locale with UI chrome but no name catalog): a 404 must
+    // not abort the whole localize — fall back to {} for that piece. Autonyms load once and
+    // are shared across all locales (locale-independent), so they're fetched here too.
     var okjson = function (r) { return r.ok ? r.json() : {}; };
     Promise.all([
-      fetch('/i18n/chrome.' + loc + '.json').then(okjson),
-      fetch('/i18n/names.' + loc + '.json').then(okjson)
+      c  ? Promise.resolve(c)  : fetch('/i18n/chrome.' + loc + '.json').then(okjson),
+      nm ? Promise.resolve(nm) : fetch('/i18n/names.' + loc + '.json').then(okjson),
+      au ? Promise.resolve(au) : fetch('/i18n/autonyms.json').then(okjson)
     ]).then(function (a) {
-      try { localStorage.setItem('se-chrome-' + loc, JSON.stringify(a[0])); localStorage.setItem('se-names-' + loc, JSON.stringify(a[1])); } catch (e) {}
+      try {
+        localStorage.setItem('se-chrome-' + loc, JSON.stringify(a[0]));
+        localStorage.setItem('se-names-' + loc, JSON.stringify(a[1]));
+        localStorage.setItem('se-autonyms', JSON.stringify(a[2]));
+      } catch (e) {}
+      AUTO = a[2];
       apply(a[0], a[1], root);
     }).catch(function () { document.documentElement.removeAttribute('data-i18n-pending'); });
   }
@@ -61,9 +71,9 @@
   window.__seApplyI18n = function (root) {
     var loc = window.__seLoc || 'eng';
     if (loc === 'eng') return;                       // baked English already correct
-    var c = cacheGet('se-chrome-' + loc), nm = cacheGet('se-names-' + loc);
-    if (c && nm) apply(c, nm, root || document);     // catalogs are cached after initial localize
-    else localize(loc, root || document);            // fall back to fetch if not cached yet
+    var c = cacheGet('se-chrome-' + loc), nm = cacheGet('se-names-' + loc), au = AUTO || cacheGet('se-autonyms');
+    if (c && nm && au) { AUTO = au; apply(c, nm, root || document); } // cached after initial localize
+    else localize(loc, root || document);                            // fall back to fetch if not cached yet
   };
 
   localize(window.__seLoc || 'eng');
