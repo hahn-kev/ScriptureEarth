@@ -40,7 +40,9 @@ function resourcesFrom(detail) {
   const nPdf = arr(nt).length, oPdf = arr(ot).length;
   if (oPdf) R.read.push(res("read","pdf","PDF",`Old Testament — ${oPdf} book(s)`,"ScriptureEarth", asset(first(ot)?.book_filename)));
   if (nPdf) R.read.push(res("read","pdf","PDF",`New Testament — ${nPdf} book(s)`,"ScriptureEarth", asset(first(nt)?.book_filename)));
-  for (const w of arr(texts.scripture_bible)) R.read.push(res("read","pdf","PDF", w?.item || "Whole Bible","ScriptureEarth", asset(w?.scripture_bible_filename)));
+  // scripture_bible is a single {item, scripture_bible_filename} object (not a collection)
+  const sbList = Array.isArray(texts.scripture_bible) ? texts.scripture_bible : (texts.scripture_bible ? [texts.scripture_bible] : []);
+  for (const w of sbList) if (w?.scripture_bible_filename) R.read.push(res("read","pdf","PDF","Whole Bible","ScriptureEarth", asset(w.scripture_bible_filename)));
   const audio = media.audio || {};
   const chap = (books) => arr(books).reduce((n, b) => n + arr(b).length, 0);          // audio is {BOOK:[chapters]}
   const firstAudio = (books) => asset(first(arr(books)[0])?.book_filename);           // first book's first chapter
@@ -67,9 +69,12 @@ function resourcesFrom(detail) {
     }
   }
   for (const g of arr(links.GRN))       R.listen.push(res("listen","audio","MP3", g?.title || "GRN recordings","Global Recordings Network", g?.URL));
-  for (const j of arr(links.JesusFilm)) R.watch.push(res("watch","video","Video","JESUS Film", j?.organization || "Jesus Film Project", j?.URL));
-  for (const v of arr(links.YouTube))   R.watch.push(res("watch","video","Video", v?.title || "YouTube", v?.organization || "YouTube", v?.URL));
-  for (const v of arr(links["other_videos"])) R.watch.push(res("watch","video","Video", v?.title || "Video", v?.organization || "—", v?.URL));
+  // JesusFilm is an object of numeric-keyed items PLUS a nested `other_videos` list — flatten both
+  for (const it of arr(links.JesusFilm))
+    for (const v of (Array.isArray(it) ? it : [it]))
+      if (v?.URL) R.watch.push(res("watch","video","Video", v?.title || "JESUS Film", v?.organization || "Jesus Film Project", v.URL));
+  for (const v of arr(links.YouTube))   if (v?.URL) R.watch.push(res("watch","video","Video", v?.title || "YouTube", v?.organization || "YouTube", v.URL));
+  for (const v of arr(links["other_videos"])) if (v?.URL) R.watch.push(res("watch","video","Video", v?.title || "Video", v?.organization || "—", v.URL));
   for (const f of arr(links["Bible.is Gospel Film"])) R.watch.push(res("watch","video","Video","Bible.is Gospel Film","Faith Comes By Hearing", f?.URL));
   for (const b of arr(links["Bibles.org"])) R.read.push(res("read","web","Web", b?.version || b?.organization || "Bibles.org edition","Bibles.org", b?.URL));
   for (const e of arr(links.eBible))    R.read.push(res("read","web","Web", e?.title || "eBible edition","eBible.org", e?.URL));
