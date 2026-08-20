@@ -36,7 +36,7 @@ npm run preview              # serve dist/
 - `src/components/`, `src/layouts/`, `src/lib/` — card, switcher, base layout, UI helpers.
 - `public/` — static assets: `site.css`, `i18n.js` (client localizer), `favicon.ico`, `sil-logo.webp`,
   and **`i18n/*.json`** (see below). `search-index.json` is generated (git-ignored).
-- `functions/_middleware.js` + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
+- `functions/index.php.js` + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
 - `scripts/` — `extract.py` (`--source=dump|api` → content JSON), `extract_i18n.py`, `harvest/` (API client).
 - `content/`, `content-api/`, `data/`, `public/search-index.json` — **generated / local; git-ignored.**
 

@@ -10,7 +10,7 @@ One coherent Astro sample assembling every resolved decision, built from the rea
   Kekchi), country card grids, breadcrumbs, sticky TOC.
 - **Home = lean search-first D (15)** + `/browse` full grid; **design system "Calm" light (10)**.
 - **URLs (08):** vanity **`/language/<slug>/`** (4,054 slug pages, e.g. `kek-00000-s`; idx internal),
-  `/country/<CC>/`, `/`, `/browse/`. **`_redirects`** (65 lines, ≪ 2,100 cap) + **`functions/_middleware.js`**
+  `/country/<CC>/`, `/`, `/browse/`. **`_redirects`** (65 lines, ≪ 2,100 cap) + **`functions/index.php.js`**
   for query-string deep links.
 - **i18n (13/14):** single English shell + client localizer; chrome + names swap; **RTL**; and
   **i18n re-applied to dynamically-rendered search results** (verified: a result card localized to Spanish

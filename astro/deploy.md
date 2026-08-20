@@ -28,7 +28,7 @@ npx wrangler login
 ```bash
 npx wrangler pages deploy dist --project-name se-proto-en --branch main
 ```
-Wrangler uploads `dist/`, compiles `functions/_middleware.js`, and prints the deployment URL;
+Wrangler uploads `dist/`, compiles `functions/index.php.js`, and prints the deployment URL;
 **https://se-proto-en.pages.dev/** refreshes within ~30 s. (First-time only, if recreating the
 project: `npx wrangler pages project create se-proto-en --production-branch main`.)
 
