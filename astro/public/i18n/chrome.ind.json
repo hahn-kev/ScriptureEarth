@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Temukan Firman Tuhan",
+  "nav.languages": "Bahasa",
+  "nav.countries": "Negara",
+  "search.ph": "Cari berdasarkan bahasa, kode, atau negara…",
+
+  "home.eyebrow": "Kitab Suci dalam setiap bahasa",
+  "home.h1": "Temukan Firman Tuhan dalam bahasa Anda.",
+  "home.lead": "Temukan Kitab Suci untuk dibaca, didengarkan, ditonton, atau digunakan di ponsel Anda.",
+  "home.browseAll": "Jelajahi semua bahasa",
+  "home.featured": "Unggulan",
+  "home.startHere": "Mulai di sini",
+  "home.seeAll": "Lihat semua",
+  "results.heading": "Hasil",
+
+  "stats.languages": "bahasa",
+  "stats.read": "untuk dibaca",
+  "stats.listen": "untuk didengarkan",
+
+  "crumb.home": "Beranda",
+  "browse.crumb": "Jelajahi semua",
+  "catalog.eyebrow": "Katalog",
+  "browse.h2": "Semua bahasa",
+  "browse.eyebrow": "Jelajahi",
+  "facet.all": "Semua",
+
+  "pill.read": "Baca",
+  "pill.listen": "Dengar",
+  "pill.watch": "Tonton",
+  "pill.app": "Aplikasi",
+  "pill.buy": "Beli",
+
+  "group.read": "Baca",
+  "group.listen": "Dengar",
+  "group.watch": "Tonton",
+  "group.use": "Aplikasi & Cetak",
+
+  "country.eyebrow": "Negara",
+  "unit.languages": "bahasa",
+  "unit.countries": "negara",
+  "unit.entries": "entri",
+
+  "meta.iso": "ISO",
+  "meta.also": "Juga:",
+  "meta.catalogentry": "Entri katalog",
+  "detail.onthispage": "Di halaman ini",
+  "detail.noresources": "Belum ada sumber daya yang terdaftar untuk bahasa ini.",
+
+  "action.readonline": "Baca online",
+  "action.download": "Unduh",
+  "action.downloadpdf": "Unduh PDF",
+  "action.play": "Putar",
+  "action.watch": "Tonton",
+  "action.getapp": "Dapatkan aplikasi",
+  "action.order": "Pesan",
+  "action.openviewer": "Buka penampil",
+  "action.open": "Buka",
+
+  "footer.about": "Tentang",
+  "footer.ministry": "Pelayanan dari SIL Global",
+  "footer.note": "Versi statis dari situs penemuan ScriptureEarth."
+}

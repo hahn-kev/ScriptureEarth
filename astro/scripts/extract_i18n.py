@@ -33,6 +33,12 @@ REGISTRY = {
     "kor": {"label": "한국어",       "dir": "ltr", "bcp": "ko"},
     "rus": {"label": "Русский",    "dir": "ltr", "bcp": "ru"},
     "arb": {"label": "العربية",     "dir": "rtl", "bcp": "ar"},
+    # Chrome-only locales (no LN_ name table in the DB — language names fall back to English).
+    "ind": {"label": "Bahasa Indonesia", "dir": "ltr", "bcp": "id"},
+    "hin": {"label": "हिन्दी",       "dir": "ltr", "bcp": "hi"},
+    "swa": {"label": "Kiswahili",   "dir": "ltr", "bcp": "sw"},
+    "fil": {"label": "Filipino",    "dir": "ltr", "bcp": "fil"},
+    "fas": {"label": "فارسی",       "dir": "rtl", "bcp": "fa"},
 }
 
 db = sqlite3.connect(DB)

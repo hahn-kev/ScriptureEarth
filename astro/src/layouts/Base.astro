@@ -11,8 +11,9 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
        non-English visitor never sees an English flash. No service worker. -->
   <script is:inline>
     (function () {
-      var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar' };
-      var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb' };
+      var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
+      var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb', id:'ind', hi:'hin', sw:'swa', tl:'fil', fa:'fas' };
+      var RTL  = { arb:1, fas:1 };
       var q = new URLSearchParams(location.search).get('lang');
       var fromQuery = q && LOCS[q];
       var loc = fromQuery ? q
@@ -26,7 +27,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       window.__seLoc = loc;
       var el = document.documentElement;
       el.lang = LOCS[loc];
-      el.dir = (loc === 'arb') ? 'rtl' : 'ltr';
+      el.dir = RTL[loc] ? 'rtl' : 'ltr';
       if (loc !== 'eng') {
         el.setAttribute('data-i18n-pending', '1');
         // failsafe: never leave content hidden if the localizer fails to load
@@ -65,6 +66,11 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       <option value="kor">한국어</option>
       <option value="rus">Русский</option>
       <option value="arb">العربية</option>
+      <option value="ind">Bahasa Indonesia</option>
+      <option value="hin">हिन्दी</option>
+      <option value="swa">Kiswahili</option>
+      <option value="fil">Filipino</option>
+      <option value="fas">فارسی</option>
     </select>
   </div></header>
 

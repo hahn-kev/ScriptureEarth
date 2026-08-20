@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Hanapin ang Salita ng Diyos",
+  "nav.languages": "Mga Wika",
+  "nav.countries": "Mga Bansa",
+  "search.ph": "Maghanap ayon sa wika, code, o bansa…",
+
+  "home.eyebrow": "Kasulatan sa bawat wika",
+  "home.h1": "Hanapin ang Salita ng Diyos sa iyong wika.",
+  "home.lead": "Maghanap ng Kasulatan na mababasa, mapapakinggan, mapapanood, o magagamit sa iyong telepono.",
+  "home.browseAll": "I-browse ang lahat ng wika",
+  "home.featured": "Itinatampok",
+  "home.startHere": "Magsimula dito",
+  "home.seeAll": "Tingnan lahat",
+  "results.heading": "Mga Resulta",
+
+  "stats.languages": "mga wika",
+  "stats.read": "mababasa",
+  "stats.listen": "mapapakinggan",
+
+  "crumb.home": "Tahanan",
+  "browse.crumb": "I-browse lahat",
+  "catalog.eyebrow": "Ang katalogo",
+  "browse.h2": "Lahat ng wika",
+  "browse.eyebrow": "Mag-browse",
+  "facet.all": "Lahat",
+
+  "pill.read": "Basahin",
+  "pill.listen": "Pakinggan",
+  "pill.watch": "Panoorin",
+  "pill.app": "App",
+  "pill.buy": "Bilhin",
+
+  "group.read": "Basahin",
+  "group.listen": "Pakinggan",
+  "group.watch": "Panoorin",
+  "group.use": "Mga App at Print",
+
+  "country.eyebrow": "Bansa",
+  "unit.languages": "wika",
+  "unit.countries": "mga bansa",
+  "unit.entries": "mga entry",
+
+  "meta.iso": "ISO",
+  "meta.also": "Pati:",
+  "meta.catalogentry": "Entry sa katalogo",
+  "detail.onthispage": "Sa pahinang ito",
+  "detail.noresources": "Wala pang mga mapagkukunang nakalista para sa wikang ito.",
+
+  "action.readonline": "Basahin online",
+  "action.download": "I-download",
+  "action.downloadpdf": "I-download ang PDF",
+  "action.play": "I-play",
+  "action.watch": "Panoorin",
+  "action.getapp": "Kunin ang app",
+  "action.order": "Mag-order",
+  "action.openviewer": "Buksan ang viewer",
+  "action.open": "Buksan",
+
+  "footer.about": "Tungkol",
+  "footer.ministry": "Isang ministeryo ng SIL Global",
+  "footer.note": "Isang static na muling pagbuo ng ScriptureEarth discovery site."
+}

@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "Pata Neno la Mungu",
+  "nav.languages": "Lugha",
+  "nav.countries": "Nchi",
+  "search.ph": "Tafuta kwa lugha, msimbo, au nchi…",
+
+  "home.eyebrow": "Maandiko katika kila lugha",
+  "home.h1": "Pata Neno la Mungu katika lugha yako.",
+  "home.lead": "Pata Maandiko ya kusoma, kusikiliza, kutazama, au kutumia kwenye simu yako.",
+  "home.browseAll": "Vinjari lugha zote",
+  "home.featured": "Iliyoangaziwa",
+  "home.startHere": "Anza hapa",
+  "home.seeAll": "Ona zote",
+  "results.heading": "Matokeo",
+
+  "stats.languages": "lugha",
+  "stats.read": "za kusoma",
+  "stats.listen": "za kusikiliza",
+
+  "crumb.home": "Mwanzo",
+  "browse.crumb": "Vinjari zote",
+  "catalog.eyebrow": "Katalogi",
+  "browse.h2": "Lugha zote",
+  "browse.eyebrow": "Vinjari",
+  "facet.all": "Zote",
+
+  "pill.read": "Soma",
+  "pill.listen": "Sikiliza",
+  "pill.watch": "Tazama",
+  "pill.app": "Programu",
+  "pill.buy": "Nunua",
+
+  "group.read": "Soma",
+  "group.listen": "Sikiliza",
+  "group.watch": "Tazama",
+  "group.use": "Programu na Kuchapisha",
+
+  "country.eyebrow": "Nchi",
+  "unit.languages": "lugha",
+  "unit.countries": "nchi",
+  "unit.entries": "maingizo",
+
+  "meta.iso": "ISO",
+  "meta.also": "Pia:",
+  "meta.catalogentry": "Ingizo la katalogi",
+  "detail.onthispage": "Kwenye ukurasa huu",
+  "detail.noresources": "Bado hakuna rasilimali zilizoorodheshwa kwa lugha hii.",
+
+  "action.readonline": "Soma mtandaoni",
+  "action.download": "Pakua",
+  "action.downloadpdf": "Pakua PDF",
+  "action.play": "Cheza",
+  "action.watch": "Tazama",
+  "action.getapp": "Pata programu",
+  "action.order": "Agiza",
+  "action.openviewer": "Fungua kitazamaji",
+  "action.open": "Fungua",
+
+  "footer.about": "Kuhusu",
+  "footer.ministry": "Huduma ya SIL Global",
+  "footer.note": "Ujenzi upya tuli wa tovuti ya ugunduzi ya ScriptureEarth."
+}

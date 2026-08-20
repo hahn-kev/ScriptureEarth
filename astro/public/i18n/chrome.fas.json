@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "کلام خدا را بیابید",
+  "nav.languages": "زبان‌ها",
+  "nav.countries": "کشورها",
+  "search.ph": "جستجو بر اساس زبان، کد یا کشور…",
+
+  "home.eyebrow": "کتاب مقدس به هر زبان",
+  "home.h1": "کلام خدا را به زبان خود بیابید.",
+  "home.lead": "کتاب مقدس را برای خواندن، شنیدن، تماشا کردن یا استفاده در گوشی خود بیابید.",
+  "home.browseAll": "مرور همه زبان‌ها",
+  "home.featured": "برگزیده",
+  "home.startHere": "از اینجا شروع کنید",
+  "home.seeAll": "دیدن همه",
+  "results.heading": "نتایج",
+
+  "stats.languages": "زبان",
+  "stats.read": "برای خواندن",
+  "stats.listen": "برای شنیدن",
+
+  "crumb.home": "خانه",
+  "browse.crumb": "مرور همه",
+  "catalog.eyebrow": "فهرست",
+  "browse.h2": "همه زبان‌ها",
+  "browse.eyebrow": "مرور",
+  "facet.all": "همه",
+
+  "pill.read": "خواندن",
+  "pill.listen": "شنیدن",
+  "pill.watch": "تماشا",
+  "pill.app": "اپ",
+  "pill.buy": "خرید",
+
+  "group.read": "خواندن",
+  "group.listen": "شنیدن",
+  "group.watch": "تماشا",
+  "group.use": "اپ‌ها و چاپ",
+
+  "country.eyebrow": "کشور",
+  "unit.languages": "زبان",
+  "unit.countries": "کشور",
+  "unit.entries": "مورد",
+
+  "meta.iso": "ISO",
+  "meta.also": "همچنین:",
+  "meta.catalogentry": "مورد فهرست",
+  "detail.onthispage": "در این صفحه",
+  "detail.noresources": "هنوز هیچ منبعی برای این زبان فهرست نشده است.",
+
+  "action.readonline": "خواندن آنلاین",
+  "action.download": "دانلود",
+  "action.downloadpdf": "دانلود PDF",
+  "action.play": "پخش",
+  "action.watch": "تماشا",
+  "action.getapp": "دریافت اپ",
+  "action.order": "سفارش",
+  "action.openviewer": "باز کردن نمایشگر",
+  "action.open": "باز کردن",
+
+  "footer.about": "درباره",
+  "footer.ministry": "خدمتی از SIL Global",
+  "footer.note": "بازسازی ایستا از سایت کاوش ScriptureEarth."
+}

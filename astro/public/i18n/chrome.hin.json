@@ -1,0 +1,62 @@
+{
+  "brand.tagline": "परमेश्वर का वचन खोजें",
+  "nav.languages": "भाषाएँ",
+  "nav.countries": "देश",
+  "search.ph": "भाषा, कोड या देश से खोजें…",
+
+  "home.eyebrow": "हर भाषा में पवित्रशास्त्र",
+  "home.h1": "अपनी भाषा में परमेश्वर का वचन खोजें।",
+  "home.lead": "पढ़ने, सुनने, देखने या अपने फ़ोन पर उपयोग करने के लिए पवित्रशास्त्र खोजें।",
+  "home.browseAll": "सभी भाषाएँ देखें",
+  "home.featured": "विशेष",
+  "home.startHere": "यहाँ से शुरू करें",
+  "home.seeAll": "सभी देखें",
+  "results.heading": "परिणाम",
+
+  "stats.languages": "भाषाएँ",
+  "stats.read": "पढ़ने के लिए",
+  "stats.listen": "सुनने के लिए",
+
+  "crumb.home": "होम",
+  "browse.crumb": "सभी देखें",
+  "catalog.eyebrow": "सूची",
+  "browse.h2": "सभी भाषाएँ",
+  "browse.eyebrow": "ब्राउज़ करें",
+  "facet.all": "सभी",
+
+  "pill.read": "पढ़ें",
+  "pill.listen": "सुनें",
+  "pill.watch": "देखें",
+  "pill.app": "ऐप",
+  "pill.buy": "खरीदें",
+
+  "group.read": "पढ़ें",
+  "group.listen": "सुनें",
+  "group.watch": "देखें",
+  "group.use": "ऐप और प्रिंट",
+
+  "country.eyebrow": "देश",
+  "unit.languages": "भाषा(एँ)",
+  "unit.countries": "देश",
+  "unit.entries": "प्रविष्टियाँ",
+
+  "meta.iso": "ISO",
+  "meta.also": "साथ ही:",
+  "meta.catalogentry": "सूची प्रविष्टि",
+  "detail.onthispage": "इस पृष्ठ पर",
+  "detail.noresources": "इस भाषा के लिए अभी तक कोई संसाधन सूचीबद्ध नहीं है।",
+
+  "action.readonline": "ऑनलाइन पढ़ें",
+  "action.download": "डाउनलोड करें",
+  "action.downloadpdf": "PDF डाउनलोड करें",
+  "action.play": "चलाएँ",
+  "action.watch": "देखें",
+  "action.getapp": "ऐप प्राप्त करें",
+  "action.order": "ऑर्डर करें",
+  "action.openviewer": "व्यूअर खोलें",
+  "action.open": "खोलें",
+
+  "footer.about": "परिचय",
+  "footer.ministry": "SIL Global की एक सेवकाई",
+  "footer.note": "ScriptureEarth खोज साइट का एक स्थैतिक पुनर्निर्माण।"
+}
