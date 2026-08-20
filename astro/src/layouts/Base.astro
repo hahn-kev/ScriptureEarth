@@ -1,5 +1,6 @@
 ---
 import { I18N_VERSION } from '../lib/i18nVersion';
+import '../styles/site.css';   // bundled + minified + content-hashed by Astro
 interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
 const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 ---
@@ -42,7 +43,6 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
-  <link rel="stylesheet" href="/site.css" />
   <script>import '../scripts/i18n.js';</script>
 </head>
 <body>
