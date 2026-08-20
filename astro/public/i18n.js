@@ -45,9 +45,12 @@
     if (loc === 'eng') { toEnglish(root); return; }
     var c = cacheGet('se-chrome-' + loc), nm = cacheGet('se-names-' + loc);
     if (c && nm) { apply(c, nm, root); return; }
+    // Tolerate a missing names/chrome file (e.g. a locale with UI chrome but no name catalog):
+    // a 404 must not abort the whole localize — fall back to {} for that half.
+    var okjson = function (r) { return r.ok ? r.json() : {}; };
     Promise.all([
-      fetch('/i18n/chrome.' + loc + '.json').then(function (r) { return r.json(); }),
-      fetch('/i18n/names.' + loc + '.json').then(function (r) { return r.json(); })
+      fetch('/i18n/chrome.' + loc + '.json').then(okjson),
+      fetch('/i18n/names.' + loc + '.json').then(okjson)
     ]).then(function (a) {
       try { localStorage.setItem('se-chrome-' + loc, JSON.stringify(a[0])); localStorage.setItem('se-names-' + loc, JSON.stringify(a[1])); } catch (e) {}
       apply(a[0], a[1], root);
