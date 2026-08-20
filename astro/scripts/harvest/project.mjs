@@ -25,6 +25,8 @@ function slug(iso, rod, varc) {
 function res(group, kind, format, name, source, url) {
   return { group, kind, format, name, source, url: url || null, external: url ? /^https?:\/\//.test(url) : false, meta: {} };
 }
+const ASSET_BASE = "https://scriptureearth.org";
+const asset = (p) => !p ? null : /^https?:\/\//.test(p) ? p : `${ASSET_BASE}/${String(p).replace(/^\/+/, "")}`;
 
 function resourcesFrom(detail) {
   const R = { read: [], listen: [], watch: [], use: [] };
@@ -34,15 +36,23 @@ function resourcesFrom(detail) {
 
   // --- READ / LISTEN from media_se texts + audio (aggregate to one counted row) ---
   const texts = media.texts || {};
-  const nPdf = arr(texts.nt_pdf_media).length, oPdf = arr(texts.ot_pdf_media).length;
-  if (oPdf) R.read.push(res("read","pdf","PDF",`Old Testament — ${oPdf} book(s)`,"ScriptureEarth", null));
-  if (nPdf) R.read.push(res("read","pdf","PDF",`New Testament — ${nPdf} book(s)`,"ScriptureEarth", null));
+  const nt = texts.nt_pdf_media || {}, ot = texts.ot_pdf_media || {};
+  const nPdf = arr(nt).length, oPdf = arr(ot).length;
+  if (oPdf) R.read.push(res("read","pdf","PDF",`Old Testament — ${oPdf} book(s)`,"ScriptureEarth", asset(first(ot)?.book_filename)));
+  if (nPdf) R.read.push(res("read","pdf","PDF",`New Testament — ${nPdf} book(s)`,"ScriptureEarth", asset(first(nt)?.book_filename)));
+  for (const w of arr(texts.scripture_bible)) R.read.push(res("read","pdf","PDF", w?.item || "Whole Bible","ScriptureEarth", asset(w?.scripture_bible_filename)));
   const audio = media.audio || {};
-  const nAud = arr(audio.nt_audio_media).length, oAud = arr(audio.ot_audio_media).length;
-  if (oAud) R.listen.push(res("listen","audio","Audio",`Old Testament — ${oAud} chapter(s)`,"ScriptureEarth", null));
-  if (nAud) R.listen.push(res("listen","audio","Audio",`New Testament — ${nAud} chapter(s)`,"ScriptureEarth", null));
-  for (const p of arr(media.playlist_video)) R.watch.push(res("watch","video","Video", p?.title || "Video playlist","ScriptureEarth", p?.URL));
-  for (const s of arr(media.study))          R.use.push(res("use","app","Study", s?.title || "Study tool","—", s?.URL || s?.url));
+  const chap = (books) => arr(books).reduce((n, b) => n + arr(b).length, 0);          // audio is {BOOK:[chapters]}
+  const firstAudio = (books) => asset(first(arr(books)[0])?.book_filename);           // first book's first chapter
+  const nAud = chap(audio.nt_audio_media), oAud = chap(audio.ot_audio_media);
+  if (oAud) R.listen.push(res("listen","audio","Audio",`Old Testament — ${oAud} chapter(s)`,"ScriptureEarth", firstAudio(audio.ot_audio_media)));
+  if (nAud) R.listen.push(res("listen","audio","Audio",`New Testament — ${nAud} chapter(s)`,"ScriptureEarth", firstAudio(audio.nt_audio_media)));
+  // playlist videos (incl. "The JESUS Film") — title/filename keys, not title/URL
+  for (const p of arr(media.playlist_video))
+    R.watch.push(res("watch","video","Video", p?.playlist_video_title || "Video","ScriptureEarth", asset(p?.playlist_video_filename)));
+  const mp4 = arr(media.videos?.mp4);
+  if (mp4.length) R.watch.push(res("watch","video","Video",`Video — ${mp4.length} clip(s)`,"ScriptureEarth", asset(mp4[0]?.video)));
+  for (const s of arr(media.study))          R.use.push(res("use","app","Study", s?.title || "Study tool","—", asset(s?.URL || s?.url || s?.filename)));
 
   // --- general_links: the version-named providers (the useful detail) ---
   for (const y of arr(links.YouVersion))
@@ -67,6 +77,12 @@ function resourcesFrom(detail) {
   // --- apps ---
   for (const u of arr(apps.android_app)) R.use.push(res("use","app","App","Android App","Scripture App Builder", typeof u === "string" ? u : u?.apk || u?.URL));
   for (const u of arr(apps.iOS))         R.use.push(res("use","app","App","iOS Asset Package","Scripture App Builder", typeof u === "string" ? u : u?.asset || u?.URL));
+
+  // dedupe within each group (a version can appear under multiple provider sections)
+  for (const g of Object.keys(R)) {
+    const seen = new Set();
+    R[g] = R[g].filter(x => { const k = `${x.kind}|${x.name}|${x.url || ""}`; if (seen.has(k)) return false; seen.add(k); return true; });
+  }
   return R;
 }
 
