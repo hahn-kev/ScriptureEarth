@@ -1,0 +1,19 @@
+{
+  "name": "scriptureearth-astro",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "ScriptureEarth public discovery site — static Astro rebuild (PoC)",
+  "scripts": {
+    "extract": "python scripts/extract.py",
+    "extract:i18n": "python scripts/extract_i18n.py",
+    "prebuild": "python scripts/extract.py",
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "astro": "^5.13.0",
+    "minisearch": "^7.2.0"
+  }
+}

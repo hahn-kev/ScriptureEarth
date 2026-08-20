@@ -1,0 +1,32 @@
+---
+// Full "Browse all" grid behind variation D's lean home. Same full static grid as
+// variation A (server-rendered cards + client filter), reached from /home-d/.
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import LangCard from '../../components/LangCard.astro';
+import { PILLS } from '../../lib/ui';
+
+const langs = (await getCollection('languages')).map((l) => l.data)
+  .sort((a, b) => a.names.localized.eng.localeCompare(b.names.localized.eng));
+---
+<Base title="ScriptureEarth — Browse all languages">
+  <section class="block shell">
+    <nav class="crumbs"><a href="/">Home</a><span>›</span><span>Browse all</span></nav>
+    <div class="sec-head"><div><p class="eyebrow">The catalog</p><h2>All languages</h2></div>
+      <span class="facet-count tnum" id="count">{langs.length} languages</span></div>
+    <div class="facets" id="facets" aria-label="Filters">
+      <button class="facet on" type="button" data-r="all" data-i18n="all">All</button>
+      {PILLS.map((p) => <button class="facet" type="button" data-r={p.key} data-i18n={p.key}>{p.label}</button>)}
+    </div>
+    <div class="lang-grid" id="grid">{langs.map((d) => <LangCard d={d} />)}</div>
+  </section>
+  <script is:inline>
+    const fold=(s)=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
+    const grid=document.getElementById('grid'),cards=[...grid.children],count=document.getElementById('count');
+    let facet='all';
+    function apply(){ let n=0; for(const c of cards){ const okF=facet==='all'||(' '+c.dataset.r+' ').includes(' '+facet+' ');
+      if(okF){c.hidden=false;n++}else c.hidden=true; } count.textContent=n.toLocaleString()+' languages'; }
+    document.getElementById('facets').addEventListener('click',e=>{const b=e.target.closest('.facet');if(!b)return;
+      facet=b.dataset.r;document.querySelectorAll('#facets .facet').forEach(f=>f.classList.toggle('on',f===b));apply();});
+  </script>
+</Base>

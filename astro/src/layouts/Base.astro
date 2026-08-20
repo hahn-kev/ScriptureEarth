@@ -1,0 +1,71 @@
+---
+interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
+const { title, lang = 'en', dir = 'ltr' } = Astro.props;
+---
+<!doctype html>
+<html lang={lang} dir={dir}>
+<head>
+  <meta charset="utf-8" />
+  <!-- i18n rendering model (ticket 13): baked English is default; this synchronous
+       head script picks the locale and sets a hide-guard BEFORE paint so a cached
+       non-English visitor never sees an English flash. No service worker. -->
+  <script is:inline>
+    (function () {
+      var LOCS = { eng: 'en', spa: 'es', rus: 'ru', arb: 'ar' };
+      var BCP2 = { en: 'eng', es: 'spa', ru: 'rus', ar: 'arb' };
+      var q = new URLSearchParams(location.search).get('lang');
+      var loc = (q && LOCS[q]) ? q
+        : localStorage.getItem('se-loc')
+        || BCP2[(navigator.language || 'en').slice(0, 2).toLowerCase()]
+        || 'eng';
+      if (!LOCS[loc]) loc = 'eng';
+      window.__seLoc = loc;
+      var el = document.documentElement;
+      el.lang = LOCS[loc];
+      el.dir = (loc === 'arb') ? 'rtl' : 'ltr';
+      if (loc !== 'eng') {
+        el.setAttribute('data-i18n-pending', '1');
+        // failsafe: never leave content hidden if the localizer fails to load
+        setTimeout(function () { el.removeAttribute('data-i18n-pending'); }, 1500);
+      }
+    })();
+  </script>
+  <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}
+    .locale-pick{margin-inline-start:var(--s3);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--pill);color:var(--text);font:inherit;font-size:.86rem;font-weight:600;padding:.35rem .7rem;cursor:pointer}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <link rel="stylesheet" href="/site.css" />
+  <script is:inline src="/i18n.js" defer></script>
+</head>
+<body>
+  <div class="hairline"></div>
+  <header class="site"><div class="shell site-inner">
+    <a class="brand" href="/">
+      <img class="silmark" src="/sil-logo.webp" alt="SIL" width="80" height="34" />
+      <span class="lock"><span class="name">ScriptureEarth</span><span class="sub">Find God’s Word</span></span>
+    </a>
+    <nav class="main"><a href="/" aria-current="page" data-i18n="languages">Languages</a><a href="/#countries" data-i18n="countries">Countries</a></nav>
+    <form class="site-search" role="search" action="/">
+      <span class="mag" aria-hidden="true">⌕</span>
+      <input type="search" name="q" placeholder="Search language, code, country…" data-i18n-ph="search" />
+    </form>
+    <select class="locale-pick" id="locale-picker" aria-label="Language">
+      <option value="eng">English</option>
+      <option value="spa">Español</option>
+      <option value="rus">Русский</option>
+      <option value="arb">العربية</option>
+    </select>
+  </div></header>
+
+  <slot />
+
+  <footer class="site"><div class="shell">
+    <div class="fin">
+      <div class="fcol"><b>ScriptureEarth</b><a href="/">Find Scripture</a><a href="/#countries" data-i18n="countries">Countries</a></div>
+      <div class="fcol"><b>About</b><span class="muted">A ministry of SIL Global</span><span class="muted">Static rewrite prototype</span></div>
+    </div>
+    <div class="cc">Bake-off prototype · i18n localizer spike (ticket 14) · content from ScriptureEarth database snapshot.</div>
+  </div></footer>
+</body>
+</html>

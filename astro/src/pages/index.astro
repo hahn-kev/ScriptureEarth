@@ -1,0 +1,87 @@
+---
+// HOME — lean / search-first (variation D, chosen in ticket 15). Hero + prominent
+// live search + a few featured languages; the full "see everything" grid lives at
+// /browse/. Search-first because most users search; featured can later become a
+// simple paginated slice if we drop curation. Server-rendered featured => instant,
+// light first paint; the prebuilt index is fetched only when the user searches.
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+import LangCard from '../components/LangCard.astro';
+
+const langs = (await getCollection('languages')).map((l) => l.data);
+const rc = (d: any) => Object.values(d.resources).reduce((n: number, a: any) => n + a.length, 0);
+const featured = [...langs].sort((a, b) => rc(b) - rc(a)).slice(0, 12);
+const withRead = langs.filter((l) => l.availability.read).length;
+const withListen = langs.filter((l) => l.availability.listen).length;
+---
+<Base title="ScriptureEarth — Find God’s Word in your language">
+  <section class="hero shell"><div class="inner">
+    <p class="eyebrow">Scripture in every language</p>
+    <h1>Find God’s Word in your language.</h1>
+    <p class="lead">Search {langs.length.toLocaleString()} languages — to read, listen, watch, or use on your phone.</p>
+    <div class="searchbig" role="search"><span class="mag" aria-hidden="true">⌕</span>
+      <input id="q" type="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search" /></div>
+    <div class="stats">
+      <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span>languages</span></div>
+      <div class="stat"><b class="tnum">{withRead.toLocaleString()}</b><br /><span>to read</span></div>
+      <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span>to listen</span></div>
+    </div>
+    <p style="margin-top:1rem"><a href="/browse/">Browse all languages →</a></p>
+  </div></section>
+
+  <section class="block shell">
+    <div class="sec-head" id="rhead" hidden><div><p class="eyebrow">Results</p><h2><span id="rcount">0</span></h2></div></div>
+    <div class="lang-grid" id="results" hidden></div>
+
+    <div id="featured">
+      <div class="sec-head"><div><p class="eyebrow">Start here</p><h2>Featured</h2></div>
+        <a class="facet" href="/browse/">See all →</a></div>
+      <div class="lang-grid">{featured.map((d) => <LangCard d={d} />)}</div>
+    </div>
+  </section>
+
+  <script>
+    // Client search = MiniSearch over the prebuilt global index (ticket 07). Matches across ALL
+    // locale names + alt-names + iso + country (find regardless of UI locale); prefix + fuzzy.
+    import MiniSearch from 'minisearch';
+    const RL = { read:'Read', listen:'Listen', watch:'Watch', app:'App', buy:'Buy' };
+    const esc = (s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+    // diacritic-insensitive across scripts: strip Latin + Arabic diacritics, normalize alef/yaa/taa
+    const fold = (s)=>s.normalize('NFD')
+      .replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g,'')          // Latin + Arabic diacritics/harakat
+      .replace(/[\u0623\u0625\u0622]/g,'\u0627').replace(/[\u0649\u06cc]/g,'\u064a').replace(/\u0629/g,'\u0647') // alef/yaa/taa
+      .toLowerCase();
+    // strip apostrophe/glottal marks so "Q'eqchi'"/"K\ua78ciche\ua78c" tokenize as one word, then split CJK per-char
+    const tokenize = (text)=>{ const t=[]; (String(text).replace(/['\u2019\u02bc\u02bb\ua78c`]/g,'').match(/[\p{L}\p{N}]+/gu)||[]).forEach(w=>{
+      if (/[\u3400-\u9fff\uf900-\ufaff]/.test(w)) { for (const ch of w) t.push(ch); } else t.push(w); }); return t; };
+    const card = (r)=>`<a class="lang" href="/language/${r.slug}/"><div class="top"><span class="code">${esc(r.code)}</span>`+
+      `<span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>${r.where?`<div class="where">${esc(r.where)}</div>`:''}`+
+      `<div class="pills">${(r.r||[]).map(k=>`<span class="pill" data-r="${k}"><span class="dot"></span>${RL[k]}</span>`).join('')}</div></a>`;
+    const q=document.getElementById('q'), results=document.getElementById('results'),
+          rhead=document.getElementById('rhead'), rcount=document.getElementById('rcount'), featured=document.getElementById('featured');
+    let ms=null;
+    async function index(){
+      if (ms) return ms;
+      const data = await fetch('/search-index.json').then(r=>r.json());
+      // one pre-joined text field for indexing (all locale names + alt + iso + country); keep the rest
+      // as raw stored fields for rendering (so `r` stays an array — no extractField coercion).
+      data.forEach(d=>{ d._text=[d.nm, ...(d.nms||[]), ...(d.alt||[]), d.code, d.where].filter(Boolean).join(' '); });
+      ms = new MiniSearch({
+        idField:'idx', fields:['_text'],
+        storeFields:['idx','slug','code','nm','where','r'],
+        processTerm:(term)=>fold(term)||null, tokenize,
+      });
+      ms.addAll(data); return ms;
+    }
+    let t; q.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(async ()=>{
+      const term=q.value.trim();
+      if (!term) { results.hidden=rhead.hidden=true; featured.hidden=false; return; }
+      const engine = await index();
+      const hits = engine.search(term, { prefix:true, fuzzy:0.2, combineWith:'AND' }).slice(0,300);
+      results.innerHTML = hits.map(card).join('');
+      rcount.textContent = hits.length + ' languages';
+      featured.hidden=true; results.hidden=rhead.hidden=false;
+      window.__seApplyI18n && window.__seApplyI18n(results);   // localize dynamically-rendered cards
+    },120); });
+  </script>
+</Base>

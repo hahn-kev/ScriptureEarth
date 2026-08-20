@@ -1,0 +1,65 @@
+# ScriptureEarth — Cloudflare Pages _redirects  (ticket 08: legacy URL redirect map)
+# Slug strategy (B): the detail slug IS the legacy vanity string <iso>[-<rod>][-<var>],
+# so ~3,779 legacy per-entry Redirect 301 lines collapse to 3 placeholder rules.
+# Query-string deep links (?iso=/?name=/?idx=/?sortby=country&name=) can't be matched
+# here (_redirects is path-only) — they are handled by functions/_middleware.js.
+#
+# ---------------------------------------------------------------------------
+# L1  HTTP->HTTPS and www->apex are NOT expressible reliably in _redirects.
+#     Handle at the CF edge:  SSL/TLS -> "Always Use HTTPS" ON, plus one
+#     Redirect Rule / Bulk Redirect  www.scriptureearth.org/* -> apex (301).
+# ---------------------------------------------------------------------------
+#
+# === Precedence guards (MUST come before the /:iso vanity catch-all) =========
+# _redirects placeholders are NOT anchored regex; a bare /:iso matches ANY single
+# path segment — including top-level asset files and the real section dirs. These
+# exact/splat rules match first (first match wins) so /:iso can never shadow them.
+# NOTE for build team: any NEW top-level dotted asset added to public/ must get a
+# guard line here, OR move the bare /:iso rule into the Function (see REDIRECTS.md).
+
+# Real top-level routes (serve in place, 200 = rewrite-to-self, stops matching)
+/browse            /browse/                  301
+/browse/*          /browse/:splat            200
+/country/*         /country/:splat           200
+/language/*        /language/:splat          200
+/i18n/*            /i18n/:splat              200
+/pagefind/*        /pagefind/:splat          200
+
+# Known top-level static assets (contain '.'/'-', would otherwise be eaten by /:iso)
+/favicon.ico       /favicon.ico              200
+/site.css          /site.css                 200
+/i18n.js           /i18n.js                  200
+/search-index.json /search-index.json        200
+/sil-logo.webp     /sil-logo.webp            200
+
+# === L3/L4/L5  Locale homepages + localized alias index files -> / + ?lang= ==
+# Plain (no query) hits only; deep-link queries on these paths are caught by the
+# Function first. Target is "/" pending ticket-04 landing decision (flip to
+# /browse/ is a one-line change). /index.php stays 302 while landing is provisional.
+/index.php                  /                 302
+/00eng.php                  /?lang=eng        301
+/00spa.php                  /?lang=spa        301
+/00por.php                  /?lang=por        301
+/00fra.php                  /?lang=fra        301
+/00nld.php                  /?lang=nld        301
+/00deu.php                  /?lang=deu        301
+/00cmn.php                  /?lang=cmn        301
+/00kor.php                  /?lang=kor        301
+/00rus.php                  /?lang=rus        301
+/00arb.php                  /?lang=arb        301
+/00e-Escrituras_Indice.php  /?lang=spa        301
+/00d-Bijbel_Indice.php      /?lang=nld        301
+/00de-Sprachindex.php       /?lang=deu        301
+/00f-Ecritures_Indice.php   /?lang=fra        301
+/00i-Scripture_Index.php    /?lang=eng        301
+/00p-Escrituras_Indice.php  /?lang=por        301
+
+# === L2  Vanity short URLs -> language detail (3,779 legacy rows in 3 rules) ==
+# Most-specific first (2 dashes, then 1, then 0). The slug equals the old vanity
+# string, so this is an exact 1:1 mapping with no lookup. e.g.
+#   /acr-00000-a -> /language/acr-00000-a/   (34 legacy rows)
+#   /abt-3053    -> /language/abt-3053/       (175 legacy rows)
+#   /aaa         -> /language/aaa/            (3,570 legacy rows)
+/:iso-:rod-:var    /language/:iso-:rod-:var/  301
+/:iso-:rod         /language/:iso-:rod/       301
+/:iso              /language/:iso/            301
