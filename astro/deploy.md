@@ -1,45 +1,50 @@
-# One-off Cloudflare Pages deploy (Astro English PoC)
+# Deploy to Cloudflare Pages
 
-Throwaway prototype share — the **English-only** Astro build. `dist/` is **~4,303 files
-(~28 MB)**, comfortably under Cloudflare Pages' **20,000-file Free** limit, so no paid plan
-and no `PAGES_WRANGLER_MAJOR_VERSION` needed. (The 100k paid-plan concern only bites at the
-full 10-locale ~40k-page scale — see `../RESULTS.md`.)
+Live preview: **https://se-proto-en.pages.dev/** (project `se-proto-en`, already created).
 
-Direct upload via Wrangler — **no Git, no build-on-Cloudflare.** Run from this `astro/` dir.
+Direct upload via Wrangler — **no Git integration, no build-on-Cloudflare.** The build runs locally
+(it needs the DB or the API harvest), and only the finished `dist/` is uploaded. **Run everything from
+this `astro/` dir** so Wrangler picks up `functions/` alongside `dist/`.
+
+`dist/` is ~4,460 files (4,233 language pages + countries + home/browse/countries), well under the
+**20,000-file Free** limit — no paid plan needed.
 
 ## Steps
 
-**1. Clean rebuild** (→ ~4,303 files, light theme, favicon included; empties `dist/` of the
-Pagefind measurement leftovers):
+**1. Build** — pick the data source (same output schema either way):
 ```bash
-npm run build
+npm run build:api      # from the API harvest cache (scripts/harvest/data) — fresher, no buy links
+```
+```bash
+npm run build:dump     # from data/scripture.db — full parity (incl. buy links)
 ```
 
-**2. Authenticate** (one-time; opens a browser for Cloudflare OAuth):
+**2. Authenticate** — only if not already logged in (opens a browser for Cloudflare OAuth):
 ```bash
 npx wrangler login
 ```
 
-**3. Create the Pages project** (once):
-```bash
-npx wrangler pages project create se-proto-en --production-branch main
-```
-
-**4. Deploy the built folder:**
+**3. Deploy** (project exists → this just publishes a new production deployment):
 ```bash
 npx wrangler pages deploy dist --project-name se-proto-en --branch main
 ```
+Wrangler uploads `dist/`, compiles `functions/_middleware.js`, and prints the deployment URL;
+**https://se-proto-en.pages.dev/** refreshes within ~30 s. (First-time only, if recreating the
+project: `npx wrangler pages project create se-proto-en --production-branch main`.)
 
-Wrangler prints a public URL like `https://<hash>.se-proto-en.pages.dev` — the shareable link.
+## What ships alongside the pages
+- **`public/_redirects`** (in `dist/`) — legacy path redirects: `00<loc>.php` → `/?lang=<loc>`, and the
+  vanity `/‹iso›[-rod[-var]]` → `/language/‹slug›/` collapse (see `REDIRECTS.md`).
+- **`functions/_middleware.js`** — handles the legacy **query-string** deep links (`?iso=`, `?idx=`,
+  `?sortby=country`) that `_redirects` can't read. It only acts on `.php` paths; every other request
+  (index, pages, assets) falls straight through. *(It is still invoked per-request as a root middleware;
+  scope it to named `.php` function files if you want Functions off the static hot path.)*
 
 ## Notes
-- The URL is **public to anyone who has it** (ScriptureEarth catalog data — already public on
-  scriptureearth.org, so low sensitivity).
-- **Absolute paths + trailing-slash routing** work at the `pages.dev` root as-is (`/language/812/`
-  → `index.html`). No base-path config needed.
-- **Favicon fix:** `public/favicon.ico` (pulled from scriptureearth.org) + `<link rel="icon">` in
-  `src/layouts/Base.astro` — without it, `/favicon.ico` fell through to the SPA/index fallback and
-  re-shipped the 2.2 MB index page on every load. The canonical copy lives in `../shared/favicon.ico`.
-- **Re-deploy** later = just re-run step 4 (project already exists).
-- The **all-cards index page is 2.2 MB**; fine for a share, but pagination is a real to-do before
-  production (noted in `../RESULTS.md`).
+- The URL is **public to anyone who has it** (ScriptureEarth catalog data — already public upstream).
+- **Routing:** absolute paths + trailing slashes work at the `pages.dev` root as-is (`/language/hau/` →
+  `index.html`); no base-path config.
+- **Home is the lean search-first page**; the heavy full-catalog grid lives behind `/browse/`.
+- **Cache caveat:** `i18n.js` and `search-index.json` are unhashed `/public` assets, so returning
+  visitors may get cached copies until the production TODO (content-hash + immutable) lands.
+- **Re-deploy** later = re-run steps 1 + 3.
