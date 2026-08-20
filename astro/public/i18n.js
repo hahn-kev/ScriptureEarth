@@ -14,14 +14,21 @@
 
   function apply(chrome, names, root) {
     root = root || document;
+    // NB: capture baked() (the English original) BEFORE overwriting, on every node.
+    // Using `chrome[k] || baked(n)` would short-circuit and never record the original
+    // when a page loads directly in a non-English locale — then switching back to
+    // English would "restore" the current translated text. So call baked() first.
     root.querySelectorAll('[data-i18n]').forEach(function (n) {
-      n.textContent = (chrome && chrome[n.getAttribute('data-i18n')]) || baked(n);
+      var b = baked(n);
+      n.textContent = (chrome && chrome[n.getAttribute('data-i18n')]) || b;
     });
     root.querySelectorAll('[data-i18n-ph]').forEach(function (n) {
-      n.setAttribute('placeholder', (chrome && chrome[n.getAttribute('data-i18n-ph')]) || baked(n, 'placeholder'));
+      var b = baked(n, 'placeholder');
+      n.setAttribute('placeholder', (chrome && chrome[n.getAttribute('data-i18n-ph')]) || b);
     });
     root.querySelectorAll('[data-i18n-name]').forEach(function (n) {
-      n.textContent = (names && names[n.getAttribute('data-i18n-name')]) || baked(n);
+      var b = baked(n);
+      n.textContent = (names && names[n.getAttribute('data-i18n-name')]) || b;
     });
     document.documentElement.removeAttribute('data-i18n-pending');
   }

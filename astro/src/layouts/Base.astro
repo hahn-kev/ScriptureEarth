@@ -14,11 +14,15 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar' };
       var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb' };
       var q = new URLSearchParams(location.search).get('lang');
-      var loc = (q && LOCS[q]) ? q
+      var fromQuery = q && LOCS[q];
+      var loc = fromQuery ? q
         : localStorage.getItem('se-loc')
         || BCP2[(navigator.language || 'en').slice(0, 2).toLowerCase()]
         || 'eng';
       if (!LOCS[loc]) loc = 'eng';
+      // Persist a ?lang= choice so it survives navigation to plain (query-less) pages;
+      // otherwise the next page would fall back to navigator.language (usually English).
+      if (fromQuery) { try { localStorage.setItem('se-loc', loc); } catch (e) {} }
       window.__seLoc = loc;
       var el = document.documentElement;
       el.lang = LOCS[loc];
