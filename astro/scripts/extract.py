@@ -263,10 +263,9 @@ dump("countries.json", countries_out)
 dump("search-index.json", search)
 dump("messages.eng.json", messages)
 
-# stage the client search index into public/ (served + MiniSearch fetches it at /search-index.json)
-_pub = os.path.join(HERE, "..", "public")
-os.makedirs(_pub, exist_ok=True)
-with open(os.path.join(_pub, "search-index.json"), "w", encoding="utf-8") as fh:
-    json.dump(search, fh, ensure_ascii=False)
+# The client search index is staged into public/ as search-index.txt (a
+# compact delimited-text encoding, not plain JSON) by
+# scripts/build_search_index.mjs, which npm run extract chains after this
+# script — see that file for the encoding and why.
 
 print(f"done in {time.time()-t0:.1f}s  ({len(languages)} languages, {len(countries_out)} countries)", file=sys.stderr)

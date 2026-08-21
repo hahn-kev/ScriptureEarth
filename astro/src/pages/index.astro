@@ -45,6 +45,42 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     // locale names + alt-names + iso + country (find regardless of UI locale); prefix + fuzzy.
     import MiniSearch from 'minisearch';
     const RL = { read:'Read', listen:'Listen', watch:'Watch', app:'App', buy:'Buy' };
+    // Decodes public/search-index.txt — a columnar, delimited-text encoding
+    // (no `auto`, `where` derived from `cc`, `r` packed as a bitmask) that
+    // ships ~16% smaller (brotli) than a plain JSON array of the same
+    // records. Produced by scripts/build_search_index.mjs; this is that
+    // script's exact counterpart — see bench/attempts/combined-columnar-delimited-text/
+    // in the repo history for how the format was derived and measured.
+    const RECORD_SEP = '\x1f', ELEMENT_SEP = '\t', LINE_SEP = '\n';
+    const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
+    function decodeSearchIndex(raw: string){
+      const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] = raw.split(LINE_SEP);
+      const countries: Record<string, string> = {};
+      for (const entry of headerLine.split(RECORD_SEP)) {
+        const sepIdx = entry.indexOf(ELEMENT_SEP);
+        countries[entry.slice(0, sepIdx)] = entry.slice(sepIdx + 1);
+      }
+      const idxCol = idxLine.split(RECORD_SEP), codeCol = codeLine.split(RECORD_SEP),
+            slugCol = slugLine.split(RECORD_SEP), nmCol = nmLine.split(RECORD_SEP),
+            nmsCol = nmsLine.split(RECORD_SEP), altCol = altLine.split(RECORD_SEP),
+            ccCol = ccLine.split(RECORD_SEP), rCol = rLine.split(RECORD_SEP);
+      return idxCol.map((idxStr: string, i: number) => {
+        const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
+        const mask = Number(rCol[i]);
+        return {
+          idx: Number(idxStr),
+          slug: slugCol[i] === '' ? codeCol[i] : slugCol[i],
+          code: codeCol[i],
+          nm: nmCol[i],
+          nms: nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP),
+          alt: altCol[i] === '' ? [] : altCol[i].split(ELEMENT_SEP),
+          where: cc.map((c: string) => countries[c]).join(', '),
+          cc,
+          r: RIGHTS.filter((_, bit) => mask & (1 << bit)),
+          _text: '',
+        };
+      });
+    }
     const esc = (s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     // diacritic-insensitive across scripts: strip Latin + Arabic diacritics, normalize alef/yaa/taa
     const fold = (s)=>s.normalize('NFD')
@@ -61,10 +97,38 @@ const withListen = langs.filter((l) => l.availability.listen).length;
           rhead=document.getElementById('rhead'), rcount=document.getElementById('rcount'),
           featured=document.getElementById('featured'), heroStats=document.getElementById('hero-stats'),
           browseLink=document.getElementById('browse-link'), form=document.getElementById('hero-form');
+    // /search-index.txt is served with a hardcoded `Content-Encoding: br`
+    // (scripts/precompress_dist.mjs) rather than Cloudflare's normal
+    // per-client negotiated compression, so every client gets the same
+    // brotli bytes regardless of what it advertised in Accept-Encoding.
+    // Real browsers all support brotli decoding (universal since ~2017),
+    // but an unusual client (corporate proxy, odd WebView, an extension
+    // that rewrites encoding headers) could fail to decode it — that can
+    // surface either as a rejected fetch (e.g. Chrome's
+    // ERR_CONTENT_DECODING_FAILED) or, worse, as a *successful* fetch whose
+    // body is still-compressed garbage, so both a thrown error and a
+    // decoded result that doesn't look like real data trigger the fallback
+    // to /search-index.fallback.txt — the same content, plain, left to
+    // Cloudflare's normal negotiated compression.
+    async function loadSearchData(){
+      try {
+        const text = await fetch('/search-index.txt').then(r => {
+          if (!r.ok) throw new Error(`search-index.txt: HTTP ${r.status}`);
+          return r.text();
+        });
+        const data = decodeSearchIndex(text);
+        if (!Array.isArray(data) || data.length < 100) throw new Error('decoded search index looks wrong');
+        return data;
+      } catch (e) {
+        console.warn('falling back to uncompressed search index:', e);
+        const text = await fetch('/search-index.fallback.txt').then(r=>r.text());
+        return decodeSearchIndex(text);
+      }
+    }
     let ms=null;
     async function index(){
       if (ms) return ms;
-      const data = await fetch('/search-index.json').then(r=>r.json());
+      const data = await loadSearchData();
       // one pre-joined text field for indexing (all locale names + alt + iso + country); keep the rest
       // as raw stored fields for rendering (so `r` stays an array — no extractField coercion).
       data.forEach(d=>{ d._text=[d.nm, ...(d.nms||[]), ...(d.alt||[]), d.code, d.where].filter(Boolean).join(' '); });

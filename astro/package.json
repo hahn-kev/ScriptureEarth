@@ -5,7 +5,7 @@
   "type": "module",
   "description": "ScriptureEarth public discovery site — static Astro rebuild (PoC)",
   "scripts": {
-    "extract": "python scripts/extract.py",
+    "extract": "python scripts/extract.py && node scripts/build_search_index.mjs",
     "extract:api": "node scripts/harvest/project.mjs",
     "extract:i18n": "python scripts/extract_i18n.py",
     "dev": "astro dev",
@@ -13,12 +13,18 @@
     "build:dump": "npm run extract && astro build",
     "build:api": "npm run extract:api && astro build",
     "preview": "astro preview",
+    "predeploy": "node scripts/precompress_dist.mjs",
     "deploy": "npx wrangler pages deploy dist --project-name se-proto-en --branch main",
     "deploy:api": "npm run build:api && npm run deploy",
-    "deploy:dump": "npm run build:dump && npm run deploy"
+    "deploy:dump": "npm run build:dump && npm run deploy",
+    "bench:search-index": "node bench/harness.mjs"
   },
   "dependencies": {
     "astro": "^5.13.0",
     "minisearch": "^7.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.7",
+    "msgpackr": "^2.0.5"
   }
 }

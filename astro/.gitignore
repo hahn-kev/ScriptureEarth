@@ -1,0 +1,25 @@
+# deps & build output
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# generated content (regenerated from the DB/API by scripts/extract.py — see README)
+content/
+content-api/
+public/search-index.txt
+
+# local data snapshot (dev DB) + API harvest cache — never commit
+data/
+scripts/harvest/data/
+
+# bench/harness.mjs regenerates each attempt's data file(s) from
+# content/search-index.json on every run — never commit the output
+bench/attempts/*/data.*
+
+# NOTE: public/i18n/*.json ARE committed (code-owned translation catalogs, seeded once — ticket 09)
+
+# misc
+*.log
+npm-debug.log*
+.DS_Store

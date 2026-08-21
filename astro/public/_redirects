@@ -27,7 +27,8 @@
 
 # Known top-level static assets (contain '.'/'-', would otherwise be eaten by /:iso)
 /favicon.ico       /favicon.ico              200
-/search-index.json /search-index.json        200
+/search-index.txt          /search-index.txt          200
+/search-index.fallback.txt /search-index.fallback.txt 200
 /sil-logo.webp     /sil-logo.webp            200
 
 # === L3/L4/L5  Locale homepages + localized alias index files -> / + ?lang= ==
