@@ -1,0 +1,5 @@
+# Harvested data is local-only per the source-of-truth decision (PoC = git-ignored snapshot).
+data/
+# Never commit the API key or any local env.
+.env
+*.local
