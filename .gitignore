@@ -13,7 +13,6 @@ include/constants.php
 process.php
 
 # ignore pages
-.gitignore
 hamburger_1.php
 ProjectSettings.json
 VSWorkSpaceState.json
