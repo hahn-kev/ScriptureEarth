@@ -651,3 +651,27 @@ footer.site .cc {
     margin-inline-start: 0;
   }
 }
+
+/* Native cross-document View Transitions (MPA). No Astro router.
+   Chrome/Edge 126+, Safari 18.2+. Unsupported browsers just load pages. */
+@view-transition {
+  navigation: auto;
+}
+header.site {
+  view-transition-name: site-header;
+}
+footer.site {
+  view-transition-name: site-footer;
+}
+.hairline {
+  view-transition-name: site-hairline;
+}
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation-duration: 200ms;
+}
+@media (prefers-reduced-motion: reduce) {
+  @view-transition {
+    navigation: none;
+  }
+}
