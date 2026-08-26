@@ -1,4 +1,4 @@
-// Converts content/search-index.json (written by scripts/extract.py) into
+// Converts content/search-index.json (written by scripts/extract.mjs) into
 // public/search-index.txt: a columnar, delimited-text encoding that ships
 // ~16% smaller (brotli) than the plain JSON array it replaces. See
 // bench/attempts/combined-columnar-delimited-text/ for how this was
@@ -9,7 +9,7 @@
 // to that attempt's load.mjs) since it needs to run in the browser, not Node.
 //
 // Run as part of `npm run extract` (see package.json) — always after
-// extract.py, since it reads that script's output.
+// extract.mjs, since it reads that script's output.
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';

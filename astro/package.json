@@ -5,9 +5,9 @@
   "type": "module",
   "description": "ScriptureEarth public discovery site — static Astro rebuild (PoC)",
   "scripts": {
-    "extract": "python scripts/extract.py && node scripts/build_search_index.mjs",
+    "extract": "node scripts/extract.mjs && node scripts/build_search_index.mjs",
     "extract:api": "node scripts/harvest/project.mjs",
-    "extract:i18n": "python scripts/extract_i18n.py",
+    "extract:i18n": "node scripts/extract_i18n.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "build:dump": "npm run extract && astro build",
