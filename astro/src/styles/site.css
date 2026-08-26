@@ -93,6 +93,8 @@ section.block{padding-block:var(--s7)}
 .res-row .fmt{font-family:var(--mono);font-size:.74rem;text-transform:uppercase;letter-spacing:.03em;color:var(--muted);border:1px solid var(--border);border-radius:5px;padding:.1rem .4rem;flex:0 0 auto}
 .res-row .rr-name{font-weight:600;color:var(--text)} .res-row .rr-src{color:var(--muted);font-size:.85rem}
 .res-row .act{margin-inline-start:auto;display:inline-flex;gap:.35rem;align-items:center;font-weight:600;font-size:.88rem;flex:0 0 auto}
+.res-clips{margin:0 var(--s5) var(--s3);}
+.res-clips summary{cursor:pointer;font-size:.85rem;font-weight:600;color:var(--muted);padding:var(--s2) 0;}
 .with-side{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:var(--s7);align-items:start}
 aside.side{position:sticky;top:5rem;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:var(--s5);box-shadow:var(--shadow-sm)}
 aside.side h4{margin:0 0 var(--s3);font-size:.82rem;text-transform:uppercase;letter-spacing:.08em;color:var(--muted)}

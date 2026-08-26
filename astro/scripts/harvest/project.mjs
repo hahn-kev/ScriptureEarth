@@ -7,6 +7,7 @@
 //   SE_HARVEST=/path node project.mjs
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
+import { loadPlaylistClips } from "../playlistTxt.mjs";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
 const HARVEST = process.env.SE_HARVEST || path.join(HERE, "data");
@@ -22,13 +23,18 @@ function slug(iso, rod, varc) {
   if (rod && rod !== "00000") return `${iso}-${rod}`.toLowerCase();
   return String(iso).toLowerCase();
 }
-function res(group, kind, format, name, source, url) {
-  return { group, kind, format, name, source, url: url || null, external: url ? /^https?:\/\//.test(url) : false, meta: {} };
+function res(group, kind, format, name, source, url, meta = {}) {
+  const cleaned = {};
+  for (const [k, v] of Object.entries(meta)) {
+    if (v !== null && v !== undefined && v !== "") cleaned[k] = v;
+  }
+  return { group, kind, format, name, source, url: url || null, external: url ? /^https?:\/\//.test(url) : false, meta: cleaned };
 }
 const ASSET_BASE = "https://scriptureearth.org";
 const asset = (p) => !p ? null : /^https?:\/\//.test(p) ? p : `${ASSET_BASE}/${String(p).replace(/^\/+/, "")}`;
+const PLAYLIST_CACHE = path.join(HERE, "..", "..", "data", "playlist-txt-cache");
 
-function resourcesFrom(detail) {
+async function resourcesFrom(detail, iso) {
   const R = { read: [], listen: [], watch: [], use: [] };
   const media = first(detail?.media)?.relationships || {};
   const links = first(detail?.links)?.relationships || {};
@@ -50,8 +56,18 @@ function resourcesFrom(detail) {
   if (oAud) R.listen.push(res("listen","audio","Audio",`Old Testament — ${oAud} chapter(s)`,"ScriptureEarth", firstAudio(audio.ot_audio_media)));
   if (nAud) R.listen.push(res("listen","audio","Audio",`New Testament — ${nAud} chapter(s)`,"ScriptureEarth", firstAudio(audio.nt_audio_media)));
   // playlist videos (incl. "The JESUS Film") — title/filename keys, not title/URL
-  for (const p of arr(media.playlist_video))
-    R.watch.push(res("watch","video","Video", p?.playlist_video_title || "Video","ScriptureEarth", asset(p?.playlist_video_filename)));
+  for (const p of arr(media.playlist_video)) {
+    const filename = p?.playlist_video_filename;
+    const clips = filename ? await loadPlaylistClips({ iso, filename, cacheDir: PLAYLIST_CACHE }) : [];
+    const firstClip = clips[0];
+    R.watch.push(res(
+      "watch", "video", "Video",
+      p?.playlist_video_title || "Video",
+      "ScriptureEarth",
+      firstClip ? firstClip.url : null,
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: filename },
+    ));
+  }
   const mp4 = arr(media.videos?.mp4);
   if (mp4.length) R.watch.push(res("watch","video","Video",`Video — ${mp4.length} clip(s)`,"ScriptureEarth", asset(mp4[0]?.video)));
   for (const s of arr(media.study))          R.use.push(res("use","app","Study", s?.title || "Study tool","—", asset(s?.URL || s?.url || s?.filename)));
@@ -117,7 +133,7 @@ async function main() {
       || (rec0?.relationships?.iso_query_string || "").match(/iso=([^&]+)/)?.[1] || "";
     const idx = e.idx, rod = e.rod || "00000", varc = e.variantCode || "";
     const sl = slug(iso, rod, varc);
-    const R = resourcesFrom(e.detail || {});
+    const R = await resourcesFrom(e.detail || {}, iso);
     const avail = availabilityFrom(e.availability || {}, R);
     const countries = (e.countryCodes || []).map((c, i) => ({ code: c, name_eng: (e.countries || [])[i] || c }));
     // all-locale names for cross-locale search (records.php language_name)

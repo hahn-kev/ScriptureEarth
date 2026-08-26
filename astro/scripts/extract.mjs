@@ -5,6 +5,7 @@ import { mkdirSync, writeFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { loadPlaylistClips } from './playlistTxt.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DB = process.env.SE_DB || path.join(HERE, '..', 'data', 'scripture.db');
@@ -113,7 +114,10 @@ const buy = groupByIdx(q('SELECT * FROM buy'));
 const study = groupByIdx(q('SELECT * FROM study'));
 const ebible = groupByIdx(q('SELECT ISO_ROD_index, homeDomain, translationId, title FROM eBible_list'));
 const plAud = groupByIdx(q('SELECT ISO_ROD_index, PlaylistAudioTitle FROM PlaylistAudio'));
-const plVid = groupByIdx(q('SELECT ISO_ROD_index, PlaylistVideoTitle FROM PlaylistVideo'));
+const plVidRows = q('SELECT ISO, ISO_ROD_index, PlaylistVideoTitle, PlaylistVideoFilename, PlaylistVideoDownload FROM PlaylistVideo');
+const plVid = groupByIdx(plVidRows);
+const PLAYLIST_CACHE = path.join(HERE, '..', 'data', 'playlist-txt-cache');
+const playlistClips = new Map();
 
 function resolve(p) {
   if (!p) return [null, true];
@@ -197,7 +201,17 @@ function buildResources(idx, _iso, _flags) {
     R.watch.push(res('watch', 'video', 'Video', nm, w.organization || '—', u, ext));
   }
   for (const p of at(plVid, idx)) {
-    R.watch.push(res('watch', 'video', 'Video', p.PlaylistVideoTitle || 'Video playlist', 'ScriptureEarth', null, false));
+    if (Number(p.PlaylistVideoDownload) === 1) continue;
+    const clips = playlistClips.get(`${p.ISO}\t${p.PlaylistVideoFilename}`) || [];
+    const first = clips[0];
+    R.watch.push(res(
+      'watch', 'video', 'Video',
+      p.PlaylistVideoTitle || 'Video playlist',
+      'ScriptureEarth',
+      first ? first.url : null,
+      first ? /^https?:/.test(first.url) : false,
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: p.PlaylistVideoFilename },
+    ));
   }
   for (const l of at(links, idx)) {
     if (l.BibleIsGospelFilm) {
@@ -236,6 +250,38 @@ function availability(_idx, f, R) {
 const FLAGCOLS = ['OT_PDF', 'NT_PDF', 'OT_Audio', 'NT_Audio', 'links', 'other_titles', 'watch', 'buy', 'study',
   'viewer', 'CellPhone', 'BibleIs', 'BibleIsGospelFilm', 'YouVersion', 'Bibles_org',
   'PlaylistAudio', 'PlaylistVideo', 'SAB', 'eBible', 'GRN'];
+
+async function poolMap(items, concurrency, fn) {
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      await fn(items[i]);
+    }
+  }
+  const n = Math.min(concurrency, items.length);
+  if (n === 0) return;
+  await Promise.all(Array.from({ length: n }, () => worker()));
+}
+
+{
+  const seen = new Set();
+  const pairs = [];
+  for (const r of plVidRows) {
+    if (Number(r.PlaylistVideoDownload) === 1) continue;
+    const iso = r.ISO;
+    const filename = r.PlaylistVideoFilename;
+    if (!iso || !filename) continue;
+    const key = `${iso}\t${filename}`;
+    if (seen.has(key)) continue;
+    seen.add(key);
+    pairs.push({ iso, filename, key });
+  }
+  console.error(`fetching ${pairs.length} playlist txt files...`);
+  await poolMap(pairs, 12, async (p) => {
+    playlistClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE }));
+  });
+}
 
 const languages = [];
 const search = [];

@@ -64,7 +64,7 @@ const withListen = langs.filter((l) => l.availability.listen).length;
             slugCol = slugLine.split(RECORD_SEP), nmCol = nmLine.split(RECORD_SEP),
             nmsCol = nmsLine.split(RECORD_SEP), altCol = altLine.split(RECORD_SEP),
             ccCol = ccLine.split(RECORD_SEP), rCol = rLine.split(RECORD_SEP);
-      return idxCol.map((idxStr: string, i: number) => {
+      const data = idxCol.map((idxStr: string, i: number) => {
         const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
         const mask = Number(rCol[i]);
         return {
@@ -80,6 +80,7 @@ const withListen = langs.filter((l) => l.availability.listen).length;
           _text: '',
         };
       });
+      return { countries, data };
     }
     const esc = (s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
     // diacritic-insensitive across scripts: strip Latin + Arabic diacritics, normalize alef/yaa/taa
@@ -116,9 +117,9 @@ const withListen = langs.filter((l) => l.availability.listen).length;
           if (!r.ok) throw new Error(`search-index.txt: HTTP ${r.status}`);
           return r.text();
         });
-        const data = decodeSearchIndex(text);
-        if (!Array.isArray(data) || data.length < 100) throw new Error('decoded search index looks wrong');
-        return data;
+        const decoded = decodeSearchIndex(text);
+        if (!Array.isArray(decoded.data) || decoded.data.length < 100) throw new Error('decoded search index looks wrong');
+        return decoded;
       } catch (e) {
         console.warn('falling back to uncompressed search index:', e);
         const text = await fetch('/search-index.fallback.txt').then(r=>r.text());
@@ -126,9 +127,10 @@ const withListen = langs.filter((l) => l.availability.listen).length;
       }
     }
     let ms=null;
+    let countryByFoldedName = new Map();
     async function index(){
       if (ms) return ms;
-      const data = await loadSearchData();
+      const { data, countries } = await loadSearchData();
       // one pre-joined text field for indexing (all locale names + alt + iso + country); keep the rest
       // as raw stored fields for rendering (so `r` stays an array — no extractField coercion).
       data.forEach(d=>{ d._text=[d.nm, ...(d.nms||[]), ...(d.alt||[]), d.code, d.where].filter(Boolean).join(' '); });
@@ -137,28 +139,49 @@ const withListen = langs.filter((l) => l.availability.listen).length;
         storeFields:['idx','slug','code','nm','where','r'],
         processTerm:(term)=>fold(term)||null, tokenize,
       });
-      ms.addAll(data); return ms;
+      ms.addAll(data);
+      ms._seRecords = data;
+      countryByFoldedName = new Map();
+      for (const [code, name] of Object.entries(countries)) {
+        const k = fold(String(name));
+        const list = countryByFoldedName.get(k);
+        if (list) list.push(code);
+        else countryByFoldedName.set(k, [code]);
+      }
+      return ms;
     }
     // when searching, show ONLY the results (hide stats + browse + featured) so results are front-and-centre on mobile
     function setSearching(on){
       [heroStats, browseLink, featured].forEach(el=>{ if(el) el.hidden=on; });
       results.hidden = rhead.hidden = !on;
     }
+    function syncQueryUrl(term){
+      const want = term ? `/?q=${encodeURIComponent(term)}` : '/';
+      if (location.pathname + location.search !== want) history.replaceState(null, '', want);
+    }
     async function search(term){
-      if (!term) { setSearching(false); return []; }
+      const t = String(term || '').trim();
+      if (!t) { setSearching(false); syncQueryUrl(''); return []; }
       const engine = await index();
-      const hits = engine.search(term, { prefix:true, fuzzy:0.2, combineWith:'AND' }).slice(0,300);
+      const codes = countryByFoldedName.get(fold(t));
+      const hits = (codes && codes.length)
+        ? engine._seRecords.filter(d => (d.cc||[]).some(c => codes.includes(c))).sort((a,b) => a.nm.localeCompare(b.nm))
+        : engine.search(t, { prefix:true, fuzzy:0.2, combineWith:'AND' }).slice(0,300);
       results.innerHTML = hits.map(card).join('');
       rcount.textContent = hits.length;
       setSearching(true);
       window.__seApplyI18n && window.__seApplyI18n(results);   // localize dynamically-rendered cards
+      syncQueryUrl(t);
       return hits;
     }
     let t; q.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>search(q.value.trim()), 120); });
-    // Enter / mobile "search" key → open the first result
-    form.addEventListener('submit', async (e)=>{ e.preventDefault();
-      const hits = await search(q.value.trim());
-      if (hits[0]) location.href = `/language/${hits[0].slug}/`;
-    });
+    form.addEventListener('submit', (e)=>{ e.preventDefault(); search(q.value.trim()); });
+    const initial = new URLSearchParams(location.search).get('q');
+    if (initial) {
+      q.value = initial;
+      const headerQ = document.querySelector('header input[name="q"]');
+      if (headerQ) headerQ.value = initial;
+    }
+    if (initial && initial.trim()) search(initial.trim());
   </script>
 </Base>
