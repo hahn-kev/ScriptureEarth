@@ -10,7 +10,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { ISO639_ALPHA2 } from "./iso639_alpha2.mjs";
-import { jsonDump } from "./json_dump.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SLDR = process.env.SLDR_DIR || "C:\\dev\\sldr\\sldr";
@@ -86,6 +85,6 @@ for (const [idx, iso] of Object.entries(idx2iso)) {
 }
 
 const p = path.join(OUT, "autonyms.json");
-writeFileSync(p, jsonDump(out), "utf8");
+writeFileSync(p, JSON.stringify(out), "utf8");
 const kb = Math.floor(statSync(p).size / 1024) || 1;
 console.error(`autonyms.json: ${Object.keys(out).length}/${Object.keys(idx2iso).length} idx covered  (${kb} KB)`);

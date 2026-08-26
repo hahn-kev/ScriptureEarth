@@ -5,7 +5,6 @@ import { mkdirSync, writeFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
-import { jsonDump } from './json_dump.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DB = process.env.SE_DB || path.join(HERE, '..', 'data', 'scripture.db');
@@ -333,7 +332,7 @@ const messages = { locale: 'eng', language_code: 'en', direction: 'ltr', name: '
 
 function dump(name, obj) {
   const p = path.join(OUT, name);
-  writeFileSync(p, jsonDump(obj), 'utf8');
+  writeFileSync(p, JSON.stringify(obj), 'utf8');
   const count = Array.isArray(obj) ? obj.length : Object.keys(obj.messages ?? obj).length;
   const kb = Math.floor(statSync(p).size / 1024);
   console.error(`  ${name.padEnd(22)} ${String(count).padStart(6)}  ${kb} KB`);

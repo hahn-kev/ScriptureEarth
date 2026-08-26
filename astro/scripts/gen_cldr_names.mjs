@@ -13,7 +13,6 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { DatabaseSync } from "node:sqlite";
 import { ISO639_ALPHA2 } from "./iso639_alpha2.mjs";
-import { jsonDump } from "./json_dump.mjs";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const DB = process.env.SE_DB || path.join(__dirname, "..", "data", "scripture.db");
@@ -45,7 +44,7 @@ console.error(`idx->iso: ${Object.keys(idx2iso).length} entries`);
 
 function dump(name, obj) {
   const p = path.join(OUT, name);
-  writeFileSync(p, jsonDump(obj), "utf8");
+  writeFileSync(p, JSON.stringify(obj), "utf8");
   const kb = Math.floor(statSync(p).size / 1024) || 1;
   console.error(`  ${name.padEnd(18)} ${String(Object.keys(obj).length).padStart(5)} names  ${kb} KB`);
 }
