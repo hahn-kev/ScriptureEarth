@@ -1,17 +1,12 @@
 ---
-// Reusable language card for the home variations (ticket 15). Same markup the
-// baseline index uses, extracted so B/C/D share it. i18n hooks preserved.
 import { PILLS } from '../lib/ui';
+
 interface Props { d: any; }
 const { d } = Astro.props;
 const where = d.countries.map((c: any) => c.name_eng).join(', ');
+const rights = Object.keys(d.availability).filter((k) => d.availability[k]).join(' ');
 ---
-<a class="lang" href={`/language/${d.identity.slug}/`}
-   data-nm={d.names.localized.eng.toLowerCase()}
-   data-code={d.identity.iso}
-   data-alt={d.names.alt_names.join('|').toLowerCase()}
-   data-where={where.toLowerCase()}
-   data-r={Object.keys(d.availability).filter((k) => d.availability[k]).join(' ')}>
+<a class="lang" href={`/language/${d.identity.slug}/`} data-r={rights}>
   <div class="top"><span class="code">{d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
   {where && <div class="where">{where}</div>}
   <div class="pills">{PILLS.filter((p) => d.availability[p.key]).map((p) => (

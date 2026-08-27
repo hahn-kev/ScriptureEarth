@@ -1,16 +1,11 @@
 ---
-// HOME — lean / search-first (variation D, chosen in ticket 15). Hero + prominent
-// live search + a few featured languages; the full "see everything" grid lives at
-// /browse/. Search-first because most users search; featured can later become a
-// simple paginated slice if we drop curation. Server-rendered featured => instant,
-// light first paint; the prebuilt index is fetched only when the user searches.
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
 import LangCard from '../components/LangCard.astro';
 
 const langs = (await getCollection('languages')).map((l) => l.data);
-const rc = (d: any) => Object.values(d.resources).reduce((n: number, a: any) => n + a.length, 0);
-const featured = [...langs].sort((a, b) => rc(b) - rc(a)).slice(0, 12);
+const resourceCount = (d: any) => Object.values(d.resources).reduce((n: number, a: any) => n + a.length, 0);
+const featured = [...langs].sort((a, b) => resourceCount(b) - resourceCount(a)).slice(0, 12);
 const withRead = langs.filter((l) => l.availability.read).length;
 const withListen = langs.filter((l) => l.availability.listen).length;
 ---
@@ -19,14 +14,16 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     <p class="eyebrow" data-i18n="home.eyebrow">Scripture in every language</p>
     <h1 data-i18n="home.h1">Find God’s Word in your language.</h1>
     <p class="lead" data-i18n="home.lead">Find Scripture to read, listen, watch, or use on your phone.</p>
-    <form class="searchbig" role="search" id="hero-form"><span class="mag" aria-hidden="true">⌕</span>
-      <input id="q" type="search" enterkeyhint="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search.ph" /></form>
+    <form class="searchbig" role="search" id="hero-form">
+      <span class="mag" aria-hidden="true">⌕</span>
+      <input id="q" type="search" enterkeyhint="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search.ph" />
+    </form>
     <div class="stats" id="hero-stats">
       <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span data-i18n="stats.languages">languages</span></div>
       <div class="stat"><b class="tnum">{withRead.toLocaleString()}</b><br /><span data-i18n="stats.read">to read</span></div>
       <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span data-i18n="stats.listen">to listen</span></div>
     </div>
-    <p style="margin-top:1rem" id="browse-link"><a href="/browse/"><span data-i18n="home.browseAll">Browse all languages</span> →</a></p>
+    <p class="hero-more" id="browse-link"><a href="/browse/"><span data-i18n="home.browseAll">Browse all languages</span> →</a></p>
   </div></section>
 
   <section class="block shell">
@@ -40,148 +37,5 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     </div>
   </section>
 
-  <script>
-    // Client search = MiniSearch over the prebuilt global index (ticket 07). Matches across ALL
-    // locale names + alt-names + iso + country (find regardless of UI locale); prefix + fuzzy.
-    import MiniSearch from 'minisearch';
-    const RL = { read:'Read', listen:'Listen', watch:'Watch', app:'App', buy:'Buy' };
-    // Decodes public/search-index.txt — a columnar, delimited-text encoding
-    // (no `auto`, `where` derived from `cc`, `r` packed as a bitmask) that
-    // ships ~16% smaller (brotli) than a plain JSON array of the same
-    // records. Produced by scripts/build_search_index.mjs; this is that
-    // script's exact counterpart — see bench/attempts/combined-columnar-delimited-text/
-    // in the repo history for how the format was derived and measured.
-    const RECORD_SEP = '\x1f', ELEMENT_SEP = '\t', LINE_SEP = '\n';
-    const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
-    function decodeSearchIndex(raw: string){
-      const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] = raw.split(LINE_SEP);
-      const countries: Record<string, string> = {};
-      for (const entry of headerLine.split(RECORD_SEP)) {
-        const sepIdx = entry.indexOf(ELEMENT_SEP);
-        countries[entry.slice(0, sepIdx)] = entry.slice(sepIdx + 1);
-      }
-      const idxCol = idxLine.split(RECORD_SEP), codeCol = codeLine.split(RECORD_SEP),
-            slugCol = slugLine.split(RECORD_SEP), nmCol = nmLine.split(RECORD_SEP),
-            nmsCol = nmsLine.split(RECORD_SEP), altCol = altLine.split(RECORD_SEP),
-            ccCol = ccLine.split(RECORD_SEP), rCol = rLine.split(RECORD_SEP);
-      const data = idxCol.map((idxStr: string, i: number) => {
-        const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
-        const mask = Number(rCol[i]);
-        return {
-          idx: Number(idxStr),
-          slug: slugCol[i] === '' ? codeCol[i] : slugCol[i],
-          code: codeCol[i],
-          nm: nmCol[i],
-          nms: nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP),
-          alt: altCol[i] === '' ? [] : altCol[i].split(ELEMENT_SEP),
-          where: cc.map((c: string) => countries[c]).join(', '),
-          cc,
-          r: RIGHTS.filter((_, bit) => mask & (1 << bit)),
-          _text: '',
-        };
-      });
-      return { countries, data };
-    }
-    const esc = (s)=>String(s||'').replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-    // diacritic-insensitive across scripts: strip Latin + Arabic diacritics, normalize alef/yaa/taa
-    const fold = (s)=>s.normalize('NFD')
-      .replace(/[\u0300-\u036f\u064b-\u065f\u0670]/g,'')          // Latin + Arabic diacritics/harakat
-      .replace(/[\u0623\u0625\u0622]/g,'\u0627').replace(/[\u0649\u06cc]/g,'\u064a').replace(/\u0629/g,'\u0647') // alef/yaa/taa
-      .toLowerCase();
-    // strip apostrophe/glottal marks so "Q'eqchi'"/"K\ua78ciche\ua78c" tokenize as one word, then split CJK per-char
-    const tokenize = (text)=>{ const t=[]; (String(text).replace(/['\u2019\u02bc\u02bb\ua78c`]/g,'').match(/[\p{L}\p{N}]+/gu)||[]).forEach(w=>{
-      if (/[\u3400-\u9fff\uf900-\ufaff]/.test(w)) { for (const ch of w) t.push(ch); } else t.push(w); }); return t; };
-    const card = (r)=>`<a class="lang" href="/language/${r.slug}/"><div class="top"><span class="code">${esc(r.code)}</span>`+
-      `<span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>${r.where?`<div class="where">${esc(r.where)}</div>`:''}`+
-      `<div class="pills">${(r.r||[]).map(k=>`<span class="pill" data-r="${k}"><span class="dot"></span><span data-i18n="pill.${k}">${RL[k]}</span></span>`).join('')}</div></a>`;
-    const q=document.getElementById('q'), results=document.getElementById('results'),
-          rhead=document.getElementById('rhead'), rcount=document.getElementById('rcount'),
-          featured=document.getElementById('featured'), heroStats=document.getElementById('hero-stats'),
-          browseLink=document.getElementById('browse-link'), form=document.getElementById('hero-form');
-    // /search-index.txt is served with a hardcoded `Content-Encoding: br`
-    // (scripts/precompress_dist.mjs) rather than Cloudflare's normal
-    // per-client negotiated compression, so every client gets the same
-    // brotli bytes regardless of what it advertised in Accept-Encoding.
-    // Real browsers all support brotli decoding (universal since ~2017),
-    // but an unusual client (corporate proxy, odd WebView, an extension
-    // that rewrites encoding headers) could fail to decode it — that can
-    // surface either as a rejected fetch (e.g. Chrome's
-    // ERR_CONTENT_DECODING_FAILED) or, worse, as a *successful* fetch whose
-    // body is still-compressed garbage, so both a thrown error and a
-    // decoded result that doesn't look like real data trigger the fallback
-    // to /search-index.fallback.txt — the same content, plain, left to
-    // Cloudflare's normal negotiated compression.
-    async function loadSearchData(){
-      try {
-        const text = await fetch('/search-index.txt').then(r => {
-          if (!r.ok) throw new Error(`search-index.txt: HTTP ${r.status}`);
-          return r.text();
-        });
-        const decoded = decodeSearchIndex(text);
-        if (!Array.isArray(decoded.data) || decoded.data.length < 100) throw new Error('decoded search index looks wrong');
-        return decoded;
-      } catch (e) {
-        console.warn('falling back to uncompressed search index:', e);
-        const text = await fetch('/search-index.fallback.txt').then(r=>r.text());
-        return decodeSearchIndex(text);
-      }
-    }
-    let ms=null;
-    let countryByFoldedName = new Map();
-    async function index(){
-      if (ms) return ms;
-      const { data, countries } = await loadSearchData();
-      // one pre-joined text field for indexing (all locale names + alt + iso + country); keep the rest
-      // as raw stored fields for rendering (so `r` stays an array — no extractField coercion).
-      data.forEach(d=>{ d._text=[d.nm, ...(d.nms||[]), ...(d.alt||[]), d.code, d.where].filter(Boolean).join(' '); });
-      ms = new MiniSearch({
-        idField:'idx', fields:['_text'],
-        storeFields:['idx','slug','code','nm','where','r'],
-        processTerm:(term)=>fold(term)||null, tokenize,
-      });
-      ms.addAll(data);
-      ms._seRecords = data;
-      countryByFoldedName = new Map();
-      for (const [code, name] of Object.entries(countries)) {
-        const k = fold(String(name));
-        const list = countryByFoldedName.get(k);
-        if (list) list.push(code);
-        else countryByFoldedName.set(k, [code]);
-      }
-      return ms;
-    }
-    // when searching, show ONLY the results (hide stats + browse + featured) so results are front-and-centre on mobile
-    function setSearching(on){
-      [heroStats, browseLink, featured].forEach(el=>{ if(el) el.hidden=on; });
-      results.hidden = rhead.hidden = !on;
-    }
-    function syncQueryUrl(term){
-      const want = term ? `/?q=${encodeURIComponent(term)}` : '/';
-      if (location.pathname + location.search !== want) history.replaceState(null, '', want);
-    }
-    async function search(term){
-      const t = String(term || '').trim();
-      if (!t) { setSearching(false); syncQueryUrl(''); return []; }
-      const engine = await index();
-      const codes = countryByFoldedName.get(fold(t));
-      const hits = (codes && codes.length)
-        ? engine._seRecords.filter(d => (d.cc||[]).some(c => codes.includes(c))).sort((a,b) => a.nm.localeCompare(b.nm))
-        : engine.search(t, { prefix:true, fuzzy:0.2, combineWith:'AND' }).slice(0,300);
-      results.innerHTML = hits.map(card).join('');
-      rcount.textContent = hits.length;
-      setSearching(true);
-      window.__seApplyI18n && window.__seApplyI18n(results);   // localize dynamically-rendered cards
-      syncQueryUrl(t);
-      return hits;
-    }
-    let t; q.addEventListener('input', ()=>{ clearTimeout(t); t=setTimeout(()=>search(q.value.trim()), 120); });
-    form.addEventListener('submit', (e)=>{ e.preventDefault(); search(q.value.trim()); });
-    const initial = new URLSearchParams(location.search).get('q');
-    if (initial) {
-      q.value = initial;
-      const headerQ = document.querySelector('header input[name="q"]');
-      if (headerQ) headerQ.value = initial;
-    }
-    if (initial && initial.trim()) search(initial.trim());
-  </script>
+  <script>import '../scripts/search.js';</script>
 </Base>

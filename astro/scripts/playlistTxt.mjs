@@ -2,8 +2,14 @@
 import { readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 import path from 'node:path';
 
+export function playlistBasename(filename) {
+  const s = String(filename || "").trim().replace(/\\/g, "/");
+  const i = s.lastIndexOf("/");
+  return i >= 0 ? s.slice(i + 1) : s;
+}
+
 export function playlistTxtUrl(iso, filename) {
-  return `https://scriptureearth.org/data/${iso}/video/${filename}`;
+  return `https://scriptureearth.org/data/${iso}/video/${playlistBasename(filename)}`;
 }
 
 export function parsePlaylistTxt(text) {
@@ -24,8 +30,9 @@ export function parsePlaylistTxt(text) {
 }
 
 export async function loadPlaylistClips({ iso, filename, cacheDir }) {
-  if (!iso || !filename || !cacheDir) return [];
-  const cachePath = path.join(cacheDir, iso, filename);
+  const name = playlistBasename(filename);
+  if (!iso || !name || !cacheDir) return [];
+  const cachePath = path.join(cacheDir, iso, name);
   try {
     return parsePlaylistTxt(readFileSync(cachePath, 'utf8'));
   } catch {

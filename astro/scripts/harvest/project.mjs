@@ -7,7 +7,7 @@
 //   SE_HARVEST=/path node project.mjs
 import { readFile, writeFile, mkdir } from "node:fs/promises";
 import path from "node:path";
-import { loadPlaylistClips } from "../playlistTxt.mjs";
+import { loadPlaylistClips, playlistBasename } from "../playlistTxt.mjs";
 
 const HERE = path.dirname(new URL(import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1"));
 const HARVEST = process.env.SE_HARVEST || path.join(HERE, "data");
@@ -33,6 +33,25 @@ function res(group, kind, format, name, source, url, meta = {}) {
 const ASSET_BASE = "https://scriptureearth.org";
 const asset = (p) => !p ? null : /^https?:\/\//.test(p) ? p : `${ASSET_BASE}/${String(p).replace(/^\/+/, "")}`;
 const PLAYLIST_CACHE = path.join(HERE, "..", "..", "data", "playlist-txt-cache");
+function isPlaylistDownload(p) {
+  const dl = p?.PlaylistVideoDownload;
+  if (dl === 1 || dl === "1" || dl === "download") return true;
+  return /download/i.test(playlistBasename(p?.playlist_video_filename));
+}
+
+async function poolMap(items, concurrency, fn) {
+  let next = 0;
+  async function worker() {
+    while (next < items.length) {
+      const i = next++;
+      await fn(items[i]);
+    }
+  }
+  const n = Math.min(concurrency, items.length);
+  if (n === 0) return;
+  await Promise.all(Array.from({ length: n }, () => worker()));
+}
+
 
 async function resourcesFrom(detail, iso) {
   const R = { read: [], listen: [], watch: [], use: [] };
@@ -57,6 +76,7 @@ async function resourcesFrom(detail, iso) {
   if (nAud) R.listen.push(res("listen","audio","Audio",`New Testament — ${nAud} chapter(s)`,"ScriptureEarth", firstAudio(audio.nt_audio_media)));
   // playlist videos (incl. "The JESUS Film") — title/filename keys, not title/URL
   for (const p of arr(media.playlist_video)) {
+    if (isPlaylistDownload(p)) continue;
     const filename = p?.playlist_video_filename;
     const clips = filename ? await loadPlaylistClips({ iso, filename, cacheDir: PLAYLIST_CACHE }) : [];
     const firstClip = clips[0];
@@ -65,7 +85,7 @@ async function resourcesFrom(detail, iso) {
       p?.playlist_video_title || "Video",
       "ScriptureEarth",
       firstClip ? firstClip.url : null,
-      { clips: clips.length > 1 ? clips : undefined, playlistFile: filename },
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: filename ? playlistBasename(filename) : undefined },
     ));
   }
   const mp4 = arr(media.videos?.mp4);
@@ -126,7 +146,27 @@ async function main() {
   const poc = JSON.parse(await readFile(path.join(HARVEST, "poc-english.json"), "utf8"));
   const languages = [], search = [], byCountry = {};
 
+  const seenPl = new Set();
+  const playlistPairs = [];
   for (const e of poc) {
+    const rec0 = first(e.detail?.record);
+    const iso = e.iso || rec0?.attributes?.iso
+      || (rec0?.relationships?.iso_query_string || "").match(/iso=([^&]+)/)?.[1] || "";
+    const media = first(e.detail?.media)?.relationships || {};
+    for (const p of arr(media.playlist_video)) {
+      if (isPlaylistDownload(p)) continue;
+      const filename = p?.playlist_video_filename;
+      if (!iso || !filename) continue;
+      const key = `${iso}\t${playlistBasename(filename)}`;
+      if (seenPl.has(key)) continue;
+      seenPl.add(key);
+      playlistPairs.push({ iso, filename });
+    }
+  }
+  console.error(`fetching ${playlistPairs.length} playlist txt files...`);
+  await poolMap(playlistPairs, 12, (p) => loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE }));
+  for (const e of poc) {
+
     // iso: harvest stored it from relationships (undefined); fall back to the record's attributes / iso_query
     const rec0 = first(e.detail?.record);
     const iso = e.iso || rec0?.attributes?.iso

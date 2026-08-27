@@ -1,6 +1,4 @@
 ---
-// Full "Browse all" grid behind variation D's lean home. Same full static grid as
-// variation A (server-rendered cards + client filter), reached from /home-d/.
 import { getCollection } from 'astro:content';
 import Base from '../../layouts/Base.astro';
 import LangCard from '../../components/LangCard.astro';
@@ -20,13 +18,5 @@ const langs = (await getCollection('languages')).map((l) => l.data)
     </div>
     <div class="lang-grid" id="grid">{langs.map((d) => <LangCard d={d} />)}</div>
   </section>
-  <script is:inline>
-    const fold=(s)=>s.normalize('NFD').replace(/[̀-ͯ]/g,'').toLowerCase();
-    const grid=document.getElementById('grid'),cards=[...grid.children],count=document.getElementById('count');
-    let facet='all';
-    function apply(){ let n=0; for(const c of cards){ const okF=facet==='all'||(' '+c.dataset.r+' ').includes(' '+facet+' ');
-      if(okF){c.hidden=false;n++}else c.hidden=true; } count.textContent=n.toLocaleString(); }
-    document.getElementById('facets').addEventListener('click',e=>{const b=e.target.closest('.facet');if(!b)return;
-      facet=b.dataset.r;document.querySelectorAll('#facets .facet').forEach(f=>f.classList.toggle('on',f===b));apply();});
-  </script>
+  <script>import '../../scripts/browse.js';</script>
 </Base>

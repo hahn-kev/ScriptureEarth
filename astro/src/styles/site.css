@@ -200,6 +200,18 @@ nav.main a[aria-current="page"] {
   width: 100%;
   outline: none;
 }
+.locale-pick {
+  margin-inline-start: var(--s3);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: var(--pill);
+  color: var(--text);
+  font: inherit;
+  font-size: 0.86rem;
+  font-weight: 600;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
 section.block {
   padding-block: var(--s7);
 }
@@ -231,6 +243,9 @@ section.block {
   color: var(--muted);
   max-width: 52ch;
   margin: 0 0 var(--s5);
+}
+.hero-more {
+  margin-top: 1rem;
 }
 .searchbig {
   display: flex;
@@ -485,6 +500,10 @@ section.block {
   height: 10px;
   border-radius: 50%;
 }
+.rg-head .lead-dot[data-r="read"] { background: var(--r-read); }
+.rg-head .lead-dot[data-r="listen"] { background: var(--r-listen); }
+.rg-head .lead-dot[data-r="watch"] { background: var(--r-watch); }
+.rg-head .lead-dot[data-r="use"] { background: var(--r-app); }
 .rg-head h3 {
   font-size: 1.05rem;
 }
@@ -562,6 +581,9 @@ aside.side h4 {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: var(--muted);
+}
+aside.side .toc + h4 {
+  margin-top: 1.5rem;
 }
 aside.side .toc {
   display: flex;

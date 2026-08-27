@@ -1,6 +1,8 @@
 ---
+import locales from '../../public/i18n/locales.json';
 import { I18N_VERSION } from '../lib/i18nVersion';
-import '../styles/site.css';   // bundled + minified + content-hashed by Astro
+import '../styles/site.css';
+
 interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
 const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 ---
@@ -8,38 +10,30 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
 <html lang={lang} dir={dir}>
 <head>
   <meta charset="utf-8" />
-  <!-- i18n rendering model (ticket 13): baked English is default; this synchronous
-       head script picks the locale and sets a hide-guard BEFORE paint so a cached
-       non-English visitor never sees an English flash. No service worker. -->
-  <script is:inline define:vars={{ i18nVer: I18N_VERSION }}>
+  <!-- Pick locale before paint so a cached non-English visitor never flashes English. -->
+  <script is:inline define:vars={{ i18nVer: I18N_VERSION, locales }}>
     (function () {
-      window.__seI18nVer = i18nVer;   // consumed by the bundled localizer to bust catalog fetches
-      var LOCS = { eng:'en', spa:'es', por:'pt', fra:'fr', nld:'nl', deu:'de', cmn:'zh', kor:'ko', rus:'ru', arb:'ar', ind:'id', hin:'hi', swa:'sw', fil:'fil', fas:'fa' };
-      var BCP2 = { en:'eng', es:'spa', pt:'por', fr:'fra', nl:'nld', de:'deu', zh:'cmn', ko:'kor', ru:'rus', ar:'arb', id:'ind', hi:'hin', sw:'swa', tl:'fil', fa:'fas' };
-      var RTL  = { arb:1, fas:1 };
+      window.__seI18nVer = i18nVer;
+      var bcp = { tl: 'fil' };
+      for (var code in locales) bcp[locales[code].bcp] = code;
       var q = new URLSearchParams(location.search).get('lang');
-      var fromQuery = q && LOCS[q];
-      var loc = fromQuery ? q
+      var loc = (q && locales[q]) ? q
         : localStorage.getItem('se-loc')
-        || BCP2[(navigator.language || 'en').slice(0, 2).toLowerCase()]
+        || bcp[(navigator.language || 'en').slice(0, 2).toLowerCase()]
         || 'eng';
-      if (!LOCS[loc]) loc = 'eng';
-      // Persist a ?lang= choice so it survives navigation to plain (query-less) pages;
-      // otherwise the next page would fall back to navigator.language (usually English).
-      if (fromQuery) { try { localStorage.setItem('se-loc', loc); } catch (e) {} }
+      if (!locales[loc]) loc = 'eng';
+      if (q && locales[q]) { try { localStorage.setItem('se-loc', loc); } catch (e) {} }
       window.__seLoc = loc;
       var el = document.documentElement;
-      el.lang = LOCS[loc];
-      el.dir = RTL[loc] ? 'rtl' : 'ltr';
+      el.lang = locales[loc].bcp;
+      el.dir = locales[loc].dir;
       if (loc !== 'eng') {
         el.setAttribute('data-i18n-pending', '1');
-        // failsafe: never leave content hidden if the localizer fails to load
         setTimeout(function () { el.removeAttribute('data-i18n-pending'); }, 1500);
       }
     })();
   </script>
-  <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}
-    .locale-pick{margin-inline-start:var(--s3);background:var(--surface-2);border:1px solid var(--border);border-radius:var(--pill);color:var(--text);font:inherit;font-size:.86rem;font-weight:600;padding:.35rem .7rem;cursor:pointer}</style>
+  <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
   <link rel="icon" href="/favicon.ico" sizes="any" />
@@ -58,21 +52,9 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       <input type="search" name="q" placeholder="Search by language, code, or country…" data-i18n-ph="search.ph" />
     </form>
     <select class="locale-pick" id="locale-picker" aria-label="Language">
-      <option value="eng">English</option>
-      <option value="spa">Español</option>
-      <option value="por">Português</option>
-      <option value="fra">Français</option>
-      <option value="nld">Nederlands</option>
-      <option value="deu">Deutsch</option>
-      <option value="cmn">中文</option>
-      <option value="kor">한국어</option>
-      <option value="rus">Русский</option>
-      <option value="arb">العربية</option>
-      <option value="ind">Bahasa Indonesia</option>
-      <option value="hin">हिन्दी</option>
-      <option value="swa">Kiswahili</option>
-      <option value="fil">Filipino</option>
-      <option value="fas">فارسی</option>
+      {Object.entries(locales).map(([code, meta]) => (
+        <option value={code}>{meta.label}</option>
+      ))}
     </select>
   </div></header>
 

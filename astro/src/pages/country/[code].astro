@@ -5,19 +5,24 @@ import LangCard from '../../components/LangCard.astro';
 
 export async function getStaticPaths() {
   const countries = await getCollection('countries');
-  return countries.map((c) => ({ params: { code: c.data.code }, props: { d: c.data } }));
+  const byIdx = new Map((await getCollection('languages')).map((l) => [l.data.idx, l.data]));
+  return countries.map((c) => {
+    const list = c.data.language_idxs
+      .map((i: number) => byIdx.get(i))
+      .filter(Boolean)
+      .sort((a: any, b: any) => a.names.localized.eng.localeCompare(b.names.localized.eng));
+    return { params: { code: c.data.code }, props: { d: c.data, list } };
+  });
 }
-const { d } = Astro.props;
-const all = (await getCollection('languages')).map(l => l.data);
-const byIdx = new Map(all.map(l => [l.idx, l]));
-const list = d.language_idxs.map(i => byIdx.get(i)).filter(Boolean).sort((a,b) => a.names.localized.eng.localeCompare(b.names.localized.eng));
+
+const { d, list } = Astro.props;
 ---
 <Base title={`${d.name.eng} — ScriptureEarth`}>
   <section class="block shell">
     <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><a href="/countries/" data-i18n="nav.countries">Countries</a><span>›</span><span>{d.name.eng}</span></nav>
     <div class="sec-head"><div><p class="eyebrow" data-i18n="country.eyebrow">Country</p><h2>{d.name.eng}</h2></div><span class="facet-count"><span class="tnum">{d.languages.length}</span> <span data-i18n="unit.languages">language(s)</span></span></div>
     <div class="lang-grid">
-      {list.map((lang) => <LangCard d={lang} />)}
+      {list.map((lang: any) => <LangCard d={lang} />)}
     </div>
   </section>
 </Base>

@@ -1,0 +1,30 @@
+---
+import { actionLabel, actionSlug } from '../lib/ui';
+
+interface Props { group: string; r: any; }
+const { group, r } = Astro.props;
+const clips = group === 'watch' && Array.isArray(r.meta?.clips) && r.meta.clips.length > 1 ? r.meta.clips : null;
+const blank = group === 'watch' || r.external;
+---
+<div class="res-row">
+  <span class="fmt">{r.format}</span>
+  <div>
+    <div class="rr-name">{r.name}</div>
+    {r.source && <div class="rr-src">{r.source}</div>}
+  </div>
+  {r.url
+    ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
+    : <span class="act muted">—</span>}
+</div>
+{clips && (
+  <details class="res-clips">
+    <summary>{clips.length} clips</summary>
+    {clips.map((c: any) => (
+      <div class="res-row">
+        <span class="fmt">Clip</span>
+        <div><div class="rr-name">{c.title}</div></div>
+        <a class="act" href={c.url} target="_blank" rel="noopener noreferrer">Watch →</a>
+      </div>
+    ))}
+  </details>
+)}

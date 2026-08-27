@@ -1,29 +1,47 @@
-// Shared presentation logic for the bake-off (Astro copy). Mirrors the design
-// system's res-group / pill vocabulary. Kept engine-neutral in spirit so the
-// Hugo/Statiq templates reproduce identical output.
 export const GROUPS = [
-  { key: 'read',   label: 'Read',          color: 'var(--r-read)' },
-  { key: 'listen', label: 'Listen',        color: 'var(--r-listen)' },
-  { key: 'watch',  label: 'Watch',         color: 'var(--r-watch)' },
-  { key: 'use',    label: 'Apps & Print',  color: 'var(--r-app)' },
+  { key: 'read', label: 'Read' },
+  { key: 'listen', label: 'Listen' },
+  { key: 'watch', label: 'Watch' },
+  { key: 'use', label: 'Apps & Print' },
 ] as const;
 
 export const PILLS = [
-  { key: 'read', label: 'Read' }, { key: 'listen', label: 'Listen' },
-  { key: 'watch', label: 'Watch' }, { key: 'app', label: 'App' }, { key: 'buy', label: 'Buy' },
-];
+  { key: 'read', label: 'Read' },
+  { key: 'listen', label: 'Listen' },
+  { key: 'watch', label: 'Watch' },
+  { key: 'app', label: 'App' },
+  { key: 'buy', label: 'Buy' },
+] as const;
 
-export function actionLabel(group: string, kind: string): string {
-  if (group === 'read')   return kind === 'pdf' ? 'Download PDF' : kind === 'viewer' ? 'Open viewer' : 'Read online';
-  if (group === 'listen') return kind === 'audio' ? 'Play' : 'Download';
-  if (group === 'watch')  return 'Watch';
-  if (group === 'use')    return kind === 'buy' ? 'Order' : kind === 'app' ? 'Get app' : 'Open';
-  return 'Open';
+const ACTIONS: Record<string, Record<string, { label: string; slug: string }>> = {
+  read: {
+    pdf: { label: 'Download PDF', slug: 'action.downloadpdf' },
+    viewer: { label: 'Open viewer', slug: 'action.openviewer' },
+    _: { label: 'Read online', slug: 'action.readonline' },
+  },
+  listen: {
+    audio: { label: 'Play', slug: 'action.play' },
+    _: { label: 'Download', slug: 'action.download' },
+  },
+  watch: {
+    _: { label: 'Watch', slug: 'action.watch' },
+  },
+  use: {
+    buy: { label: 'Order', slug: 'action.order' },
+    app: { label: 'Get app', slug: 'action.getapp' },
+    _: { label: 'Open', slug: 'action.open' },
+  },
+};
+
+function action(group: string, kind: string) {
+  const g = ACTIONS[group];
+  return (g && (g[kind] || g._)) || { label: 'Open', slug: 'action.open' };
 }
-export function actionSlug(group: string, kind: string): string {
-  if (group === 'read')   return kind === 'pdf' ? 'action.downloadpdf' : kind === 'viewer' ? 'action.openviewer' : 'action.readonline';
-  if (group === 'listen') return kind === 'audio' ? 'action.play' : 'action.download';
-  if (group === 'watch')  return 'action.watch';
-  if (group === 'use')    return kind === 'buy' ? 'action.order' : kind === 'app' ? 'action.getapp' : 'action.open';
-  return 'action.open';
+
+export function actionLabel(group: string, kind: string) {
+  return action(group, kind).label;
+}
+
+export function actionSlug(group: string, kind: string) {
+  return action(group, kind).slug;
 }
