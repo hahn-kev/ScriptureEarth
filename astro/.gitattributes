@@ -1,0 +1,4 @@
+# The awk converter is run via `awk -f`; CRLF breaks awk parsing on some builds.
+# Keep it (and the build scripts it's driven by) LF regardless of core.autocrlf.
+scripts/mysql2sqlite.awk text eol=lf
+scripts/*.mjs text eol=lf

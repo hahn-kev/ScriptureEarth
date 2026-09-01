@@ -13,11 +13,15 @@ Catalog of languages and countries with scripture resources (read / listen / wat
 **Static SSG, no adapter, no SSR.** Astro Content Layer loads two JSON arrays. English is the source of truth; locale catalogs swap chrome and names in the browser.
 
 ```
-dump (data/scripture.db) ── extract.py ──┐
-                                         ├─► content/{languages,countries}.json ─► Astro pages
-API harvest cache ── harvest/project.mjs ┘
-                                         └─► content/search-index.json ─► build_search_index.mjs ─► public/search-index.txt
+API dump endpoint ─ fetch_dump.mjs ─► data/scripture.sql ─ convert_dump.mjs ─► data/scripture.db ─┐
+  (SE_KEY auth)                          (mysql2sqlite.awk + node:sqlite)                          │
+                                                                     dump (data/scripture.db) ── extract.mjs ──┐
+                                                                                                              ├─► content/{languages,countries}.json ─► Astro pages
+                                             API harvest cache ── harvest/project.mjs (DEPRECATED) ────────────┘
+                                                                                                              └─► content/search-index.json ─► build_search_index.mjs ─► public/search-index.txt
 ```
+
+**Source of truth = the SQLite snapshot** (`data/scripture.db`), produced from a downloaded `mysqldump` (`fetch_dump.mjs` → `convert_dump.mjs`; see `scripts/README-dump.md`). The **JSON API harvest** (`scripts/harvest/`, `build:api`) is **deprecated** — kept only as a fallback; it lacks `buy` rows and full media/links/SAB tables the dump provides.
 
 Dump path also writes `messages.eng.json` (unused by `src`). API projector also writes `public/search-index.json` (client does **not** fetch it).
 
@@ -48,27 +52,37 @@ Dump path also writes `messages.eng.json` (unused by `src`). API projector also 
 
 ## Development Commands
 
-CWD is this directory (`astro/`). npm + Node 18+; Python 3 for dump extract.
+CWD is this directory (`astro/`). npm + Node 18+ (built-in `node:sqlite`); `awk` for the dump converter (Git Bash on Windows).
 
 ```bash
 npm install
 
-# Dump (full parity, including buy resource rows) — needs data/scripture.db or SE_DB=
-npm run extract          # extract.py && build_search_index.mjs → public/search-index.txt
+# Fresh build from the live DB dump (source of truth) — needs SE_KEY (+ SE_DUMP_PATH once known)
+SE_KEY=… npm run build:fresh    # fetch:dump → convert:dump → extract → astro build
+#   or step by step:
+SE_KEY=… npm run fetch:dump     # /api dump endpoint → data/scripture.sql
+npm run convert:dump            # mysql2sqlite.awk + node:sqlite → data/scripture.db
+npm run build:dump              # extract.mjs && build_search_index.mjs, then astro build
+
+# Dump build from an existing data/scripture.db (skip fetch/convert)
+npm run extract                 # extract.mjs && build_search_index.mjs → public/search-index.txt
 npm run build:dump
 
-# API (fresher; buy pill only, no buy rows) — harvest first
-SE_KEY=… SE_OUT=scripts/harvest/data node scripts/harvest/harvest.mjs   # or cd scripts/harvest
-npm run extract:api      # project.mjs only — does not emit .txt
-node scripts/build_search_index.mjs   # required for home search after API extract
+# API harvest — DEPRECATED (fresher but no buy rows); kept as fallback only
+SE_KEY=… SE_OUT=scripts/harvest/data node scripts/harvest/harvest.mjs
+npm run extract:api             # project.mjs only — does not emit .txt
+node scripts/build_search_index.mjs
 npm run build:api
 
 npm run dev              # after extract
 npm run preview          # serves dist/; not after predeploy (brotli bytes look like garbage)
 
+npm run deploy:fresh     # fetch + convert + extract + build + precompress + wrangler pages deploy
 npm run deploy:dump      # extract + build + precompress + wrangler pages deploy
 npm run deploy           # current dist/ only (still runs predeploy)
 ```
+
+CI (`.github/workflows/astro-poc.yml`, astro-poc branch only) runs `build:fresh` end-to-end and deploys to Cloudflare Pages **only if** `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist (else build-only). Config: `secrets.SE_KEY`, `vars.SE_DUMP_PATH`/`vars.SE_BASE`. See `scripts/README-dump.md`.
 
 `extract.py --source=api` is **not** `extract:api`: it reads SQLite and writes gitignored `content-api/`, which Content Layer does not load.
 
@@ -96,7 +110,8 @@ Harvest `SE_OUT` defaults to **cwd** `./data`. Projector default is `scripts/har
 | `src/lib/ui.ts` | Pill/group/kind mapping |
 | `src/lib/i18nVersion.ts` | Catalog cache-bust query |
 | `astro.config.mjs` | Static output; JS never inlined (`assetsInlineLimit`) |
-| `scripts/extract.py` | Dump → `content/` |
+| `scripts/extract.mjs` | Dump (`data/scripture.db`) → `content/` |
+| `scripts/fetch_dump.mjs`, `scripts/convert_dump.mjs`, `scripts/mysql2sqlite.awk` | Dump download → SQLite (see `scripts/README-dump.md`) |
 | `scripts/build_search_index.mjs` | JSON → `public/search-index.txt` (`auto` stays null) |
 | `scripts/harvest/{harvest,project}.mjs` | API cache → `content/` |
 | `scripts/precompress_dist.mjs` | In-place brotli on `dist/search-index.txt` + `_headers` |
@@ -108,9 +123,9 @@ Docs with useful detail and some drift (`public/i18n.js`, `search-index.json`): 
 ## Runtime/Tooling Preferences
 
 - **npm** (`package-lock.json`); not Bun/pnpm/yarn.
-- **Node 18+** (Astro 5 lock: `18.20.8 \| ^20.3.0 \| >=22.0.0`). ESM (`"type": "module"`).
-- **Python 3** for `extract.py` / `extract_i18n.py`. Autonym/CLDR generators need `pycountry` / `Babel` (not npm).
-- No `tsconfig.json`, no Wrangler project file, no Git-connected Pages build, no CI. Wrangler via `npx` (unpinned).
+- **Node 18+** (Astro 5 lock: `18.20.8 \| ^20.3.0 \| >=22.0.0`). ESM (`"type": "module"`). Extractors/generators are all Node `.mjs`; dump import uses built-in `node:sqlite`.
+- **`awk`** required by `convert_dump.mjs` (present on Linux/CI; Git Bash on Windows).
+- No `tsconfig.json`, no Wrangler project file, no Git-connected Pages build. CI: `.github/workflows/astro-poc.yml` (astro-poc branch, GitHub Actions). Wrangler via `npx` (unpinned).
 - Deploy from `astro/` so sibling `functions/` uploads with `dist/`. Project name `se-proto-en`. File count ~4.3k (Pages Free 20k cap).
 - `predeploy` always runs before `deploy` (npm `pre*` lifecycle). Brotli is hardcoded `Content-Encoding: br` on the search index; every client gets br bytes; fallback file is for broken decoders.
 
