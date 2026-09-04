@@ -20,6 +20,27 @@ for (const line of read('scripts/data/zone1970.tab').split('\n')) {
   tz[zone] = codes.split(',');
 }
 
+// backward: "Link<ws>TARGET<ws>LINKNAME" — deprecated aliases (Africa/Kinshasa,
+// Asia/Calcutta, America/Buenos_Aires…) that some OSes/browsers still report.
+// Point each alias at its target's country list so those visitors resolve too.
+const links = [];
+for (const line of read('scripts/data/backward').split('\n')) {
+  if (!line.startsWith('Link')) continue;
+  const [, target, name] = line.split(/\s+/);
+  if (target && name) links.push([target, name]);
+}
+// Resolve, chasing link→link chains until a real zone or we give up.
+for (const [target, name] of links) {
+  if (tz[name]) continue;
+  let t = target;
+  for (let hop = 0; hop < 5 && !tz[t]; hop++) {
+    const next = links.find(([, n]) => n === t);
+    if (!next) break;
+    t = next[0];
+  }
+  if (tz[t]) tz[name] = tz[t];
+}
+
 const regions = JSON.parse(read('scripts/data/country-regions.json'));
 delete regions._note;
 

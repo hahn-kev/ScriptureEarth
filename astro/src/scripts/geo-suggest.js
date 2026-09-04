@@ -11,6 +11,9 @@ const known = (code) => Boolean(geo.names[code]);
 
 function regionCountry(langs) {
   for (const l of langs) {
+    // en-US is the default UI locale on countless non-US devices, so it is not a
+    // reliable location signal — ignore it (but keep en-GB, en-KE, en-NG, …).
+    if (/^en[-_]US$/i.test(l || '')) continue;
     const m = /[-_]([A-Za-z]{2})(?:[-_]|$)/.exec(l || '');
     if (m) {
       const cc = m[1].toUpperCase();
@@ -31,12 +34,17 @@ function run() {
   const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
   const langCC = regionCountry(langs);
 
-  // Primary: first timezone country we can link to, else the language region.
-  const primary = zoneCodes.find(known) || langCC;
+  // Primary: if the browser's language region is one of this zone's countries,
+  // trust it as the specific country (disambiguates zones shared by several
+  // countries, e.g. West/Central Africa). Otherwise the zone's primary
+  // (most-populous) country, and only as a last resort the language region alone.
+  const primary = (langCC && zoneCodes.includes(langCC)) ? langCC : (zoneCodes.find(known) || langCC);
   if (!primary) return;
 
   // Nearby: other countries sharing the exact timezone, limited to the primary's
-  // own continent (drops far-flung same-offset outliers), plus the language region.
+  // own continent (drops far-flung same-offset outliers like Indian Ocean islands
+  // on Gulf time). Language region is deliberately NOT used here — en-US is the
+  // default UI locale for countless non-US visitors, so it is noise as a neighbour.
   const primRegion = geo.regions[primary];
   const seen = new Set([primary]);
   const nearby = [];
@@ -46,7 +54,6 @@ function run() {
     seen.add(c);
     if (nearby.length >= 3) break;
   }
-  if (langCC && !seen.has(langCC) && nearby.length < 3) { nearby.push(langCC); seen.add(langCC); }
 
   render(mount, primary, nearby);
 }

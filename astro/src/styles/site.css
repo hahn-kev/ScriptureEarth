@@ -340,11 +340,12 @@ section.block {
   max-width: 560px;
 }
 .geo-card {
+  position: relative;
   display: flex;
   align-items: center;
   flex-wrap: wrap;
   gap: var(--s3);
-  padding: 0.6rem 0.85rem;
+  padding: 0.6rem 2.6rem 0.6rem 0.85rem;
   background: var(--tint);
   border: 1px solid var(--accent-2);
   border-radius: var(--radius, 12px);
@@ -363,13 +364,15 @@ section.block {
   color: var(--accent);
 }
 .geo-x {
-  margin-inline-start: auto;
+  position: absolute;
+  top: 0.3rem;
+  inset-inline-end: 0.35rem;
   border: 0;
   background: transparent;
   color: var(--muted);
   font-size: 1.1rem;
   line-height: 1;
-  padding: 0.1rem 0.4rem;
+  padding: 0.15rem 0.4rem;
   cursor: pointer;
   border-radius: var(--pill);
 }
