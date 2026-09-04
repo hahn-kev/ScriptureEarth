@@ -9,9 +9,14 @@ content/
 content-api/
 public/search-index.txt
 
-# local data snapshot (dev DB) + API harvest cache — never commit
-data/
+# local data snapshot (dev DB) + API harvest cache — never commit.
+# Anchored to astro/data so code-owned src/data and scripts/data stay tracked.
+/data/
 scripts/harvest/data/
+
+# Re-include code-owned data dirs the repo-root .gitignore's bare `data` rule catches.
+!src/data/
+!scripts/data/
 
 # bench/harness.mjs regenerates each attempt's data file(s) from
 # content/search-index.json on every run — never commit the output
