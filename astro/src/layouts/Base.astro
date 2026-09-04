@@ -43,7 +43,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <div class="hairline"></div>
   <header class="site"><div class="shell site-inner">
     <a class="brand" href="/">
-      <img class="silmark" src="/sil-logo.webp" alt="SIL" width="63" height="34" />
+      <img class="silmark" src="/se-logo.png" alt="ScriptureEarth" width="50" height="34" />
       <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
     </a>
     <nav class="main"><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></nav>
@@ -65,7 +65,10 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
       <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></div>
       <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span></div>
     </div>
-    <div class="cc" data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</div>
+    <div class="cc">
+      <img class="silmark-foot" src="/sil-logo.webp" alt="SIL" width="63" height="34" />
+      <span data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</span>
+    </div>
   </div></footer>
 </body>
 </html>

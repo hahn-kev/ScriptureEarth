@@ -1,11 +1,8 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
-import LangCard from '../components/LangCard.astro';
 
 const langs = (await getCollection('languages')).map((l) => l.data);
-const resourceCount = (d: any) => Object.values(d.resources).reduce((n: number, a: any) => n + a.length, 0);
-const featured = [...langs].sort((a, b) => resourceCount(b) - resourceCount(a)).slice(0, 12);
 const withRead = langs.filter((l) => l.availability.read).length;
 const withListen = langs.filter((l) => l.availability.listen).length;
 ---
@@ -29,12 +26,6 @@ const withListen = langs.filter((l) => l.availability.listen).length;
   <section class="block shell">
     <div class="sec-head" id="rhead" hidden><div><p class="eyebrow" data-i18n="results.heading">Results</p><h2><span id="rcount">0</span></h2></div></div>
     <div class="lang-grid" id="results" hidden></div>
-
-    <div id="featured">
-      <div class="sec-head"><div><p class="eyebrow" data-i18n="home.startHere">Start here</p><h2 data-i18n="home.featured">Featured</h2></div>
-        <a class="facet" href="/browse/"><span data-i18n="home.seeAll">See all</span> →</a></div>
-      <div class="lang-grid">{featured.map((d) => <LangCard d={d} />)}</div>
-    </div>
   </section>
 
   <script>import '../scripts/search.js';</script>

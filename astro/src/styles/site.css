@@ -633,10 +633,20 @@ footer.site .fcol b {
   margin-bottom: 0.2rem;
 }
 footer.site .cc {
+  display: flex;
+  align-items: center;
+  gap: var(--s4);
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding-block: var(--s4);
   font-size: 0.82rem;
   color: #9fb3c4;
+}
+footer.site .silmark-foot {
+  height: 34px;
+  width: auto;
+  display: block;
+  flex: 0 0 auto;
+  border-radius: 3px;
 }
 [hidden] {
   display: none !important;
