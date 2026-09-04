@@ -32,7 +32,7 @@ if (ungrouped.length) groups.push({ region: 'Other', list: ungrouped });
         <h3 class="reg-h" data-i18n={`region.${region}`}>{region}</h3>
         <div class="facets">
           {list.map((c) => (
-            <a class="facet" href={`/country/${c.code}/`} data-code={c.code} data-name={c.name.eng}>{c.name.eng} <span class="x tnum">{c.languages.length}</span></a>
+            <a class="facet" href={`/country/${c.code}/`}>{c.name.eng} <span class="x tnum">{c.languages.length}</span></a>
           ))}
         </div>
       </div>

@@ -23,8 +23,14 @@ for (const line of read('scripts/data/zone1970.tab').split('\n')) {
 const regions = JSON.parse(read('scripts/data/country-regions.json'));
 delete regions._note;
 
-// Sanity: every country we actually render should have a region.
-const countries = JSON.parse(read('content/countries.json'));
+// names: English name for every browseable country (languages > 0). Doubles as
+// the "is this a country we can link to?" set, so the hint is self-contained and
+// needs neither a rendered list nor the (lazy) search index.
+const countries = JSON.parse(read('content/countries.json')).filter((c) => c.languages.length > 0);
+const names = {};
+for (const c of countries) names[c.code] = c.name.eng;
+
+// Sanity: every browseable country should have a region.
 const missing = countries.map((c) => c.code).filter((c) => !regions[c]);
 if (missing.length) {
   console.error(`WARN ${missing.length} countries missing a region: ${missing.join(', ')}`);
@@ -33,9 +39,9 @@ if (missing.length) {
 // Display order for continent groups.
 const order = ['Africa', 'Americas', 'Asia', 'Europe', 'Oceania'];
 
-const out = { order, tz, regions };
+const out = { order, tz, regions, names };
 writeFileSync(path.join(root, 'src/data/geo.json'), JSON.stringify(out), 'utf8');
 console.error(
-  `geo.json  ${Object.keys(tz).length} zones, ${Object.keys(regions).length} countries` +
+  `geo.json  ${Object.keys(tz).length} zones, ${Object.keys(names).length} countries` +
     (missing.length ? `  (${missing.length} missing region)` : ''),
 );

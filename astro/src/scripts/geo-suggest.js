@@ -1,18 +1,20 @@
-// "Browsing from X?" hint on the countries page. Pure client, no permission,
+// "Browsing from X?" hint (home + countries pages). Pure client, no permission,
 // no network: guesses country from the IANA timezone (Intl) with navigator
 // language region as a tiebreaker, and offers a few same-continent neighbours
-// that share the timezone. Progressive enhancement — absent JS, the full
-// alphabetical-by-continent list still renders untouched.
+// that share the timezone. Self-contained — names and the browseable-country set
+// come from geo.json, so it needs neither a rendered list nor the (lazy) search
+// index. Progressive enhancement: absent JS, the page renders untouched.
 import geo from '../data/geo.json';
 
 const HIDE_KEY = 'se-geo-hide';
+const known = (code) => Boolean(geo.names[code]);
 
-function regionCountry(langs, links) {
+function regionCountry(langs) {
   for (const l of langs) {
     const m = /[-_]([A-Za-z]{2})(?:[-_]|$)/.exec(l || '');
     if (m) {
       const cc = m[1].toUpperCase();
-      if (links[cc]) return cc;
+      if (known(cc)) return cc;
     }
   }
   return '';
@@ -23,20 +25,14 @@ function run() {
   if (!mount) return;
   try { if (localStorage.getItem(HIDE_KEY) === '1') return; } catch { /* private mode */ }
 
-  // Only suggest countries that are actually in the rendered list.
-  const links = {};
-  document.querySelectorAll('.facets a[data-code]').forEach((a) => {
-    links[a.getAttribute('data-code')] = { href: a.getAttribute('href'), name: a.dataset.name || a.textContent.trim() };
-  });
-
   let zone = '';
   try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { /* very old browser */ }
   const zoneCodes = geo.tz[zone] || [];
   const langs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
-  const langCC = regionCountry(langs, links);
+  const langCC = regionCountry(langs);
 
-  // Primary: first timezone country present in the list, else the language region.
-  const primary = zoneCodes.find((c) => links[c]) || (links[langCC] ? langCC : '');
+  // Primary: first timezone country we can link to, else the language region.
+  const primary = zoneCodes.find(known) || langCC;
   if (!primary) return;
 
   // Nearby: other countries sharing the exact timezone, limited to the primary's
@@ -45,25 +41,25 @@ function run() {
   const seen = new Set([primary]);
   const nearby = [];
   for (const c of zoneCodes) {
-    if (seen.has(c) || !links[c] || geo.regions[c] !== primRegion) continue;
+    if (seen.has(c) || !known(c) || geo.regions[c] !== primRegion) continue;
     nearby.push(c);
     seen.add(c);
     if (nearby.length >= 3) break;
   }
   if (langCC && !seen.has(langCC) && nearby.length < 3) { nearby.push(langCC); seen.add(langCC); }
 
-  render(mount, links, primary, nearby);
+  render(mount, primary, nearby);
 }
 
-function facet(code, links, cls) {
+function facet(code, cls) {
   const a = document.createElement('a');
   a.className = 'facet' + (cls ? ' ' + cls : '');
-  a.href = links[code].href;
-  a.textContent = links[code].name;
+  a.href = `/country/${code}/`;
+  a.textContent = geo.names[code];
   return a;
 }
 
-function render(mount, links, primary, nearby) {
+function render(mount, primary, nearby) {
   const card = document.createElement('div');
   card.className = 'geo-card';
 
@@ -71,7 +67,7 @@ function render(mount, links, primary, nearby) {
   lead.className = 'geo-lead';
   lead.setAttribute('data-i18n', 'geo.here');
   lead.textContent = 'Browsing from';
-  card.append(lead, ' ', facet(primary, links, 'geo-primary'));
+  card.append(lead, ' ', facet(primary, 'geo-primary'));
 
   if (nearby.length) {
     const or = document.createElement('span');
@@ -79,7 +75,7 @@ function render(mount, links, primary, nearby) {
     or.setAttribute('data-i18n', 'geo.orNearby');
     or.textContent = 'or nearby';
     card.append(document.createTextNode(' '), or, document.createTextNode(' '));
-    nearby.forEach((c) => card.append(facet(c, links), ' '));
+    nearby.forEach((c) => card.append(facet(c), ' '));
   }
 
   const x = document.createElement('button');
@@ -89,12 +85,14 @@ function render(mount, links, primary, nearby) {
   x.textContent = '×';
   x.addEventListener('click', () => {
     mount.hidden = true;
+    mount.dataset.geoShown = '0';
     try { localStorage.setItem(HIDE_KEY, '1'); } catch { /* private mode */ }
   });
   card.appendChild(x);
 
   mount.replaceChildren(card);
   mount.hidden = false;
+  mount.dataset.geoShown = '1';
   if (typeof window.__seApplyI18n === 'function') window.__seApplyI18n(mount);
 }
 

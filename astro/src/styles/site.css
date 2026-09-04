@@ -334,6 +334,11 @@ section.block {
 .geo-suggest {
   margin-bottom: var(--s5);
 }
+.geo-suggest-hero {
+  margin-top: var(--s5);
+  margin-bottom: 0;
+  max-width: 560px;
+}
 .geo-card {
   display: flex;
   align-items: center;

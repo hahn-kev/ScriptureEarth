@@ -21,6 +21,7 @@ const withListen = langs.filter((l) => l.availability.listen).length;
       <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span data-i18n="stats.listen">to listen</span></div>
     </div>
     <p class="hero-more" id="browse-link"><a href="/browse/"><span data-i18n="home.browseAll">Browse all languages</span> →</a></p>
+    <div id="geo-suggest" class="geo-suggest geo-suggest-hero" hidden></div>
   </div></section>
 
   <section class="block shell">
@@ -28,5 +29,6 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     <div class="lang-grid" id="results" hidden></div>
   </section>
 
+  <script>import '../scripts/geo-suggest.js';</script>
   <script>import '../scripts/search.js';</script>
 </Base>
