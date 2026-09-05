@@ -5,6 +5,7 @@
   "type": "module",
   "description": "ScriptureEarth public discovery site — static Astro rebuild (PoC)",
   "scripts": {
+    "setup:data": "node scripts/setup-data.mjs",
     "extract": "node scripts/extract.mjs && node scripts/build_search_index.mjs",
     "extract:api": "node scripts/harvest/project.mjs",
     "extract:i18n": "node scripts/extract_i18n.mjs",

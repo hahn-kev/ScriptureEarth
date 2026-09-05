@@ -18,10 +18,12 @@ import { existsSync, rmSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
+import { dataPaths } from './data-dir.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const SQL_IN = process.env.SE_DUMP_OUT || path.join(HERE, '..', 'data', 'scripture.sql');
-const DB_OUT = process.env.SE_DB || path.join(HERE, '..', 'data', 'scripture.db');
+const DATA = dataPaths();
+const SQL_IN = process.env.SE_DUMP_OUT || DATA.sql;
+const DB_OUT = process.env.SE_DB || DATA.db;
 const AWK = process.env.AWK || 'awk';
 const CONVERTER = path.join(HERE, 'mysql2sqlite.awk');
 

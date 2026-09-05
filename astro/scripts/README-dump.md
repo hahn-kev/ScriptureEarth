@@ -13,6 +13,31 @@ fetch_dump.mjs        convert_dump.mjs                 extract.mjs + astro build
 
 `data/scripture.db` and `data/scripture.sql` are git-ignored (`data/`); every build regenerates them.
 
+## Worktrees: share one data folder (`npm run setup:data`)
+
+Because `data/` is git-ignored, a freshly-created **git worktree starts with no DB** — and you
+don't want each worktree re-downloading the dump. The fix is one shared folder that every
+worktree points at, recorded in a single **shared git config key** (lives in the common
+`.git/config`, so every worktree sees it — no machine path is ever committed):
+
+```bash
+# once per machine, from any worktree — pick any absolute path (the main checkout's is fine):
+git config se.datadir "C:/dev/ScriptureEarth/astro/data"
+
+# put the API key in that folder (git-ignored, never committed):
+#   <that folder>/config.env
+#     SE_KEY=your-api-key
+#     # SE_DUMP_PATH=/api/db_dump.php   # once the real endpoint is confirmed
+
+npm run setup:data     # resolves the folder, fetch+convert the DB there IF missing, else no-op
+```
+
+After that, every worktree's `fetch:dump` / `convert:dump` / `extract` reads and writes that
+one folder. Resolution order for the data dir: `SE_DATA_DIR` env → `git config se.datadir` →
+`<package>/data` (the old worktree-local behavior, used when nothing is configured).
+`setup:data` is idempotent — if the DB is already there it does nothing. If you have no key
+but already possess a `scripture.sql` or `scripture.db`, just drop it in the folder and re-run.
+
 ## Run it
 
 ```bash
@@ -38,8 +63,9 @@ Git for Windows. (On Linux/CI `awk` is always present.) Node 18+ is required for
 | `SE_BASE` | `https://scriptureearth.org` | API host. |
 | `SE_V` | `1` | API version query param. |
 | `SE_DUMP_URL` | *(unset)* | Full endpoint URL, auth included — overrides `SE_BASE`+`SE_DUMP_PATH` and disables key-appending. Escape hatch for local testing. |
-| `SE_DUMP_OUT` | `data/scripture.sql` | Where the dump is written / read. |
-| `SE_DB` | `data/scripture.db` | Output SQLite DB (also read by `extract.mjs`). |
+| `SE_DUMP_OUT` | `<data dir>/scripture.sql` | Where the dump is written / read. |
+| `SE_DB` | `<data dir>/scripture.db` | Output SQLite DB (also read by `extract.mjs`). |
+| `SE_DATA_DIR` | *(unset)* | Override the shared data dir for one command (else `git config se.datadir`, else `<package>/data`). Also the folder `config.env` is read from. |
 | `SE_STRICT` | *(unset)* | `1` → `convert_dump.mjs` exits non-zero if `scripture_main` is empty (used in CI). |
 | `AWK` | `awk` | Override the awk binary if it isn't on `PATH`. |
 
@@ -47,6 +73,8 @@ Git for Windows. (On Linux/CI `awk` is always present.) Node 18+ is required for
 
 | file | role |
 |---|---|
+| `data-dir.mjs` | Resolves the shared data dir (`SE_DATA_DIR` → `git config se.datadir` → `<package>/data`) and loads `<dir>/config.env` secrets without clobbering real env. Imported by the three scripts below. |
+| `setup-data.mjs` | `npm run setup:data` — worktree bootstrap: ensure the shared DB exists (fetch+convert once), else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
 | `fetch_dump.mjs` | Download the MySQL dump (same `?v=&key=` auth as the rest of `/api/`). Detects gzip; rejects HTML error pages. |
 | `convert_dump.mjs` | `awk mysql2sqlite` → SQLite SQL, imported into a **fresh** `data/scripture.db` via `node:sqlite`. Reports table/row counts. |
 | `mysql2sqlite.awk` | Vendored converter (MIT, github.com/dumblob/mysql2sqlite) — handles MySQL escaping, `AUTO_INCREMENT`, `KEY`→`CREATE INDEX`, charset/collation stripping. Do not edit; re-vendor from upstream. |

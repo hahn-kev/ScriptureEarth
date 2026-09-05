@@ -57,6 +57,11 @@ CWD is this directory (`astro/`). npm + Node 18+ (built-in `node:sqlite`); `awk`
 ```bash
 npm install
 
+# NEW WORKTREE / fresh checkout: data/ is gitignored so it starts empty. Bootstrap the
+# shared DB once (reads `git config se.datadir` + <that folder>/config.env; downloads only
+# if missing). See scripts/README-dump.md § "Worktrees: share one data folder".
+npm run setup:data
+
 # Fresh build from the live DB dump (source of truth) — needs SE_KEY (+ SE_DUMP_PATH once known)
 SE_KEY=… npm run build:fresh    # fetch:dump → convert:dump → extract → astro build
 #   or step by step:
