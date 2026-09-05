@@ -29,14 +29,27 @@ git config se.datadir "C:/dev/ScriptureEarth/astro/data"
 #     SE_KEY=your-api-key
 #     # SE_DUMP_PATH=/api/db_dump.php   # once the real endpoint is confirmed
 
-npm run setup:data     # resolves the folder, fetch+convert the DB there IF missing, else no-op
+npm run setup:data     # ensures the DB + playlist cache exist in the shared folder, else no-op
 ```
 
-After that, every worktree's `fetch:dump` / `convert:dump` / `extract` reads and writes that
+`setup:data` populates two things in the shared folder, downloading each only if missing:
+
+- **`scripture.db`** — the SQLite snapshot the build reads.
+- **`playlist-txt-cache/`** — a cache of PlaylistVideo `.txt` listings. Optional: `extract.mjs`
+  re-fetches any missing `.txt` from scriptureearth.org on demand, so this just skips thousands
+  of network round-trips (extract is ~10s with the cache vs. many minutes without).
+
+**No API key needed to get started.** By default it downloads *prebuilt* artifacts from public
+links (baked into `setup-data.mjs`, overridable via `SE_DB_URL` / `SE_PLAYLIST_CACHE_URL`).
+**Maintainers** who want to rebuild the DB from the live API dump instead set `SE_KEY`
+(+ `SE_DUMP_URL`/`SE_DUMP_PATH`) and run `npm run fetch:dump && npm run convert:dump` (or
+`build:fresh`) — or delete the prebuilt link so `setup:data` falls through to fetch+convert.
+
+After setup, every worktree's `fetch:dump` / `convert:dump` / `extract` reads and writes that
 one folder. Resolution order for the data dir: `SE_DATA_DIR` env → `git config se.datadir` →
 `<package>/data` (the old worktree-local behavior, used when nothing is configured).
-`setup:data` is idempotent — if the DB is already there it does nothing. If you have no key
-but already possess a `scripture.sql` or `scripture.db`, just drop it in the folder and re-run.
+`setup:data` is idempotent. If you already possess a `scripture.sql` or `scripture.db`, just
+drop it in the folder and re-run (an existing `.db` is used as-is; an existing `.sql` is converted).
 
 ## Run it
 
@@ -66,6 +79,8 @@ Git for Windows. (On Linux/CI `awk` is always present.) Node 18+ is required for
 | `SE_DUMP_OUT` | `<data dir>/scripture.sql` | Where the dump is written / read. |
 | `SE_DB` | `<data dir>/scripture.db` | Output SQLite DB (also read by `extract.mjs`). |
 | `SE_DATA_DIR` | *(unset)* | Override the shared data dir for one command (else `git config se.datadir`, else `<package>/data`). Also the folder `config.env` is read from. |
+| `SE_DB_URL` | *(Drive link)* | `setup:data`: prebuilt `scripture.db` download URL. |
+| `SE_PLAYLIST_CACHE_URL` | *(Drive link)* | `setup:data`: prebuilt `playlist-txt-cache.zip` download URL (zip must contain a top-level `playlist-txt-cache/`). |
 | `SE_STRICT` | *(unset)* | `1` → `convert_dump.mjs` exits non-zero if `scripture_main` is empty (used in CI). |
 | `AWK` | `awk` | Override the awk binary if it isn't on `PATH`. |
 
@@ -74,7 +89,8 @@ Git for Windows. (On Linux/CI `awk` is always present.) Node 18+ is required for
 | file | role |
 |---|---|
 | `data-dir.mjs` | Resolves the shared data dir (`SE_DATA_DIR` → `git config se.datadir` → `<package>/data`) and loads `<dir>/config.env` secrets without clobbering real env. Imported by the three scripts below. |
-| `setup-data.mjs` | `npm run setup:data` — worktree bootstrap: ensure the shared DB exists (fetch+convert once), else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
+| `setup-data.mjs` | `npm run setup:data` — worktree bootstrap: download (or fetch+convert) the DB and download+unzip the playlist cache into the shared folder, else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
+| `download.mjs` | Helpers for `setup-data.mjs`: streaming `download()`, `driveUrl()`, and a dependency-free ZIP extractor (`unzipInto()`, stored + deflate, zip-slip guarded). |
 | `fetch_dump.mjs` | Download the MySQL dump (same `?v=&key=` auth as the rest of `/api/`). Detects gzip; rejects HTML error pages. |
 | `convert_dump.mjs` | `awk mysql2sqlite` → SQLite SQL, imported into a **fresh** `data/scripture.db` via `node:sqlite`. Reports table/row counts. |
 | `mysql2sqlite.awk` | Vendored converter (MIT, github.com/dumblob/mysql2sqlite) — handles MySQL escaping, `AUTO_INCREMENT`, `KEY`→`CREATE INDEX`, charset/collation stripping. Do not edit; re-vendor from upstream. |
