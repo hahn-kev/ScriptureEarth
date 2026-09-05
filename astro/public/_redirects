@@ -18,6 +18,7 @@
 # guard line here, OR move the bare /:iso rule into the Function (see REDIRECTS.md).
 
 # Real top-level routes (serve in place, 200 = rewrite-to-self, stops matching)
+/assets/*          /assets/:splat            200
 /browse            /browse/                  301
 /browse/*          /browse/:splat            200
 /country/*         /country/:splat           200

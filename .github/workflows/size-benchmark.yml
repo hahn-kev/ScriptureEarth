@@ -1,0 +1,89 @@
+name: Size benchmark
+
+# Cold-load size-regression gate for the Astro build (bench/SIZE-BENCH-SPEC.md).
+# Builds the site, produces dist/assets/sizes.json, diffs it against the sizes.json
+# currently deployed to production, posts a sticky PR comment, then fails if any
+# gated metric grew past its fail band.
+#
+# Configuration (same knobs as astro-poc.yml):
+#   secrets.SE_KEY                  (required)  API key for the dump endpoint
+#   vars.SE_DUMP_PATH               (optional)  dump endpoint path
+#   vars.SE_BASE                    (optional)  API host
+#   vars.SIZE_BENCH_BASELINE_URL    (optional)  baseline sizes.json URL
+#                                               (default: prod origin /assets/sizes.json)
+#
+# Fork-PR caveat: on a pull_request from a fork, GITHUB_TOKEN is read-only, so the
+# sticky-comment step 403s. For external forks, switch to the pull_request_target
+# or artifact + workflow_run two-workflow pattern. Same-repo PRs work as-is.
+
+on:
+  pull_request:
+    branches: [astro-poc, main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pull-requests: write # required to post/update the sticky comment
+
+concurrency:
+  group: size-benchmark-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  size-benchmark:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: astro
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: astro/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Fetch DB dump
+        run: npm run fetch:dump
+        env:
+          SE_KEY: ${{ secrets.SE_KEY }}
+          SE_BASE: ${{ vars.SE_BASE }}
+          SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
+
+      - name: Convert dump to SQLite
+        run: npm run convert:dump
+        env:
+          SE_STRICT: '1' # fail the build if scripture_main (the spine) is empty
+
+      - name: Build site
+        run: npm run build:dump
+
+      - name: Produce sizes.json
+        run: node scripts/build_sizes.mjs
+
+      # Diff vs the prod baseline; render the markdown report + verdict. Never
+      # fails here — a missing/404 baseline is report-only (spec §4).
+      - name: Compare against baseline
+        run: node scripts/check_sizes.mjs --report size-report.md --verdict size-verdict.txt
+        env:
+          SIZE_BENCH_BASELINE_URL: ${{ vars.SIZE_BENCH_BASELINE_URL }}
+
+      - name: Post sticky comment
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: size-benchmark
+          path: astro/size-report.md
+
+      # Separate gate: the comment is already posted, THEN fail on a breach.
+      - name: Enforce size budget
+        run: |
+          if [ "$(cat size-verdict.txt)" = "fail" ]; then
+            echo "::error::Cold-load size exceeds the fail-band budget"
+            exit 1
+          fi
