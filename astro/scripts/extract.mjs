@@ -6,9 +6,11 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DatabaseSync } from 'node:sqlite';
 import { loadPlaylistClips } from './playlistTxt.mjs';
+import { dataPaths } from './data-dir.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const DB = process.env.SE_DB || path.join(HERE, '..', 'data', 'scripture.db');
+const DATA = dataPaths();
+const DB = process.env.SE_DB || DATA.db;
 const SOURCE = process.argv.includes('--source=api') ? 'api' : 'dump';
 const OUT = path.join(HERE, '..', SOURCE === 'api' ? 'content-api' : 'content');
 const ASSET_BASE = 'https://scriptureearth.org';
@@ -116,7 +118,7 @@ const ebible = groupByIdx(q('SELECT ISO_ROD_index, homeDomain, translationId, ti
 const plAud = groupByIdx(q('SELECT ISO_ROD_index, PlaylistAudioTitle FROM PlaylistAudio'));
 const plVidRows = q('SELECT ISO, ISO_ROD_index, PlaylistVideoTitle, PlaylistVideoFilename, PlaylistVideoDownload FROM PlaylistVideo');
 const plVid = groupByIdx(plVidRows);
-const PLAYLIST_CACHE = path.join(HERE, '..', 'data', 'playlist-txt-cache');
+const PLAYLIST_CACHE = DATA.playlistCache;
 const playlistClips = new Map();
 
 function resolve(p) {

@@ -21,13 +21,18 @@ import { mkdir, writeFile } from 'node:fs/promises';
 import { gunzipSync } from 'node:zlib';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { dataPaths, loadDataEnv } from './data-dir.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
+const DATA = dataPaths();
+// Pull SE_KEY / SE_DUMP_PATH / ... from <dataDir>/config.env if not already in the
+// environment (real env / CI vars win). Keeps secrets out of the tree.
+loadDataEnv(DATA.dir);
 const KEY = process.env.SE_KEY;
 const BASE = (process.env.SE_BASE || 'https://scriptureearth.org').replace(/\/$/, '');
 const DUMP_PATH = process.env.SE_DUMP_PATH || '/api/db_dump.php';
 const V = process.env.SE_V || '1';
-const OUT = process.env.SE_DUMP_OUT || path.join(HERE, '..', 'data', 'scripture.sql');
+const OUT = process.env.SE_DUMP_OUT || DATA.sql;
 const UA = 'ScriptureEarth-Build/1.0 (static-site rebuild; SIL)';
 
 if (!KEY) {
