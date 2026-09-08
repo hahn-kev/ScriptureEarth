@@ -31,6 +31,8 @@
 /search-index.txt          /search-index.txt          200
 /search-index.fallback.txt /search-index.fallback.txt 200
 /sil-logo.webp     /sil-logo.webp            200
+/se-logo.webp      /se-logo.webp             200
+/se-logo.png       /se-logo.png              200
 
 # === L3/L4/L5  Locale homepages + localized alias index files -> / + ?lang= ==
 # Plain (no query) hits only; deep-link queries on these paths are caught by the
