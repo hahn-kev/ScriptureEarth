@@ -43,7 +43,10 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
   <div class="hairline"></div>
   <header class="site"><div class="shell site-inner">
     <a class="brand" href="/">
-      <img class="silmark" src="/se-logo.png" alt="ScriptureEarth" width="50" height="34" />
+        <picture>
+            <source type="image/webp" src="/se-logo.webp" />
+            <img class="silmark" src="/se-logo.png" alt="ScriptureEarth" width="50" height="34" />
+        </picture>
       <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
     </a>
     <nav class="main"><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></nav>
