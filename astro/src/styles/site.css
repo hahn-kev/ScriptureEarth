@@ -318,6 +318,68 @@ section.block {
   color: var(--muted);
   font-size: 0.86rem;
 }
+.reg-group {
+  margin-bottom: var(--s5);
+}
+.reg-h {
+  font-size: 0.72rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--muted);
+  margin: 0 0 var(--s3);
+  padding-bottom: 0.35rem;
+  border-bottom: 1px solid var(--border);
+}
+.geo-suggest {
+  margin-bottom: var(--s5);
+}
+.geo-suggest-hero {
+  margin-top: var(--s5);
+  margin-bottom: 0;
+  max-width: 560px;
+}
+.geo-card {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--s3);
+  padding: 0.6rem 2.6rem 0.6rem 0.85rem;
+  background: var(--tint);
+  border: 1px solid var(--accent-2);
+  border-radius: var(--radius, 12px);
+}
+.geo-lead {
+  font-size: 0.9rem;
+  color: var(--heading);
+  font-weight: 600;
+}
+.geo-or {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.geo-primary {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+.geo-x {
+  position: absolute;
+  top: 0.3rem;
+  inset-inline-end: 0.35rem;
+  border: 0;
+  background: transparent;
+  color: var(--muted);
+  font-size: 1.1rem;
+  line-height: 1;
+  padding: 0.15rem 0.4rem;
+  cursor: pointer;
+  border-radius: var(--pill);
+}
+.geo-x:hover {
+  color: var(--heading);
+  background: var(--surface);
+}
 .lang-grid {
   display: grid;
   gap: var(--s4);

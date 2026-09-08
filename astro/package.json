@@ -8,6 +8,7 @@
     "extract": "node scripts/extract.mjs && node scripts/build_search_index.mjs",
     "extract:api": "node scripts/harvest/project.mjs",
     "extract:i18n": "node scripts/extract_i18n.mjs",
+    "gen:geo": "node scripts/gen_geo.mjs",
     "fetch:dump": "node scripts/fetch_dump.mjs",
     "convert:dump": "node scripts/convert_dump.mjs",
     "dev": "astro dev",
