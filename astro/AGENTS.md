@@ -6,24 +6,22 @@ PoC static rebuild of the ScriptureEarth **public discovery site**: English HTML
 
 ## Project Overview
 
-Catalog of languages and countries with scripture resources (read / listen / watch / apps / buy). Dual ingest — SQLite dump or JSON API harvest — projects into the same `content/` schema. Live preview: https://se-proto-en.pages.dev/. Decision records live outside this tree (`.scratch/scriptureearth-rewrite/`).
+Catalog of languages and countries with scripture resources (read / listen / watch / apps / buy). Ingest is one consolidated JSON dump (`data/scripture.json`) projected into the `content/` schema. Live preview: https://se-proto-en.pages.dev/. Decision records live outside this tree (`.scratch/scriptureearth-rewrite/`).
 
 ## Architecture & Data Flow
 
 **Static SSG, no adapter, no SSR.** Astro Content Layer loads two JSON arrays. English is the source of truth; locale catalogs swap chrome and names in the browser.
 
 ```
-API dump endpoint ─ fetch_dump.mjs ─► data/scripture.sql ─ convert_dump.mjs ─► data/scripture.db ─┐
-  (SE_KEY auth)                          (mysql2sqlite.awk + node:sqlite)                          │
-                                                                     dump (data/scripture.db) ── extract.mjs ──┐
-                                                                                                              ├─► content/{languages,countries}.json ─► Astro pages
-                                             API harvest cache ── harvest/project.mjs (DEPRECATED) ────────────┘
-                                                                                                              └─► content/search-index.json ─► build_search_index.mjs ─► public/search-index.txt
+/api/db_dump.php?v=1 ── fetch_dump.mjs ──► data/scripture.json ── extract.mjs ──┬─► content/{languages,countries}.json ─► Astro pages
+  (www host, SE_KEY auth)                   (one JSON object)      (projector)   └─► content/search-index.json ─► build_search_index.mjs ─► public/search-index.txt
 ```
 
-**Source of truth = the SQLite snapshot** (`data/scripture.db`), produced from a downloaded `mysqldump` (`fetch_dump.mjs` → `convert_dump.mjs`; see `scripts/README-dump.md`). The **JSON API harvest** (`scripts/harvest/`, `build:api`) is **deprecated** — kept only as a fallback; it lacks `buy` rows and full media/links/SAB tables the dump provides.
+**Source of truth = the consolidated JSON dump** (`data/scripture.json`), one pre-joined object from the API (see `scripts/README-dump.md`). Top-level keys are row ordinals; the real language key is `relationships.idx`. `extract.mjs` (the projector) builds asset URLs from basenames as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`.
 
-Dump path also writes `messages.eng.json` (unused by `src`). API projector also writes `public/search-index.json` (client does **not** fetch it).
+**Deprecated ingest, fallback only** (not in any default build): the SQLite/`mysqldump` path (`convert_dump.mjs` + `extract_sqlite.mjs`, `npm run build:sqlite`) and the JSON API harvest (`scripts/harvest/`, `npm run build:api`).
+
+Unlike the old SQLite path, the JSON projector does **not** emit `messages.eng.json` (UI chrome is code-owned in `public/i18n/`, and that file was unused by `src`). It also does not write `public/search-index.json` (only `search-index.json` in `content/`).
 
 **Build:** `getCollection('languages'|'countries')` → English HTML. Language `id` = `String(idx)`; country `id` = `code`. Internal key is `idx`; vanity slug is `iso[-rod[-var]]` (ISO is not unique; dump may suffix `-{idx}`).
 
@@ -43,8 +41,8 @@ Dump path also writes `messages.eng.json` (unused by `src`). API projector also 
 | `src/lib/ui.ts` | Shared vocab: `GROUPS` vs `PILLS`, action labels |
 | `src/scripts/i18n.js` | Client localizer (hashed Vite bundle; never inline) |
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
-| `scripts/` | Extractors, search-index encoder, harvest, precompress |
-| `scripts/harvest/` | API harvest + projector |
+| `scripts/` | Projector (`extract.mjs`), dump fetch, search-index encoder, precompress |
+| `scripts/harvest/` | DEPRECATED API harvest + projector |
 | `public/i18n/` | Chrome + names catalogs (committed) |
 | `functions/` | Pages Function for `/index.php` |
 | `bench/` | Search-index size/hash bake-off |
@@ -52,48 +50,44 @@ Dump path also writes `messages.eng.json` (unused by `src`). API projector also 
 
 ## Development Commands
 
-CWD is this directory (`astro/`). npm + Node 18+ (built-in `node:sqlite`); `awk` for the dump converter (Git Bash on Windows).
+CWD is this directory (`astro/`). npm + Node 18+.
 
 ```bash
 npm install
 
 # NEW WORKTREE / fresh checkout: data/ is gitignored so it starts empty. Bootstrap the
-# shared DB + playlist cache once (reads `git config se.datadir`; downloads prebuilt
-# artifacts — no API key needed — only if missing). Set the key once per machine:
+# shared dump + playlist cache once (reads `git config se.datadir`; downloads prebuilt
+# artifacts — no API key needed — only if missing). Set the shared folder once per machine:
 #   git config se.datadir "C:/dev/ScriptureEarth/astro/data"   # any absolute path
 # See scripts/README-dump.md § "Worktrees: share one data folder".
 npm run setup:data
 
-# Fresh build from the live DB dump (source of truth) — needs SE_KEY (+ SE_DUMP_PATH once known)
-SE_KEY=… npm run build:fresh    # fetch:dump → convert:dump → extract → astro build
+# Fresh build from the live JSON dump (source of truth) — needs SE_KEY only
+SE_KEY=… npm run build:fresh    # fetch:dump → extract (project) → astro build
 #   or step by step:
-SE_KEY=… npm run fetch:dump     # /api dump endpoint → data/scripture.sql
-npm run convert:dump            # mysql2sqlite.awk + node:sqlite → data/scripture.db
+SE_KEY=… npm run fetch:dump     # www.scriptureearth.org/api/db_dump.php?v=1&key=… → data/scripture.json
 npm run build:dump              # extract.mjs && build_search_index.mjs, then astro build
 
-# Dump build from an existing data/scripture.db (skip fetch/convert)
+# Build from an existing data/scripture.json (skip fetch)
 npm run extract                 # extract.mjs && build_search_index.mjs → public/search-index.txt
+#   SE_SKIP_PLAYLISTS=1 npm run extract   # fast dev build (no playlist .txt fetch)
 npm run build:dump
 
-# API harvest — DEPRECATED (fresher but no buy rows); kept as fallback only
-SE_KEY=… SE_OUT=scripts/harvest/data node scripts/harvest/harvest.mjs
-npm run extract:api             # project.mjs only — does not emit .txt
-node scripts/build_search_index.mjs
-npm run build:api
+# DEPRECATED fallbacks (not in any default build):
+npm run build:sqlite            # convert:dump (mysql2sqlite.awk + node:sqlite) + extract_sqlite.mjs
+npm run build:api               # harvest projector (no buy rows)
 
 npm run dev              # after extract
 npm run preview          # serves dist/; not after predeploy (brotli bytes look like garbage)
 
-npm run deploy:fresh     # fetch + convert + extract + build + precompress + wrangler pages deploy
+npm run deploy:fresh     # fetch + extract + build + precompress + wrangler pages deploy
 npm run deploy:dump      # extract + build + precompress + wrangler pages deploy
 npm run deploy           # current dist/ only (still runs predeploy)
 ```
 
-CI (`.github/workflows/astro-poc.yml`, astro-poc branch only) runs `build:fresh` end-to-end and deploys to Cloudflare Pages **only if** `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist (else build-only). Config: `secrets.SE_KEY`, `vars.SE_DUMP_PATH`/`vars.SE_BASE`. See `scripts/README-dump.md`.
+CI (`.github/workflows/astro-poc.yml`, astro-poc branch only) runs `build:fresh` (fetch JSON → project → build) and deploys to Cloudflare Pages **only if** `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist (else build-only). Config: `secrets.SE_KEY` is all that's required — the endpoint (`/api/db_dump.php` on `www.scriptureearth.org`, `v=1`) is the built-in default; `vars.SE_DUMP_PATH`/`vars.SE_BASE`/`vars.SE_DUMP_URL` are optional overrides. `astro-preview.yml` and `size-benchmark.yml` use the same steps. See `scripts/README-dump.md`.
 
-`extract.py --source=api` is **not** `extract:api`: it reads SQLite and writes gitignored `content-api/`, which Content Layer does not load.
-
-Harvest `SE_OUT` defaults to **cwd** `./data`. Projector default is `scripts/harvest/data/` (`SE_HARVEST=`). Align those paths. Key is env-only (`SE_KEY`); never cached.
+Key is env-only (`SE_KEY`); never cached.
 
 `npm run extract:i18n` seeds DB-backed `public/i18n/names.*.json` once. Chrome catalogs and autonyms/CLDR names are separate generators — not part of every build.
 
@@ -117,21 +111,22 @@ Harvest `SE_OUT` defaults to **cwd** `./data`. Projector default is `scripts/har
 | `src/lib/ui.ts` | Pill/group/kind mapping |
 | `src/lib/i18nVersion.ts` | Catalog cache-bust query |
 | `astro.config.mjs` | Static output; JS never inlined (`assetsInlineLimit`) |
-| `scripts/extract.mjs` | Dump (`data/scripture.db`) → `content/` |
-| `scripts/fetch_dump.mjs`, `scripts/convert_dump.mjs`, `scripts/mysql2sqlite.awk` | Dump download → SQLite (see `scripts/README-dump.md`) |
+| `scripts/extract.mjs` | **Projector**: `data/scripture.json` → `content/` (builds asset URLs, fetches playlist clips) |
+| `scripts/fetch_dump.mjs` | JSON dump download → `data/scripture.json` (see `scripts/README-dump.md`) |
+| `scripts/extract_sqlite.mjs`, `scripts/convert_dump.mjs`, `scripts/mysql2sqlite.awk` | DEPRECATED SQLite path (`build:sqlite`) |
 | `scripts/build_search_index.mjs` | JSON → `public/search-index.txt` (`auto` stays null) |
 | `scripts/harvest/{harvest,project}.mjs` | API cache → `content/` |
 | `scripts/precompress_dist.mjs` | In-place brotli on `dist/search-index.txt` + `_headers` |
 | `public/_redirects`, `functions/index.php.js` | Legacy URL map |
 | `public/_headers` | Long-cache `/_astro/*` and `/i18n/*` only |
 
-Docs with useful detail and some drift (`public/i18n.js`, `search-index.json`): `README.md`, `deploy.md`, `REDIRECTS.md`, `scripts/harvest/README.md`, `bench/README.md`. `RESULTS-datasource.md` is linked from README and absent.
+Known gaps / fidelity notes live in `CURRENT-ISSUES.md` (JSON-projection differences vs the old SQLite extractor, CI duplication). Docs with useful detail and some drift (`public/i18n.js`, `search-index.json`): `README.md`, `deploy.md`, `REDIRECTS.md`, `scripts/harvest/README.md`, `bench/README.md`. `RESULTS-datasource.md` is linked from README and absent.
 
 ## Runtime/Tooling Preferences
 
 - **npm** (`package-lock.json`); not Bun/pnpm/yarn.
-- **Node 18+** (Astro 5 lock: `18.20.8 \| ^20.3.0 \| >=22.0.0`). ESM (`"type": "module"`). Extractors/generators are all Node `.mjs`; dump import uses built-in `node:sqlite`.
-- **`awk`** required by `convert_dump.mjs` (present on Linux/CI; Git Bash on Windows).
+- **Node 18+** (Astro 5 lock: `18.20.8 \| ^20.3.0 \| >=22.0.0`). ESM (`"type": "module"`). Extractors/generators are all Node `.mjs`. The default JSON path needs no extra tools.
+- **`awk`** + `node:sqlite` only for the DEPRECATED `build:sqlite` fallback (`convert_dump.mjs`); Git Bash provides `awk` on Windows.
 - No `tsconfig.json`, no Wrangler project file, no Git-connected Pages build. CI: `.github/workflows/astro-poc.yml` (astro-poc branch, GitHub Actions). Wrangler via `npx` (unpinned).
 - Deploy from `astro/` so sibling `functions/` uploads with `dist/`. Project name `se-proto-en`. File count ~4.3k (Pages Free 20k cap).
 - `predeploy` always runs before `deploy` (npm `pre*` lifecycle). Brotli is hardcoded `Content-Encoding: br` on the search index; every client gets br bytes; fallback file is for broken decoders.

@@ -1,14 +1,14 @@
 name: Build & Deploy (astro-poc)
 
 # Full from-scratch build of the static Astro site:
-#   fetch MySQL dump  →  convert to SQLite  →  extract content  →  astro build  →  (optional) Cloudflare Pages.
+#   fetch JSON dump  →  project to content/  →  astro build  →  (optional) Cloudflare Pages.
 # The publish step is skipped when the Cloudflare secrets are absent, so the build
 # still runs (and fails loudly on data problems) without deploy access.
 #
 # Scoped to the astro-poc branch for now. Required/optional configuration:
 #   secrets.SE_KEY                 (required)  API key for the dump endpoint
-#   vars.SE_DUMP_PATH              (optional)  dump endpoint path (default /api/db_dump.php — set once known)
-#   vars.SE_BASE                   (optional)  API host (default https://scriptureearth.org)
+#   vars.SE_DUMP_PATH              (optional)  dump endpoint path (default /api/db_dump.php)
+#   vars.SE_BASE                   (optional)  API host (default https://www.scriptureearth.org)
 #   secrets.CLOUDFLARE_API_TOKEN   (optional)  present → publish; absent → skip
 #   secrets.CLOUDFLARE_ACCOUNT_ID  (optional)  present → publish; absent → skip
 
@@ -44,20 +44,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch DB dump
+      - name: Fetch JSON dump
         run: npm run fetch:dump
         env:
           SE_KEY: ${{ secrets.SE_KEY }}
           SE_BASE: ${{ vars.SE_BASE }}
           SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
 
-      - name: Convert dump to SQLite
-        run: npm run convert:dump
-        env:
-          SE_STRICT: '1' # fail the build if scripture_main (the spine) is empty
-
       - name: Build site
-        run: npm run build:dump
+        run: npm run build:dump # project scripture.json → content/ then astro build
 
       - name: Check Cloudflare credentials
         id: cf

@@ -1,16 +1,16 @@
 name: Preview (astro-poc PRs)
 
 # Cloudflare Pages *preview* deployment for pull requests targeting astro-poc.
-# Same from-scratch build as astro-poc.yml (fetch dump -> SQLite -> extract ->
+# Same from-scratch build as astro-poc.yml (fetch JSON dump -> project content/ ->
 # astro build), but deployed with --branch <pr-branch> so Cloudflare treats it
 # as a preview and mints a per-branch URL, which is posted back as a PR comment.
 #
 # The job self-gates: until every prerequisite is configured it skips (green)
-# with a notice, so PRs are not blocked by a red check before the data endpoint
-# and Cloudflare credentials exist. Required configuration:
+# with a notice, so PRs are not blocked by a red check before the credentials
+# exist. Required configuration:
 #   secrets.SE_KEY                 API key for the dump endpoint
-#   vars.SE_DUMP_PATH              dump endpoint path (e.g. /api/db_dump.php)
-#   vars.SE_BASE                   (optional) API host (default https://scriptureearth.org)
+#   vars.SE_DUMP_PATH              (optional) dump endpoint path (default /api/db_dump.php)
+#   vars.SE_BASE                   (optional) API host (default https://www.scriptureearth.org)
 #   secrets.CLOUDFLARE_API_TOKEN   token with Account · Cloudflare Pages · Edit
 #   secrets.CLOUDFLARE_ACCOUNT_ID  Cloudflare account id
 
@@ -36,15 +36,14 @@ jobs:
         id: check
         env:
           SE_KEY: ${{ secrets.SE_KEY }}
-          SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
           CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: |
-          if [ -n "$SE_KEY" ] && [ -n "$SE_DUMP_PATH" ] && [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+          if [ -n "$SE_KEY" ] && [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
             echo "ready=true" >> "$GITHUB_OUTPUT"
           else
             echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::notice::Preview skipped — set secrets.SE_KEY, vars.SE_DUMP_PATH, secrets.CLOUDFLARE_API_TOKEN and secrets.CLOUDFLARE_ACCOUNT_ID to enable Cloudflare PR previews."
+            echo "::notice::Preview skipped — set secrets.SE_KEY, secrets.CLOUDFLARE_API_TOKEN and secrets.CLOUDFLARE_ACCOUNT_ID to enable Cloudflare PR previews."
           fi
 
   preview:
@@ -68,20 +67,15 @@ jobs:
       - name: Install dependencies
         run: npm ci
 
-      - name: Fetch DB dump
+      - name: Fetch JSON dump
         run: npm run fetch:dump
         env:
           SE_KEY: ${{ secrets.SE_KEY }}
           SE_BASE: ${{ vars.SE_BASE }}
           SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
 
-      - name: Convert dump to SQLite
-        run: npm run convert:dump
-        env:
-          SE_STRICT: '1' # fail the build if scripture_main (the spine) is empty
-
       - name: Build site
-        run: npm run build:dump
+        run: npm run build:dump # project scripture.json → content/ then astro build
 
       - name: Precompress dist
         run: npm run predeploy

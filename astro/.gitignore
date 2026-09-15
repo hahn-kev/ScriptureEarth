@@ -4,12 +4,12 @@ dist/
 .astro/
 .wrangler/
 
-# generated content (regenerated from the DB/API by scripts/extract.mjs — see README)
+# generated content (regenerated from data/scripture.json by scripts/extract.mjs — see README)
 content/
 content-api/
 public/search-index.txt
 
-# local data snapshot (dev DB) + API harvest cache — never commit.
+# local data snapshot (scripture.json + deprecated dev DB) + API harvest cache — never commit.
 # Anchored to astro/data so code-owned src/data and scripts/data stay tracked.
 /data/
 scripts/harvest/data/

@@ -79,8 +79,9 @@ export function loadDataEnv(dataDir = resolveDataDir()) {
 export function dataPaths(dataDir = resolveDataDir()) {
   return {
     dir: dataDir,
-    sql: path.join(dataDir, 'scripture.sql'),
-    db: path.join(dataDir, 'scripture.db'),
+    json: path.join(dataDir, 'scripture.json'),   // consolidated dump (current source of truth)
+    sql: path.join(dataDir, 'scripture.sql'),      // DEPRECATED mysqldump path
+    db: path.join(dataDir, 'scripture.db'),        // DEPRECATED SQLite path
     playlistCache: path.join(dataDir, 'playlist-txt-cache'),
     configEnv: path.join(dataDir, 'config.env'),
   };

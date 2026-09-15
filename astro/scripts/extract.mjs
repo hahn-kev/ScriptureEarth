@@ -1,84 +1,79 @@
-// Reads the SQLite PoC dump and emits content-JSON documents
-// (languages, countries, search-index, English UI messages).
-// `--source=api` writes content-api/ without BUY rows; default dump writes content/.
-import { mkdirSync, writeFileSync, statSync } from 'node:fs';
+// Projects the consolidated JSON dump (data/scripture.json) into content-JSON
+// documents (languages, countries, search-index). This is the CURRENT source of
+// truth — the ScriptureEarth /api/db_dump.php endpoint returns one pre-joined JSON
+// object (keyed by a row ordinal; the real language key is relationships.idx), the
+// same data the live site's per-language nav renders. See scripts/README-dump.md.
+//
+// The old SQLite/mysqldump path (extract_sqlite.mjs) and JSON harvest (harvest/)
+// are DEPRECATED. This projector emits the identical content/ schema they did, so
+// src/ (pages, search, i18n) is unchanged.
+//
+// Run: node scripts/extract.mjs   (then build_search_index.mjs — `npm run extract`)
+import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { DatabaseSync } from 'node:sqlite';
 import { loadPlaylistClips } from './playlistTxt.mjs';
 import { dataPaths } from './data-dir.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const DATA = dataPaths();
-const DB = process.env.SE_DB || DATA.db;
-const SOURCE = process.argv.includes('--source=api') ? 'api' : 'dump';
-const OUT = path.join(HERE, '..', SOURCE === 'api' ? 'content-api' : 'content');
+const SRC = process.env.SE_JSON || DATA.json;
+const OUT = path.join(HERE, '..', 'content');
 const ASSET_BASE = 'https://scriptureearth.org';
+const PLAYLIST_CACHE = DATA.playlistCache;
+
+// language_name locale keys → our locale codes (matches extract_sqlite.mjs LN_*).
+const LN = {
+  English: 'eng', Spanish: 'spa', Portuguese: 'por', French: 'fra', Dutch: 'nld',
+  German: 'deu', Chinese: 'cmn', Korean: 'kor', Russian: 'rus', Arabic: 'arb',
+};
+const AUTONYM_KEY = 'autonym(s)';
 
 mkdirSync(OUT, { recursive: true });
 const t0 = Date.now();
-const db = new DatabaseSync(DB);
 
-function int(v) {
-  return typeof v === 'bigint' ? Number(v) : v;
+const raw = JSON.parse(readFileSync(SRC, 'utf8'));
+if (raw && typeof raw === 'object' && !Array.isArray(raw) && '__error' in raw) {
+  console.error(`ERROR: ${SRC} looks like an API error payload, not a dump.`);
+  process.exit(1);
+}
+// Top-level object is keyed by a row ordinal, NOT the idx. Take the values.
+const entries = Array.isArray(raw) ? raw : Object.values(raw);
+if (!entries.length) {
+  console.error(`ERROR: ${SRC} has no entries.`);
+  process.exit(1);
 }
 
-function q(sql, ...a) {
-  return db.prepare(sql).all(...a);
+const base = (f) => String(f || '').trim().replace(/\\/g, '/').split('/').pop();
+// Numeric-keyed maps ({"0":"a","1":"b"}) → array of non-empty string values.
+function vals(m) {
+  if (!m || typeof m !== 'object') return [];
+  return Object.values(m).filter((v) => typeof v === 'string' && v.trim());
 }
-
-function groupByIdx(rows) {
-  const d = new Map();
-  for (const r of rows) {
-    const k = int(r.ISO_ROD_index);
-    let list = d.get(k);
-    if (!list) {
-      list = [];
-      d.set(k, list);
-    }
-    list.push(r);
+function asset(iso, kind, file) {
+  return `${ASSET_BASE}/data/${iso}/${kind}/${base(file)}`;
+}
+function res(group, kind, fmt, name, source, url, external, meta = {}) {
+  const cleaned = {};
+  for (const [k, v] of Object.entries(meta)) {
+    if (v !== null && v !== undefined && v !== '') cleaned[k] = v;
   }
-  return d;
+  return { group, kind, format: fmt, name, source, url, external, meta: cleaned };
 }
 
-function at(map, idx) {
-  return map.get(idx) ?? [];
+// --- canonical country name per code (first seen; verified conflict-free) ---
+const countryName = new Map();
+function countriesOf(r) {
+  const codes = vals(r.countries_codes);
+  const names = vals(r.countries_names);
+  return codes.map((code, i) => {
+    const nm = names[i] || code;
+    if (!countryName.has(code)) countryName.set(code, nm);
+    return { code, name_eng: countryName.get(code) };
+  });
 }
 
-console.error('reading spine...');
-const spine = q('SELECT * FROM scripture_main');
-const lnEng = new Map();
-for (const r of q('SELECT ISO_ROD_index, LN_English FROM LN_English')) {
-  lnEng.set(int(r.ISO_ROD_index), r.LN_English);
-}
-
-const LN_TABLES = {
-  eng: 'LN_English',
-  spa: 'LN_Spanish',
-  por: 'LN_Portuguese',
-  fra: 'LN_French',
-  nld: 'LN_Dutch',
-  deu: 'LN_German',
-  cmn: 'LN_Chinese',
-  kor: 'LN_Korean',
-  rus: 'LN_Russian',
-  arb: 'LN_Arabic',
-};
-const lnAll = new Map();
-for (const [loc, tbl] of Object.entries(LN_TABLES)) {
-  for (const r of q(`SELECT ISO_ROD_index i, ${tbl} n FROM ${tbl} WHERE ISO_ROD_index IS NOT NULL`)) {
-    if (r.n && String(r.n).trim()) {
-      const i = int(r.i);
-      let names = lnAll.get(i);
-      if (!names) {
-        names = {};
-        lnAll.set(i, names);
-      }
-      names[loc] = String(r.n).trim();
-    }
-  }
-}
-
+// --- slug (same collision rule as extract_sqlite.mjs) ---
 const seenSlugs = new Map();
 function makeSlug(iso, rod, variant, idx) {
   let s;
@@ -86,227 +81,145 @@ function makeSlug(iso, rod, variant, idx) {
   else if (rod && rod !== '00000') s = `${iso}-${rod}`;
   else s = iso;
   s = String(s).toLowerCase();
-  if (seenSlugs.has(s) && seenSlugs.get(s) !== idx) {
-    s = `${s}-${idx}`;
-  }
+  if (seenSlugs.has(s) && seenSlugs.get(s) !== idx) s = `${s}-${idx}`;
   seenSlugs.set(s, idx);
   return s;
 }
 
-const variants = new Map();
-for (const r of q('SELECT Variant_Code, Variant_Eng FROM Variants')) {
-  variants.set(r.Variant_Code, r.Variant_Eng);
-}
-const countryName = new Map();
-for (const r of q('SELECT ISO_Country, English FROM countries')) {
-  countryName.set(r.ISO_Country, r.English);
+function testament(iso, map, kind, label, unit) {
+  const files = vals(map);
+  if (!files.length) return null;
+  const combined = files.find((f) => /^00-/.test(base(f)));
+  const count = files.filter((f) => !/^00-/.test(base(f))).length || files.length;
+  const dir = kind === 'audio' ? 'audio' : 'PDF';
+  const fmt = kind === 'audio' ? 'Audio' : 'PDF';
+  return res(kind === 'audio' ? 'listen' : 'read', kind === 'audio' ? 'audio' : 'pdf', fmt,
+    `${label} — ${count} ${unit}(s)`, 'ScriptureEarth', asset(iso, dir, combined || files[0]), false,
+    kind === 'audio' ? { chapters: count } : { books: count });
 }
 
-const altByIdx = groupByIdx(q('SELECT ISO_ROD_index, alt_lang_name FROM alt_lang_names'));
-const isoCtry = groupByIdx(q('SELECT ISO_ROD_index, ISO_countries FROM ISO_countries'));
-
-const otPdf = groupByIdx(q('SELECT ISO_ROD_index, OT_PDF, OT_PDF_Filename FROM OT_PDF_Media'));
-const ntPdf = groupByIdx(q('SELECT ISO_ROD_index, NT_PDF, NT_PDF_Filename FROM NT_PDF_Media'));
-const otAud = groupByIdx(q('SELECT ISO_ROD_index, OT_Audio_Book, OT_Audio_Filename FROM OT_Audio_Media'));
-const ntAud = groupByIdx(q('SELECT ISO_ROD_index, NT_Audio_Book, NT_Audio_Filename FROM NT_Audio_Media'));
-const links = groupByIdx(q('SELECT * FROM links'));
-const watchRows = groupByIdx(q('SELECT * FROM watch'));
-const cell = groupByIdx(q('SELECT * FROM CellPhone'));
-const buy = groupByIdx(q('SELECT * FROM buy'));
-const study = groupByIdx(q('SELECT * FROM study'));
-const ebible = groupByIdx(q('SELECT ISO_ROD_index, homeDomain, translationId, title FROM eBible_list'));
-const plAud = groupByIdx(q('SELECT ISO_ROD_index, PlaylistAudioTitle FROM PlaylistAudio'));
-const plVidRows = q('SELECT ISO, ISO_ROD_index, PlaylistVideoTitle, PlaylistVideoFilename, PlaylistVideoDownload FROM PlaylistVideo');
-const plVid = groupByIdx(plVidRows);
-const PLAYLIST_CACHE = DATA.playlistCache;
+// --- playlist videos: gather (iso, filename) pairs, fetch clip listings once ---
 const playlistClips = new Map();
-
-function resolve(p) {
-  if (!p) return [null, true];
-  const s = String(p);
-  if (s.startsWith('http://') || s.startsWith('https://')) return [s, true];
-  return [`${ASSET_BASE}/${s.replace(/^\/+/, '')}`, false];
-}
-
-function res(group, kind, fmt, name, source, url, external, meta = {}) {
-  const cleaned = {};
-  for (const [k, v] of Object.entries(meta)) {
-    if (v !== null && v !== '') cleaned[k] = v;
-  }
-  return { group, kind, format: fmt, name, source, url, external, meta: cleaned };
-}
-
-function stripPrefix(title, prefix) {
-  let t = (title || '').trim();
-  if (t.startsWith(prefix)) t = t.slice(prefix.length);
-  return t.replace(/^[ \-\u2013\u2014:]+/, '').trim();
-}
-
-function buildResources(idx, _iso, _flags) {
-  const R = { read: [], listen: [], watch: [], use: [] };
-
-  if (otPdf.has(idx)) {
-    const rows = otPdf.get(idx);
-    const [url, ext] = resolve(rows[0].OT_PDF_Filename);
-    R.read.push(res('read', 'pdf', 'PDF', `Old Testament — ${rows.length} book(s)`,
-      'ScriptureEarth', url, ext, { books: rows.length }));
-  }
-  if (ntPdf.has(idx)) {
-    const rows = ntPdf.get(idx);
-    const [url, ext] = resolve(rows[0].NT_PDF_Filename);
-    R.read.push(res('read', 'pdf', 'PDF', `New Testament — ${rows.length} book(s)`,
-      'ScriptureEarth', url, ext, { books: rows.length }));
-  }
-  for (const r of at(ebible, idx).slice(0, 3)) {
-    const [url, ext] = resolve(r.homeDomain ? `https://${r.homeDomain}/${r.translationId}` : null);
-    R.read.push(res('read', 'web', 'Web', r.title || 'eBible edition', 'eBible.org', url, true));
-  }
-  for (const l of at(links, idx)) {
-    const [u, ext] = resolve(l.URL);
-    if (l.YouVersion) {
-      const ver = stripPrefix(l.company_title, 'Bible.com (YouVersion)');
-      R.read.push(res('read', 'web', 'Web', ver || 'YouVersion', 'Bible.com (YouVersion)', u, ext));
-    } else if (l.Bibles_org) {
-      R.read.push(res('read', 'web', 'Web', l.company_title || l.company || 'Bibles.org edition', 'Bibles.org', u, ext));
-    } else if ([2, 3, 4].includes(Number(l.BibleIs))) {
-      R.read.push(res('read', 'web', 'Web', l.company_title || 'Bible.is edition', 'Bible.is', u, ext));
-    }
-  }
-
-  if (otAud.has(idx)) {
-    const rows = otAud.get(idx);
-    const [url, ext] = resolve(rows[0].OT_Audio_Filename);
-    R.listen.push(res('listen', 'audio', 'Audio', `Old Testament — ${rows.length} chapter(s)`,
-      'ScriptureEarth', url, ext, { chapters: rows.length }));
-  }
-  if (ntAud.has(idx)) {
-    const rows = ntAud.get(idx);
-    const [url, ext] = resolve(rows[0].NT_Audio_Filename);
-    R.listen.push(res('listen', 'audio', 'Audio', `New Testament — ${rows.length} chapter(s)`,
-      'ScriptureEarth', url, ext, { chapters: rows.length }));
-  }
-  for (const p of at(plAud, idx)) {
-    R.listen.push(res('listen', 'audio', 'MP3', p.PlaylistAudioTitle || 'Audio playlist', 'ScriptureEarth', null, false));
-  }
-  for (const l of at(links, idx)) {
-    const [u, ext] = resolve(l.URL);
-    if (l.GRN) {
-      R.listen.push(res('listen', 'audio', 'MP3', l.company_title || 'GRN recordings', 'Global Recordings Network', u, ext));
-    } else if ([1, 3, 4].includes(Number(l.BibleIs))) {
-      R.listen.push(res('listen', 'audio', 'Audio', l.company_title || 'Bible.is audio', 'Bible.is', u, ext));
-    }
-  }
-
-  for (const w of at(watchRows, idx)) {
-    const [u, ext] = resolve(w.URL);
-    const nm = w.JesusFilm ? 'JESUS Film' : (w.YouTube ? 'YouTube' : (w.watch_what || 'Video'));
-    R.watch.push(res('watch', 'video', 'Video', nm, w.organization || '—', u, ext));
-  }
-  for (const p of at(plVid, idx)) {
-    if (Number(p.PlaylistVideoDownload) === 1) continue;
-    const clips = playlistClips.get(`${p.ISO}\t${p.PlaylistVideoFilename}`) || [];
-    const first = clips[0];
-    R.watch.push(res(
-      'watch', 'video', 'Video',
-      p.PlaylistVideoTitle || 'Video playlist',
-      'ScriptureEarth',
-      first ? first.url : null,
-      first ? /^https?:/.test(first.url) : false,
-      { clips: clips.length > 1 ? clips : undefined, playlistFile: p.PlaylistVideoFilename },
-    ));
-  }
-  for (const l of at(links, idx)) {
-    if (l.BibleIsGospelFilm) {
-      const [u, ext] = resolve(l.URL);
-      R.watch.push(res('watch', 'video', 'Video', 'Bible.is Gospel Film', 'Faith Comes By Hearing', u, ext));
-    }
-  }
-
-  for (const c of at(cell, idx)) {
-    const [u, ext] = resolve(c.Cell_Phone_File);
-    R.use.push(res('use', 'app', 'App', c.Cell_Phone_Title || 'Mobile app', 'Scripture App Builder', u, ext));
-  }
-  for (const s of at(study, idx)) {
-    const [u, ext] = resolve(s.ScriptureURL || s.othersiteURL);
-    R.use.push(res('use', 'app', 'Study', s.ScriptureDescription || 'Study tool', '—', u, ext));
-  }
-  if (SOURCE !== 'api') {
-    for (const b of at(buy, idx)) {
-      const [u, ext] = resolve(b.URL);
-      R.use.push(res('use', 'buy', 'Buy', b.buy_what || 'Printed edition', b.organization || 'Print-on-demand', u, ext));
-    }
-  }
-  return R;
-}
-
-function availability(_idx, f, R) {
-  return {
-    read: Boolean(f.OT_PDF || f.NT_PDF || f.YouVersion || f.Bibles_org || f.eBible || f.viewer || f.BibleIs || f.SAB || R.read.length),
-    listen: Boolean(f.OT_Audio || f.NT_Audio || f.PlaylistAudio || f.GRN || R.listen.length),
-    watch: Boolean(f.watch || f.PlaylistVideo || f.BibleIsGospelFilm || R.watch.length),
-    app: Boolean(f.CellPhone || f.study || (R.use.length && R.use.some((x) => x.kind === 'app'))),
-    buy: Boolean(f.buy),
-  };
-}
-
-const FLAGCOLS = ['OT_PDF', 'NT_PDF', 'OT_Audio', 'NT_Audio', 'links', 'other_titles', 'watch', 'buy', 'study',
-  'viewer', 'CellPhone', 'BibleIs', 'BibleIsGospelFilm', 'YouVersion', 'Bibles_org',
-  'PlaylistAudio', 'PlaylistVideo', 'SAB', 'eBible', 'GRN'];
-
 async function poolMap(items, concurrency, fn) {
   let next = 0;
-  async function worker() {
-    while (next < items.length) {
-      const i = next++;
-      await fn(items[i]);
-    }
-  }
+  const worker = async () => { while (next < items.length) await fn(items[next++]); };
   const n = Math.min(concurrency, items.length);
-  if (n === 0) return;
-  await Promise.all(Array.from({ length: n }, () => worker()));
+  if (n > 0) await Promise.all(Array.from({ length: n }, worker));
 }
-
 {
   const seen = new Set();
   const pairs = [];
-  for (const r of plVidRows) {
-    if (Number(r.PlaylistVideoDownload) === 1) continue;
-    const iso = r.ISO;
-    const filename = r.PlaylistVideoFilename;
-    if (!iso || !filename) continue;
-    const key = `${iso}\t${filename}`;
-    if (seen.has(key)) continue;
-    seen.add(key);
-    pairs.push({ iso, filename, key });
+  for (const e of entries) {
+    const iso = e.attributes?.iso;
+    for (const f of vals(e.relationships?.se_media?.playlist_video)) {
+      const key = `${iso}\t${base(f)}`;
+      if (!iso || seen.has(key)) continue;
+      seen.add(key);
+      pairs.push({ iso, filename: f, key });
+    }
   }
-  console.error(`fetching ${pairs.length} playlist txt files...`);
-  await poolMap(pairs, 12, async (p) => {
-    playlistClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE }));
-  });
+  if (process.env.SE_SKIP_PLAYLISTS) {
+    console.error(`skipping ${pairs.length} playlist txt files (SE_SKIP_PLAYLISTS set — video playlists get no clip URLs)`);
+  } else {
+    console.error(`fetching ${pairs.length} playlist txt files...`);
+    await poolMap(pairs, 12, async (p) => {
+      playlistClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE }));
+    });
+  }
 }
 
 const languages = [];
 const search = [];
-for (const r of spine) {
-  const idx = int(r.ISO_ROD_index);
-  const iso = r.ISO;
-  const flags = {};
-  for (const c of FLAGCOLS) flags[c] = r[c];
-  const R = buildResources(idx, iso, flags);
-  const avail = availability(idx, flags, R);
-  const ccodes = at(isoCtry, idx).map((c) => c.ISO_countries);
-  const countries = ccodes.map((c) => ({ code: c, name_eng: countryName.get(c) ?? c }));
-  const slug = makeSlug(iso, r.ROD_Code, r.Variant_Code, idx);
-  const name = lnEng.get(idx) || iso;
-  const alt = at(altByIdx, idx).map((a) => a.alt_lang_name).filter(Boolean);
-  const doc = {
+for (const e of entries) {
+  const a = e.attributes || {};
+  const r = e.relationships || {};
+  const iso = a.iso;
+  const idx = Number(r.idx);
+  if (!iso || !Number.isFinite(idx)) continue;
+
+  const R = { read: [], listen: [], watch: [], use: [] };
+  const media = r.se_media || {};
+
+  // read
+  const otPdf = testament(iso, media.text?.OT, 'pdf', 'Old Testament', 'book');
+  const ntPdf = testament(iso, media.text?.NT, 'pdf', 'New Testament', 'book');
+  if (otPdf) R.read.push(otPdf);
+  if (ntPdf) R.read.push(ntPdf);
+  const lm = r.links_media || {};
+  for (const u of vals(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', 'YouVersion', 'Bible.com (YouVersion)', u, true));
+  for (const u of vals(lm.eBible)) R.read.push(res('read', 'web', 'Web', 'eBible edition', 'eBible.org', u, true));
+  for (const u of vals(lm['Bible.is'])) R.read.push(res('read', 'web', 'Web', 'Bible.is', 'Faith Comes By Hearing', u, true));
+  for (const u of vals(lm.Kalaam_websites)) R.read.push(res('read', 'web', 'Web', 'Website', 'Kalaam Media', u, true));
+  for (const u of vals(lm.other_websites)) R.read.push(res('read', 'web', 'Web', 'Website', '—', u, true));
+  if (typeof r.se_online_viewer === 'string' && r.se_online_viewer.trim()) {
+    R.read.push(res('read', 'web', 'Web', 'Online viewer', 'ScriptureEarth', r.se_online_viewer.trim(), true));
+  }
+
+  // listen
+  const otAud = testament(iso, media.audio?.OT, 'audio', 'Old Testament', 'chapter');
+  const ntAud = testament(iso, media.audio?.NT, 'audio', 'New Testament', 'chapter');
+  if (otAud) R.listen.push(otAud);
+  if (ntAud) R.listen.push(ntAud);
+  for (const f of vals(media.playlist_audio)) {
+    R.listen.push(res('listen', 'audio', 'MP3', base(f).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth', null, false));
+  }
+  for (const u of vals(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', 'GRN recordings', 'Global Recordings Network', u, true));
+
+  // watch
+  for (const u of vals(r.watch)) {
+    const [nm, src] = /jesusfilm\.org/i.test(u) ? ['JESUS Film', 'Jesus Film Project']
+      : /youtu\.?be/i.test(u) ? ['YouTube', 'YouTube'] : ['Video', '—'];
+    R.watch.push(res('watch', 'video', 'Video', nm, src, u, true));
+  }
+  for (const f of vals(media.playlist_video)) {
+    const clips = playlistClips.get(`${iso}\t${base(f)}`) || [];
+    const first = clips[0];
+    R.watch.push(res('watch', 'video', 'Video', base(f).replace(/\.txt$/i, '') || 'Video playlist', 'ScriptureEarth',
+      first ? first.url : null, first ? /^https?:/.test(first.url) : false,
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(f) }));
+  }
+  for (const u of vals(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', 'Bible.is Gospel Film', 'Faith Comes By Hearing', u, true));
+
+  // use (apps + buy)
+  const apps = r.se_apps || {};
+  for (const u of vals(apps.android)) R.use.push(res('use', 'app', 'App', 'Android app', 'Scripture App Builder', u, true));
+  for (const u of vals(apps.ios)) R.use.push(res('use', 'app', 'App', 'iOS app', 'Scripture App Builder', u, true));
+  for (const u of vals(r.se_google_play)) R.use.push(res('use', 'app', 'App', 'Google Play', 'Google Play', u, true));
+  for (const u of vals(lm.AppleStore)) R.use.push(res('use', 'app', 'App', 'iOS app', 'App Store', u, true));
+  for (const u of vals(r.buy)) R.use.push(res('use', 'buy', 'Buy', 'Printed edition', 'Print-on-demand', u, true));
+
+  // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
+  // toward read availability (as extract_sqlite.mjs did for the SAB flag) w/o a link.
+  const sab = r.se_sab || {};
+  const hasSab = vals(sab.text).length > 0 || vals(sab.audio).length > 0;
+
+  const avail = {
+    read: R.read.length > 0 || hasSab,
+    listen: R.listen.length > 0,
+    watch: R.watch.length > 0,
+    app: R.use.some((x) => x.kind === 'app'),
+    buy: R.use.some((x) => x.kind === 'buy'),
+  };
+
+  const ln = r.language_name || {};
+  const name = (typeof ln.English === 'string' && ln.English.trim()) ? ln.English.trim() : iso;
+  const localizedNames = [];
+  for (const key of Object.keys(LN)) {
+    const v = ln[key];
+    if (typeof v === 'string' && v.trim()) localizedNames.push(v.trim());
+  }
+  const alt = vals(r.alternate_language_names);
+  const countries = countriesOf(r);
+  const slug = makeSlug(iso, r.rod, r.var_code, idx);
+
+  languages.push({
     idx,
     identity: {
       iso,
       slug,
-      rod: r.ROD_Code,
-      variant_code: r.Variant_Code,
-      variant_name: r.Variant_Code ? (variants.get(r.Variant_Code) ?? '') : '',
+      rod: r.rod,
+      variant_code: r.var_code || '',
+      variant_name: r.var_name || '',
       iso_query: `iso=${iso}`,
       idx_query: `idx=${idx}`,
     },
@@ -314,42 +227,34 @@ for (const r of spine) {
     countries,
     availability: avail,
     resources: R,
-  };
-  languages.push(doc);
-  const allNames = [...new Set(Object.values(lnAll.get(idx) ?? {}))];
+  });
+
   search.push({
     idx,
     slug,
     code: iso,
     nm: name,
     auto: null,
-    nms: allNames.filter((n) => n !== name),
+    nms: [...new Set(localizedNames)].filter((n) => n !== name),
     alt,
     where: countries.map((c) => c.name_eng).join(', '),
-    cc: ccodes,
+    cc: countries.map((c) => c.code),
     r: Object.entries(avail).filter(([, v]) => v).map(([k]) => k),
   });
 }
 
-const langsByCountry = new Map();
+// --- countries.json: invert languages by country ---
 const byidx = new Map(languages.map((d) => [d.idx, d]));
-for (const [cidx, rows] of isoCtry) {
-  const d = byidx.get(cidx);
-  if (!d) continue;
-  for (const c of rows) {
-    const code = c.ISO_countries;
-    let ls = langsByCountry.get(code);
-    if (!ls) {
-      ls = [];
-      langsByCountry.set(code, ls);
-    }
+const langsByCountry = new Map();
+for (const d of languages) {
+  for (const c of d.countries) {
+    let ls = langsByCountry.get(c.code);
+    if (!ls) { ls = []; langsByCountry.set(c.code, ls); }
     ls.push(d);
   }
 }
-
 const countriesOut = [];
-const countryEntries = [...countryName.entries()].sort((a, b) => (a[0] < b[0] ? -1 : a[0] > b[0] ? 1 : 0));
-for (const [code, name] of countryEntries) {
+for (const [code, name] of [...countryName.entries()].sort((a, b) => (a[0] < b[0] ? -1 : 1))) {
   const ls = langsByCountry.get(code) ?? [];
   countriesOut.push({
     code,
@@ -366,22 +271,10 @@ for (const [code, name] of countryEntries) {
   });
 }
 
-const msg = {};
-let transRows;
-try {
-  transRows = q('SELECT id, phrase FROM translations_eng WHERE active=1');
-} catch {
-  transRows = q('SELECT id, phrase FROM translations_eng');
-}
-for (const r of transRows) {
-  msg[String(r.id)] = r.phrase;
-}
-const messages = { locale: 'eng', language_code: 'en', direction: 'ltr', name: 'English', messages: msg };
-
 function dump(name, obj) {
   const p = path.join(OUT, name);
   writeFileSync(p, JSON.stringify(obj), 'utf8');
-  const count = Array.isArray(obj) ? obj.length : Object.keys(obj.messages ?? obj).length;
+  const count = Array.isArray(obj) ? obj.length : Object.keys(obj).length;
   const kb = Math.floor(statSync(p).size / 1024);
   console.error(`  ${name.padEnd(22)} ${String(count).padStart(6)}  ${kb} KB`);
 }
@@ -390,6 +283,5 @@ console.error('writing content/...');
 dump('languages.json', languages);
 dump('countries.json', countriesOut);
 dump('search-index.json', search);
-dump('messages.eng.json', messages);
 
 console.error(`done in ${((Date.now() - t0) / 1000).toFixed(1)}s  (${languages.length} languages, ${countriesOut.length} countries)`);

@@ -7,6 +7,7 @@
   "scripts": {
     "setup:data": "node scripts/setup-data.mjs",
     "extract": "node scripts/extract.mjs && node scripts/build_search_index.mjs",
+    "extract:sqlite": "node scripts/extract_sqlite.mjs && node scripts/build_search_index.mjs",
     "extract:api": "node scripts/harvest/project.mjs",
     "extract:i18n": "node scripts/extract_i18n.mjs",
     "gen:geo": "node scripts/gen_geo.mjs",
@@ -15,8 +16,9 @@
     "dev": "astro dev",
     "build": "astro build",
     "build:dump": "npm run extract && astro build",
+    "build:sqlite": "npm run convert:dump && npm run extract:sqlite && astro build",
     "build:api": "npm run extract:api && astro build",
-    "build:fresh": "npm run fetch:dump && npm run convert:dump && npm run build:dump",
+    "build:fresh": "npm run fetch:dump && npm run build:dump",
     "preview": "astro preview",
     "predeploy": "node scripts/build_sizes.mjs && node scripts/precompress_dist.mjs",
     "bench:size": "node scripts/build_sizes.mjs && node scripts/check_sizes.mjs",

@@ -5,29 +5,47 @@ client-side search, built from the ScriptureEarth database. Proof-of-concept pro
 `/wayfinder` planning effort (decision records live in `.scratch/scriptureearth-rewrite/`).
 
 ## Prerequisites
-- **Node 18+** and **Python 3** (the extractor is Python).
-- A **data source** (one of):
-  - `data/scripture.db` — a SQLite snapshot of the ScriptureEarth DB (git-ignored). *Default.*
-  - the JSON API — harvest via `scripts/harvest/harvest.mjs` (`SE_KEY=… node harvest.mjs`), then project.
-  - Override the DB path with `SE_DB=/path/to.db`.
+- **Node 18+** — all extractors/generators are Node `.mjs`. The default JSON path needs no extra tools. No Python.
+- A **data source** — `data/scripture.json`, the consolidated JSON dump of the ScriptureEarth DB (git-ignored).
+  Get one via **`npm run setup:data`** (downloads a prebuilt dump — no key needed) or fetch it fresh
+  from the live **dump API** (needs `SE_KEY`; see [`scripts/README-dump.md`](scripts/README-dump.md)).
+  Override the data dir with `SE_DATA_DIR`, or the dump path with `SE_JSON=/path/to.json`.
+
+## Data source: the JSON dump (source of truth)
+The site is built from a single pre-joined JSON dump of the production `scripture` DB, downloaded
+from the API — **not** per-record scraping. Confirmed endpoint:
+```
+https://www.scriptureearth.org/api/db_dump.php?v=1&key=<your key>
+```
+`<your key>` is a row in the server's `api_users` table. Flow:
+`fetch_dump.mjs` (→ `data/scripture.json`) → `extract.mjs` (projector → `content/*.json`) → `astro build`.
+The dump keys entries by a row ordinal (the real key is `relationships.idx`); the projector builds asset
+URLs as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`. Details + how to test your key:
+[`scripts/README-dump.md`](scripts/README-dump.md).
+
+Two older ingest paths are **deprecated**, fallback only (not in any default build): the SQLite/`mysqldump`
+path (`npm run build:sqlite`) and the JSON API harvest (`scripts/harvest/`, `npm run build:api`).
 
 ## Build & run
-Two mutually-exclusive data sources produce the **same** `content/` schema (ticket 12):
 ```bash
 npm install
+npm run setup:data           # one-time: get data/scripture.json (prebuilt; no key needed)
 
-# (A) DUMP build — full parity. Needs data/scripture.db (or SE_DB=/path).
-npm run build:dump           # extract.py (DB -> content/) then astro build -> dist/
+# (A) Build from an existing data/scripture.json — source of truth.
+npm run build:dump           # extract.mjs (project -> content/) then astro build -> dist/
 
-# (B) API build — from the JSON API. Needs a harvest first (your key):
-node scripts/harvest/harvest.mjs        # SE_KEY=… ; -> scripts/harvest/data/  (throttled, resumable)
-npm run build:api                        # project.mjs (harvest cache -> content/) then astro build
+# (B) FRESH build — re-download the live dump first (maintainers; needs SE_KEY).
+SE_KEY=… npm run build:fresh  # fetch:dump -> extract -> astro build
 
-npm run dev                  # dev server (build content once first: npm run extract | extract:api)
+# Deprecated fallbacks:
+npm run build:sqlite         # SQLite/mysqldump path (needs awk + node:sqlite)
+npm run build:api            # JSON-harvest path (no buy rows)
+
+npm run dev                  # dev server (build content once first: npm run extract)
 npm run preview              # serve dist/
 ```
-- `npm run extract` / `npm run extract:api` regenerate `content/` without building.
-- **DUMP** = complete (incl. `buy` links); **API** = fresher but no `buy` links (no buy endpoint) — see `RESULTS-datasource.md`.
+- `npm run extract` regenerates `content/` (and `public/search-index.txt`) from `data/scripture.json` without building.
+  Add `SE_SKIP_PLAYLISTS=1` for a fast dev build (skips the per-playlist `.txt` fetch).
 - `npm run extract:i18n` regenerates the per-locale UI catalogs — rarely needed (see note below).
 
 ## Layout
@@ -37,7 +55,7 @@ npm run preview              # serve dist/
 - `public/` — static assets: `site.css`, `i18n.js` (client localizer), `favicon.ico`, `sil-logo.webp`,
   and **`i18n/*.json`** (see below). `search-index.json` is generated (git-ignored).
 - `functions/index.php.js` + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
-- `scripts/` — `extract.py` (`--source=dump|api` → content JSON), `extract_i18n.py`, `harvest/` (API client).
+- `scripts/` — `fetch_dump.mjs` (dump API → `data/scripture.json`), `extract.mjs` (projector → content JSON), `extract_i18n.mjs`; `extract_sqlite.mjs`/`convert_dump.mjs` + `harvest/` are deprecated fallbacks.
 - `content/`, `content-api/`, `data/`, `public/search-index.json` — **generated / local; git-ignored.**
 
 ## i18n (important)
