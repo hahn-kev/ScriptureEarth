@@ -302,6 +302,69 @@ function dump(name, obj) {
   console.error(`  ${name.padEnd(22)} ${String(count).padStart(6)}  ${kb} KB`);
 }
 
+// --- data audit / strict mode -------------------------------------------------
+// Catches the class of regression that has bitten us twice (dump field shapes
+// changing so the projector silently emits nothing). For each dump field, count
+// languages that HAVE raw data in it vs. languages we actually emitted a row from.
+// raw>0 but emitted==0 ⇒ the field shape changed. SE_STRICT=1 turns findings into a
+// non-zero exit (use it to audit a dump; NOT wired into CI, which must still deploy
+// the best-available build). Also reports title coverage for watch/buy — data the
+// old SQLite dump carried (watch_what/buy_what) that the JSON dump currently omits.
+function auditData(ents, langs) {
+  const byIdx = new Map(langs.map((d) => [d.idx, d]));
+  const some = (a, p) => Array.isArray(a) && a.some(p);
+  const isPlaylist = (x) => x.meta && x.meta.playlistFile;
+  const checks = [
+    ['se_media.text',    (r) => vals(r.se_media?.text?.OT).length || vals(r.se_media?.text?.NT).length, (d) => some(d.resources.read, (x) => x.kind === 'pdf')],
+    ['se_media.audio',   (r) => vals(r.se_media?.audio?.OT).length || vals(r.se_media?.audio?.NT).length, (d) => some(d.resources.listen, (x) => x.kind === 'audio' && /Testament/.test(x.name))],
+    ['playlist_video',   (r) => playlistItems(r.se_media?.playlist_video).length, (d) => some(d.resources.watch, isPlaylist)],
+    ['playlist_audio',   (r) => playlistItems(r.se_media?.playlist_audio).length, (d) => some(d.resources.listen, (x) => x.format === 'MP3' && !x.url)],
+    ['links.YouVersion', (r) => vals(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
+    ['links.eBible',     (r) => vals(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
+    ['links.Bible.is',   (r) => vals(r.links_media?.['Bible.is']).length, (d) => some(d.resources.read, (x) => x.name === 'Bible.is')],
+    ['links.GRN',        (r) => vals(r.links_media?.GRN).length, (d) => some(d.resources.listen, (x) => x.source === 'Global Recordings Network')],
+    ['watch',            (r) => vals(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x))],
+    ['buy',              (r) => vals(r.buy).length, (d) => some(d.resources.use, (x) => x.kind === 'buy')],
+    ['se_apps',          (r) => vals(r.se_apps?.android).length || vals(r.se_apps?.ios).length, (d) => some(d.resources.use, (x) => x.kind === 'app')],
+  ];
+  const failures = [];
+  console.error('data audit (languages with raw field → languages we emitted from it):');
+  for (const [name, rawFn, emitFn] of checks) {
+    let raw = 0, emitted = 0;
+    for (const e of ents) {
+      if (!rawFn(e.relationships || {})) continue;
+      raw++;
+      const d = byIdx.get(Number(e.relationships?.idx));
+      if (d && emitFn(d)) emitted++;
+    }
+    const flag = raw > 0 && emitted === 0 ? '  ✗ SHAPE CHANGED' : (emitted < raw * 0.5 ? '  ⚠ partial' : '');
+    console.error(`  ${name.padEnd(18)} ${String(raw).padStart(5)} → ${String(emitted).padStart(5)}${flag}`);
+    if (raw > 0 && emitted === 0) failures.push(`${name}: ${raw} languages have data but none was projected — dump field shape likely changed`);
+  }
+  // Title coverage for watch/buy (data the JSON dump currently omits vs the old DB dump).
+  const genericWatch = new Set(['JESUS Film', 'YouTube', 'Video']);
+  let wRows = 0, wTitled = 0, bRows = 0, bTitled = 0;
+  for (const d of langs) {
+    for (const x of d.resources.watch) { if (isPlaylist(x)) continue; wRows++; if (!genericWatch.has(x.name)) wTitled++; }
+    for (const x of d.resources.use) { if (x.kind !== 'buy') continue; bRows++; if (x.name !== 'Printed edition') bTitled++; }
+  }
+  console.error(`  watch titles: ${wTitled}/${wRows}   buy titles: ${bTitled}/${bRows}`);
+  if (wRows > 0 && wTitled === 0) failures.push('watch: 0 rows have a real title (dump omits watch_what/organization)');
+  if (bRows > 0 && bTitled === 0) failures.push('buy: 0 rows have a real title (dump omits buy_what/organization)');
+  if (langs.length < Number(process.env.SE_MIN_LANGS || 4000)) failures.push(`only ${langs.length} languages (< ${process.env.SE_MIN_LANGS || 4000})`);
+  return failures;
+}
+
+const auditFailures = auditData(entries, languages);
+if (auditFailures.length) {
+  console.error(`\n${process.env.SE_STRICT ? 'STRICT ' : ''}data audit: ${auditFailures.length} issue(s):`);
+  for (const f of auditFailures) console.error(`  - ${f}`);
+  if (process.env.SE_STRICT) {
+    console.error('SE_STRICT set — failing without writing content/.');
+    process.exit(1);
+  }
+}
+
 console.error('writing content/...');
 dump('languages.json', languages);
 dump('countries.json', countriesOut);

@@ -122,6 +122,8 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 | `SE_DUMP_OUT` | `<data dir>/scripture.json` | Where the dump is written / read. |
 | `SE_JSON` | `<data dir>/scripture.json` | Dump path read by `extract.mjs`. |
 | `SE_SKIP_PLAYLISTS` | *(unset)* | `1` → `extract.mjs` skips fetching playlist `.txt` listings. **Dev only** — drops video-playlist rows; never deploy such a build. |
+| `SE_STRICT` | *(unset)* | `1` → `extract.mjs` runs a data audit and exits non-zero (without writing) if a dump field has data but nothing was projected (shape change), or `watch`/`buy` titles are absent. Audit tool — not wired into CI. See `DUMP-API-REQUESTS.md`. |
+| `SE_MIN_LANGS` | `4000` | Strict-mode floor: fail if fewer than this many languages projected. |
 | `SE_DATA_DIR` | *(unset)* | Override the shared data dir for one command (else `git config se.datadir`, else `<package>/data`). Also the folder `config.env` is read from. |
 | `SE_JSON_URL` | *(Drive link)* | `setup:data`: prebuilt dump download URL — a zip of `scripture.json`, or a raw `.json`. |
 | `SE_PLAYLIST_CACHE_URL` | *(Drive link)* | `setup:data`: prebuilt `playlist-txt-cache.zip` download URL (zip must contain a top-level `playlist-txt-cache/`). |
