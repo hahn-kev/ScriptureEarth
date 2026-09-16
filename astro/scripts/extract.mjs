@@ -53,6 +53,15 @@ function vals(m) {
 function asset(iso, kind, file) {
   return `${ASSET_BASE}/data/${iso}/${kind}/${base(file)}`;
 }
+// The JSON dump gives video playlists only as filenames (the old SQLite path had a
+// human PlaylistVideoTitle). Derive a readable title: drop .txt + trailing language
+// code, special-case JESUS Film, else split CamelCase/separators into words.
+function playlistTitle(file) {
+  let s = base(file).replace(/\.txt$/i, '').replace(/-[A-Za-z]{2,4}\d*$/, '');
+  if (/^JESUS ?Film/i.test(s)) return 'JESUS Film';
+  s = s.replace(/([a-z])([A-Z])/g, '$1 $2').replace(/[_-]+/g, ' ').trim();
+  return s || 'Video playlist';
+}
 function res(group, kind, fmt, name, source, url, external, meta = {}) {
   const cleaned = {};
   for (const [k, v] of Object.entries(meta)) {
@@ -174,7 +183,7 @@ for (const e of entries) {
   for (const f of vals(media.playlist_video)) {
     const clips = playlistClips.get(`${iso}\t${base(f)}`) || [];
     const first = clips[0];
-    R.watch.push(res('watch', 'video', 'Video', base(f).replace(/\.txt$/i, '') || 'Video playlist', 'ScriptureEarth',
+    R.watch.push(res('watch', 'video', 'Video', playlistTitle(f), 'ScriptureEarth',
       first ? first.url : null, first ? /^https?:/.test(first.url) : false,
       { clips: clips.length > 1 ? clips : undefined, playlistFile: base(f) }));
   }

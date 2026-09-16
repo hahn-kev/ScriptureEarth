@@ -41,11 +41,14 @@ The dump doesn't carry the `translations_eng` table. That file was unused by `sr
 (UI chrome is code-owned in `public/i18n/`), so this is intentional — listed only so its
 absence isn't mistaken for a bug.
 
-### 5. Playlist cache is a subset
-The prebuilt `playlist-txt-cache/` (from `setup:data`) covers ~2845 of the ~3429
-playlist `.txt` listings the dump references. `extract.mjs` fetches the rest from
-scriptureearth.org on demand (slower first build; use `SE_SKIP_PLAYLISTS=1` to skip
-entirely for fast dev builds — video playlists then have no per-clip URLs).
+### 5. Video playlists depend on fetching `.txt` listings — never skip for a deploy
+Video playlists (e.g. JESUS Film) are stored as a `.txt` filename; `extract.mjs` fetches
+each to expand its per-clip rows. A playlist with no fetched clips has no URL, so the
+**whole row is dropped** — a build made with `SE_SKIP_PLAYLISTS=1` (a dev-speed flag)
+silently loses those entries (this caused a real kea regression: 62 JESUS Film clips gone).
+Guardrails now in place: the flag is documented dev-only, and CI runs `setup:data` to
+download the prebuilt `playlist-txt-cache/` so builds expand clips reliably and fast. The
+cache covers ~2845 of ~3429 listings; the rest are fetched on demand.
 
 ## CI
 
