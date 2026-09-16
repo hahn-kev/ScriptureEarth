@@ -5,6 +5,9 @@ import '../styles/site.css';
 
 interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
 const { title, lang = 'en', dir = 'ltr' } = Astro.props;
+// Build timestamp (date granularity) — baked into every page, shown in the footer.
+// ISO YYYY-MM-DD is locale-neutral, so the same value is correct under every locale.
+const buildDate = new Date().toISOString().slice(0, 10);
 ---
 <!doctype html>
 <html lang={lang} dir={dir}>
@@ -71,6 +74,7 @@ const { title, lang = 'en', dir = 'ltr' } = Astro.props;
     <div class="cc">
       <img class="silmark-foot" src="/sil-logo.webp" alt="SIL" width="63" height="34" />
       <span data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</span>
+      <span class="updated"><span data-i18n="footer.updated">Last updated</span> <time datetime={buildDate}>{buildDate}</time></span>
     </div>
   </div></footer>
 </body>

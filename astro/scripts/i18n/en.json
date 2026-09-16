@@ -58,5 +58,6 @@
 
   "footer.about": "About",
   "footer.ministry": "A ministry of SIL Global",
-  "footer.note": "A static rebuild of the ScriptureEarth discovery site."
+  "footer.note": "A static rebuild of the ScriptureEarth discovery site.",
+  "footer.updated": "Last updated"
 }

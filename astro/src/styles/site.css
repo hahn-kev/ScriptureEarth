@@ -697,11 +697,16 @@ footer.site .fcol b {
 footer.site .cc {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: var(--s4);
   border-top: 1px solid rgba(255, 255, 255, 0.15);
   padding-block: var(--s4);
   font-size: 0.82rem;
   color: #9fb3c4;
+}
+footer.site .cc .updated {
+  margin-inline-start: auto;
+  white-space: nowrap;
 }
 footer.site .silmark-foot {
   height: 34px;
