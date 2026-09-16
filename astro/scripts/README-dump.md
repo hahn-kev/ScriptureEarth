@@ -29,8 +29,11 @@ localized `language_name`, `countries_codes`/`countries_names`, …). This is th
 live site's per-language nav renders. `scripts/extract.mjs` projects it into the `content/`
 schema (`languages.json`, `countries.json`, `search-index.json`).
 
-Media values are basenames; the projector builds URLs as `https://scriptureearth.org/data/<iso>/<TYPE>/<file>`
-(`PDF/` for text, `audio/` for audio, `video/` for playlist listings — all verified).
+Media values (`se_media.text`/`audio`) are full URLs; playlists come as
+`{ title:{0:..}, filename:{0:<full URL>} }` under `se_media.playlist_video`/`playlist_audio`.
+(Older captures used bare basenames and a flat `{0:file}` playlist shape — the projector still
+tolerates both.) The dump format has changed more than once, so if resources vanish, re-probe a
+fresh dump before assuming a build bug.
 
 ## Worktrees: share one data folder (`npm run setup:data`)
 

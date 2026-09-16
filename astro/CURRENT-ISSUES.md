@@ -49,15 +49,14 @@ them all — the flag is documented dev-only. CI does **not** use `setup:data`; 
 `extract.mjs` fetch the `.txt` listings from the server (`npm run setup:data` is local-dev
 convenience only).
 
-### 5b. ⚠️ OPEN: the live dump shape differs from the sample the projector was built on
-CI fetched a **16.9 MB** dump from the live API and `extract.mjs` found **0**
-`se_media.playlist_video` entries in it (`fetching 0 playlist txt files...`), so no video
-playlists shipped. The sample the projector was written against (the Drive-seeded
-`data/scripture.json`) is **12.5 MB** and *does* carry `se_media.playlist_video`. So the
-live endpoint's structure has changed/diverged from the sample. **The whole projection may
-be reading stale field paths, not just playlists.** Next step: fetch a current dump with a
-real key and re-derive the field map (top-level shape, `attributes`/`relationships` keys,
-where video/playlist data now lives) before trusting any CI build.
+### 5b. RESOLVED: the dump's playlist format changed
+The live dump changed `se_media.playlist_video`/`playlist_audio` from a flat
+`{ "0": "file.txt" }` (basenames) to `{ title: {0:..}, filename: {0: <full URL>} }`, and
+`se_media.text`/`audio` values from basenames to full URLs. The old projector read the flat
+shape and found nothing (a CI build shipped with 0 video playlists). Fixed: `playlistItems()`
+normalizes both shapes and uses the dump-provided title ("The JESUS Film"); `asset()` uses a
+full URL as-is. The dump format has been in flux, so the projector now tolerates both shapes —
+re-verify against a fresh dump if resources go missing again.
 
 ## CI
 

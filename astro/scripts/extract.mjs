@@ -51,10 +51,24 @@ function vals(m) {
   return Object.values(m).filter((v) => typeof v === 'string' && v.trim());
 }
 function asset(iso, kind, file) {
-  return `${ASSET_BASE}/data/${iso}/${kind}/${base(file)}`;
+  // The dump gives media as full URLs now (older captures used basenames); use the
+  // URL as-is, else build it under the standard /data/<iso>/<kind>/ path.
+  const s = String(file || '');
+  return /^https?:/i.test(s) ? s : `${ASSET_BASE}/data/${iso}/${kind}/${base(s)}`;
 }
-// The JSON dump gives video playlists only as filenames (the old SQLite path had a
-// human PlaylistVideoTitle). Derive a readable title: drop .txt + trailing language
+// Playlists come as { title:{0:..}, filename:{0:url} } in the current dump (older
+// captures used a flat { 0:file } with no title). Normalize to [{file, title}].
+function playlistItems(pl) {
+  if (!pl || typeof pl !== 'object') return [];
+  if (pl.filename && typeof pl.filename === 'object') {
+    const titles = pl.title || {};
+    return Object.entries(pl.filename)
+      .filter(([, f]) => typeof f === 'string' && f.trim())
+      .map(([k, f]) => ({ file: f, title: (typeof titles[k] === 'string' && titles[k].trim()) ? titles[k].trim() : null }));
+  }
+  return vals(pl).map((f) => ({ file: f, title: null }));
+}
+// Fallback title when the dump gives no playlist title: drop .txt + trailing language
 // code, special-case JESUS Film, else split CamelCase/separators into words.
 function playlistTitle(file) {
   let s = base(file).replace(/\.txt$/i, '').replace(/-[A-Za-z]{2,4}\d*$/, '');
@@ -120,11 +134,11 @@ async function poolMap(items, concurrency, fn) {
   const pairs = [];
   for (const e of entries) {
     const iso = e.attributes?.iso;
-    for (const f of vals(e.relationships?.se_media?.playlist_video)) {
-      const key = `${iso}\t${base(f)}`;
+    for (const it of playlistItems(e.relationships?.se_media?.playlist_video)) {
+      const key = `${iso}\t${base(it.file)}`;
       if (!iso || seen.has(key)) continue;
       seen.add(key);
-      pairs.push({ iso, filename: f, key });
+      pairs.push({ iso, filename: it.file, key });
     }
   }
   if (process.env.SE_SKIP_PLAYLISTS) {
@@ -169,8 +183,8 @@ for (const e of entries) {
   const ntAud = testament(iso, media.audio?.NT, 'audio', 'New Testament', 'chapter');
   if (otAud) R.listen.push(otAud);
   if (ntAud) R.listen.push(ntAud);
-  for (const f of vals(media.playlist_audio)) {
-    R.listen.push(res('listen', 'audio', 'MP3', base(f).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth', null, false));
+  for (const it of playlistItems(media.playlist_audio)) {
+    R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth', null, false));
   }
   for (const u of vals(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', 'GRN recordings', 'Global Recordings Network', u, true));
 
@@ -180,12 +194,12 @@ for (const e of entries) {
       : /youtu\.?be/i.test(u) ? ['YouTube', 'YouTube'] : ['Video', '—'];
     R.watch.push(res('watch', 'video', 'Video', nm, src, u, true));
   }
-  for (const f of vals(media.playlist_video)) {
-    const clips = playlistClips.get(`${iso}\t${base(f)}`) || [];
+  for (const it of playlistItems(media.playlist_video)) {
+    const clips = playlistClips.get(`${iso}\t${base(it.file)}`) || [];
     const first = clips[0];
-    R.watch.push(res('watch', 'video', 'Video', playlistTitle(f), 'ScriptureEarth',
+    R.watch.push(res('watch', 'video', 'Video', it.title || playlistTitle(it.file), 'ScriptureEarth',
       first ? first.url : null, first ? /^https?:/.test(first.url) : false,
-      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(f) }));
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file) }));
   }
   for (const u of vals(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', 'Bible.is Gospel Film', 'Faith Comes By Hearing', u, true));
 
