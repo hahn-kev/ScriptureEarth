@@ -10,6 +10,26 @@ The dump is already inconsistent about this: `se_media.playlist_video` carries
 `{ title:{…}, filename:{…} }`, but `watch` and `buy` are bare URL lists. The ask is to make
 the rest consistent with the playlist pattern.
 
+## Columns at a glance
+
+One row per DB column the dump should carry but currently doesn't:
+
+| Table | Column | Why we want it |
+|---|---|---|
+| `watch` | `watch_what` | The video's title (e.g. "My Last Day"), instead of a generic "YouTube". |
+| `watch` | `organization` | Who produced/hosts the video (often the local-language title) — shown as the source. |
+| `buy` | `buy_what` | The printed edition's title, instead of a generic "Printed edition". |
+| `buy` | `organization` | The store/publisher selling it (Lulu.com, Virtual Storehouse, …). |
+| `CellPhone` | `Cell_Phone_Title` | The app's name, instead of a generic "Android app" / "iOS app". |
+| `links` | `company_title` | The edition/version name for web links (YouVersion, Bibles.org, GRN, Bible.is). |
+| `links` | `BibleIs` | Code marking a Bible.is link as text / audio / both, so it can be listed under Read **and** Listen (~2000 languages lost their Bible.is audio without it). |
+| `eBible_list` | `title` | The eBible edition's title, instead of a generic "eBible edition". |
+| `study` | `ScriptureDescription` | The study/reference tool's title (the whole `study` table is absent; ~610 languages). |
+| `study` | `ScriptureURL` | The study tool's link (fall back to `othersiteURL` when empty). |
+
+The first 8 are columns the dump can already reach (the granular API emits them); the two
+`study` rows plus `links.BibleIs` are the additions that need real work. Detail below.
+
 ## Priority 1 — titles/organizations that were on the old site
 
 | dump field | today | add | source in DB / committed API |
