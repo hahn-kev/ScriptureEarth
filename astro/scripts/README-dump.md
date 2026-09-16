@@ -34,6 +34,9 @@ Media values are basenames; the projector builds URLs as `https://scriptureearth
 
 ## Worktrees: share one data folder (`npm run setup:data`)
 
+> **`setup:data` is for local dev only.** CI never runs it — a CI build fetches the dump fresh
+> (`fetch:dump`) and lets `extract.mjs` fetch video playlist listings from the server directly.
+
 Because `data/` is git-ignored, a freshly-created **git worktree starts with no dump** — and you
 don't want each worktree re-downloading it. The fix is one shared folder that every worktree
 points at, recorded in a single **shared git config key** (lives in the common `.git/config`, so

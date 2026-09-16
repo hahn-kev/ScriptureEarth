@@ -44,11 +44,20 @@ absence isn't mistaken for a bug.
 ### 5. Video playlists depend on fetching `.txt` listings — never skip for a deploy
 Video playlists (e.g. JESUS Film) are stored as a `.txt` filename; `extract.mjs` fetches
 each to expand its per-clip rows. A playlist with no fetched clips has no URL, so the
-**whole row is dropped** — a build made with `SE_SKIP_PLAYLISTS=1` (a dev-speed flag)
-silently loses those entries (this caused a real kea regression: 62 JESUS Film clips gone).
-Guardrails now in place: the flag is documented dev-only, and CI runs `setup:data` to
-download the prebuilt `playlist-txt-cache/` so builds expand clips reliably and fast. The
-cache covers ~2845 of ~3429 listings; the rest are fetched on demand.
+**whole row is dropped**. A build made with `SE_SKIP_PLAYLISTS=1` (a dev-speed flag) drops
+them all — the flag is documented dev-only. CI does **not** use `setup:data`; it lets
+`extract.mjs` fetch the `.txt` listings from the server (`npm run setup:data` is local-dev
+convenience only).
+
+### 5b. ⚠️ OPEN: the live dump shape differs from the sample the projector was built on
+CI fetched a **16.9 MB** dump from the live API and `extract.mjs` found **0**
+`se_media.playlist_video` entries in it (`fetching 0 playlist txt files...`), so no video
+playlists shipped. The sample the projector was written against (the Drive-seeded
+`data/scripture.json`) is **12.5 MB** and *does* carry `se_media.playlist_video`. So the
+live endpoint's structure has changed/diverged from the sample. **The whole projection may
+be reading stale field paths, not just playlists.** Next step: fetch a current dump with a
+real key and re-derive the field map (top-level shape, `attributes`/`relationships` keys,
+where video/playlist data now lives) before trusting any CI build.
 
 ## CI
 

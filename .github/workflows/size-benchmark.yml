@@ -56,11 +56,8 @@ jobs:
           SE_BASE: ${{ vars.SE_BASE }}
           SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
 
-      - name: Download playlist cache
-        run: npm run setup:data # scripture.json already present → just fetches the video playlist .txt cache so clips are reliably expanded (no slow/flaky per-file fetch at build time)
-
       - name: Build site
-        run: npm run build:dump # project scripture.json → content/ then astro build
+        run: npm run build:dump # project scripture.json → content/ then astro build (extract.mjs fetches video playlist .txt listings from the server)
 
       - name: Produce sizes.json
         run: node scripts/build_sizes.mjs

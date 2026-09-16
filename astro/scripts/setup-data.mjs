@@ -1,5 +1,9 @@
 // One-shot data bootstrap for a fresh git worktree.  `npm run setup:data`
 //
+// LOCAL DEV ONLY. CI does not use this — a CI build fetches the dump fresh
+// (`fetch:dump`) and lets `extract.mjs` fetch video playlist listings from the
+// server. This script just saves local devs the downloads.
+//
 // The dump (data/scripture.json) is gitignored, so a new worktree starts without
 // it. This resolves the SHARED data folder (see scripts/data-dir.mjs), makes sure
 // the JSON dump is present there, and downloads it exactly once per machine — every
