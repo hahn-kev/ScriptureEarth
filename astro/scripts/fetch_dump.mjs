@@ -62,14 +62,6 @@ try {
   console.error(`ERROR: request failed: ${e}`);
   process.exit(1);
 }
-if (!res.ok) {
-  console.error(`ERROR: HTTP ${res.status} ${res.statusText} from dump endpoint.`);
-  console.error('  401/403: bad or missing SE_KEY (or wrong SE_V).');
-  console.error('  406 Not Acceptable: the server blocked the User-Agent — should not happen from this script (it sends one); check any proxy stripping headers.');
-  console.error('  404: SE_DUMP_PATH is wrong — expected /api/db_dump.php on https://www.scriptureearth.org.');
-  process.exit(1);
-}
-
 let buf = Buffer.from(await res.arrayBuffer());
 // fetch() transparently decodes Content-Encoding (gzip/br). If the *body itself*
 // is gzip (e.g. served as application/gzip with a .gz payload), gunzip it here.
@@ -79,6 +71,30 @@ if (buf.length > 2 && buf[0] === 0x1f && buf[1] === 0x8b) {
 }
 
 const text = buf.toString('utf8');
+
+if (!res.ok) {
+  console.error(`ERROR: HTTP ${res.status} ${res.statusText} from dump endpoint.`);
+  console.error('  401/403: bad or missing SE_KEY (or wrong SE_V).');
+  console.error('  406 Not Acceptable: the server blocked the User-Agent — should not happen from this script (it sends one); check any proxy stripping headers.');
+  console.error('  404: SE_DUMP_PATH is wrong — expected /api/db_dump.php on https://www.scriptureearth.org.');
+  console.error('  500: server-side error — see the response body below for a PHP message/stack trace.');
+  const ctype = res.headers.get('content-type') || '(none)';
+  const LIMIT = 4000;
+  const body = text.trim() || '(empty response body)';
+  console.error(`  content-type: ${ctype}  size: ${buf.length} bytes`);
+  console.error(`  --- response body${body.length > LIMIT ? ` (first ${LIMIT} chars of ${body.length})` : ''} ---`);
+  console.error(body.slice(0, LIMIT));
+  console.error('  --- end response body ---');
+  // Persist the full body next to the output so a long trace isn't truncated in the terminal.
+  try {
+    const dir = path.dirname(OUT);
+    const errFile = path.join(dir, `${path.basename(OUT).replace(/\.[^.]+$/, '')}.error.${res.status}.txt`);
+    await mkdir(dir, { recursive: true });
+    await writeFile(errFile, buf);
+    console.error(`  full body written to: ${errFile}`);
+  } catch { /* best-effort */ }
+  process.exit(1);
+}
 
 function saveUnexpected(reason) {
   const ctype = (res.headers.get('content-type') || '').toLowerCase();
