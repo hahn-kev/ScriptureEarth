@@ -50,6 +50,35 @@ function vals(m) {
   if (!m || typeof m !== 'object') return [];
   return Object.values(m).filter((v) => typeof v === 'string' && v.trim());
 }
+const ext = (u) => /^https?:/i.test(String(u || ''));
+const s = (v) => (typeof v === 'string' ? v.trim() : '');
+// A resource group in the dump is either the OLD flat shape { "0": url, "1": url }
+// or the CURRENT nested shape { url:{0:..}, title:{0:..}, organization:{0:..}, ... }
+// (parallel numeric-keyed submaps). Normalize both to [{ url, title, organization, ...}].
+function linkRows(obj) {
+  if (!obj || typeof obj !== 'object') return [];
+  const entries = Object.entries(obj);
+  if (!entries.length) return [];
+  if (entries.every(([, v]) => typeof v === 'string')) {
+    return vals(obj).map((u) => ({ url: u })); // flat shape
+  }
+  const subs = entries.filter(([, v]) => v && typeof v === 'object'); // nested shape
+  const idxs = new Set();
+  for (const [, v] of subs) for (const k of Object.keys(v)) idxs.add(k);
+  const out = [];
+  for (const i of [...idxs].sort((x, y) => Number(x) - Number(y))) {
+    const row = {};
+    for (const [name, v] of subs) if (v[i] !== undefined && v[i] !== '') row[name] = v[i];
+    if (row.url || row.URL) out.push(row);
+  }
+  return out;
+}
+// Bible.is media_type code (1–8) → which resource groups the link belongs in.
+const bibleIsGroups = (m) => ({
+  read: [1, 2, 3, 4, 8].includes(m) || !m,
+  listen: [1, 3, 4, 5, 6].includes(m),
+  watch: [4, 6, 7, 8].includes(m),
+});
 function asset(iso, kind, file) {
   // The dump gives media as full URLs now (older captures used basenames); use the
   // URL as-is, else build it under the standard /data/<iso>/<kind>/ path.
@@ -169,14 +198,12 @@ for (const e of entries) {
   if (otPdf) R.read.push(otPdf);
   if (ntPdf) R.read.push(ntPdf);
   const lm = r.links_media || {};
-  for (const u of vals(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', 'YouVersion', 'Bible.com (YouVersion)', u, true));
-  for (const u of vals(lm.eBible)) R.read.push(res('read', 'web', 'Web', 'eBible edition', 'eBible.org', u, true));
-  for (const u of vals(lm['Bible.is'])) R.read.push(res('read', 'web', 'Web', 'Bible.is', 'Faith Comes By Hearing', u, true));
-  for (const u of vals(lm.Kalaam_websites)) R.read.push(res('read', 'web', 'Web', 'Website', 'Kalaam Media', u, true));
-  for (const u of vals(lm.other_websites)) R.read.push(res('read', 'web', 'Web', 'Website', '—', u, true));
-  if (typeof r.se_online_viewer === 'string' && r.se_online_viewer.trim()) {
-    R.read.push(res('read', 'web', 'Web', 'Online viewer', 'ScriptureEarth', r.se_online_viewer.trim(), true));
-  }
+  const url = (x) => x.url || x.URL;
+  for (const l of linkRows(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'YouVersion', 'Bible.com (YouVersion)', url(l), ext(url(l))));
+  for (const l of linkRows(lm.eBible)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'eBible edition', 'eBible.org', url(l), ext(url(l))));
+  for (const l of linkRows(lm.Kalaam_websites)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || 'Kalaam Media', url(l), ext(url(l))));
+  for (const l of linkRows(lm.other_websites)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || '—', url(l), ext(url(l))));
+  if (s(r.se_online_viewer)) R.read.push(res('read', 'web', 'Web', 'Online viewer', 'ScriptureEarth', s(r.se_online_viewer), true));
 
   // listen
   const otAud = testament(iso, media.audio?.OT, 'audio', 'Old Testament', 'chapter');
@@ -186,13 +213,24 @@ for (const e of entries) {
   for (const it of playlistItems(media.playlist_audio)) {
     R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth', null, false));
   }
-  for (const u of vals(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', 'GRN recordings', 'Global Recordings Network', u, true));
+  for (const l of linkRows(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', s(l.title) || 'GRN recordings', 'Global Recordings Network', url(l), ext(url(l))));
+
+  // Bible.is: read/listen/watch per its media_type code (1–8); restores the audio
+  // listings the old DB split via BibleIs but the flat dump had dropped.
+  for (const l of linkRows(lm['Bible.is'])) {
+    const g = bibleIsGroups(Number(l.media_type));
+    const nm = s(l.title) || 'Bible.is', src = 'Faith Comes By Hearing', u = url(l);
+    if (g.read) R.read.push(res('read', 'web', 'Web', nm, src, u, ext(u)));
+    if (g.listen) R.listen.push(res('listen', 'audio', 'Audio', nm, src, u, ext(u)));
+    if (g.watch) R.watch.push(res('watch', 'video', 'Video', nm, src, u, ext(u)));
+  }
 
   // watch
-  for (const u of vals(r.watch)) {
-    const [nm, src] = /jesusfilm\.org/i.test(u) ? ['JESUS Film', 'Jesus Film Project']
-      : /youtu\.?be/i.test(u) ? ['YouTube', 'YouTube'] : ['Video', '—'];
-    R.watch.push(res('watch', 'video', 'Video', nm, src, u, true));
+  for (const w of linkRows(r.watch)) {
+    const jf = String(w.JesusFilm) === '1', yt = String(w.YouTube) === '1';
+    const nm = s(w.watch_what) || (jf ? 'JESUS Film' : yt ? 'YouTube' : 'Video');
+    const src = s(w.organization) || (jf ? 'Jesus Film Project' : yt ? 'YouTube' : '—');
+    R.watch.push(res('watch', 'video', 'Video', nm, src, url(w), ext(url(w))));
   }
   for (const it of playlistItems(media.playlist_video)) {
     const clips = playlistClips.get(`${iso}\t${base(it.file)}`) || [];
@@ -201,15 +239,17 @@ for (const e of entries) {
       first ? first.url : null, first ? /^https?:/.test(first.url) : false,
       { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file) }));
   }
-  for (const u of vals(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', 'Bible.is Gospel Film', 'Faith Comes By Hearing', u, true));
+  for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', s(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
 
-  // use (apps + buy)
+  // use (apps + buy). se_apps sections are { <Platform>: { title:{}, url:{} } }.
   const apps = r.se_apps || {};
-  for (const u of vals(apps.android)) R.use.push(res('use', 'app', 'App', 'Android app', 'Scripture App Builder', u, true));
-  for (const u of vals(apps.ios)) R.use.push(res('use', 'app', 'App', 'iOS app', 'Scripture App Builder', u, true));
-  for (const u of vals(r.se_google_play)) R.use.push(res('use', 'app', 'App', 'Google Play', 'Google Play', u, true));
-  for (const u of vals(lm.AppleStore)) R.use.push(res('use', 'app', 'App', 'iOS app', 'App Store', u, true));
-  for (const u of vals(r.buy)) R.use.push(res('use', 'buy', 'Buy', 'Printed edition', 'Print-on-demand', u, true));
+  for (const [section, data] of Object.entries(apps)) {
+    const platform = /ios|apple|asset/i.test(section) ? 'iOS app' : 'Android app';
+    for (const app of linkRows(data)) R.use.push(res('use', 'app', 'App', s(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
+  }
+  for (const l of linkRows(r.se_google_play)) R.use.push(res('use', 'app', 'App', s(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
+  for (const l of linkRows(lm.AppleStore)) R.use.push(res('use', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
+  for (const b of linkRows(r.buy)) R.use.push(res('use', 'buy', 'Buy', s(b.testament) || s(b.buy_what) || s(b.title) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
 
   // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
   // toward read availability (as extract_sqlite.mjs did for the SAB flag) w/o a link.
@@ -314,18 +354,21 @@ function auditData(ents, langs) {
   const byIdx = new Map(langs.map((d) => [d.idx, d]));
   const some = (a, p) => Array.isArray(a) && a.some(p);
   const isPlaylist = (x) => x.meta && x.meta.playlistFile;
+  // raw detectors are shape-agnostic (linkRows handles flat and nested) so a shape
+  // change shows up as emitted==0 rather than silently reading raw==0 too.
+  const anyApp = (r) => Object.values(r.se_apps || {}).some((sec) => linkRows(sec).length);
   const checks = [
     ['se_media.text',    (r) => vals(r.se_media?.text?.OT).length || vals(r.se_media?.text?.NT).length, (d) => some(d.resources.read, (x) => x.kind === 'pdf')],
     ['se_media.audio',   (r) => vals(r.se_media?.audio?.OT).length || vals(r.se_media?.audio?.NT).length, (d) => some(d.resources.listen, (x) => x.kind === 'audio' && /Testament/.test(x.name))],
     ['playlist_video',   (r) => playlistItems(r.se_media?.playlist_video).length, (d) => some(d.resources.watch, isPlaylist)],
     ['playlist_audio',   (r) => playlistItems(r.se_media?.playlist_audio).length, (d) => some(d.resources.listen, (x) => x.format === 'MP3' && !x.url)],
-    ['links.YouVersion', (r) => vals(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
-    ['links.eBible',     (r) => vals(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
-    ['links.Bible.is',   (r) => vals(r.links_media?.['Bible.is']).length, (d) => some(d.resources.read, (x) => x.name === 'Bible.is')],
-    ['links.GRN',        (r) => vals(r.links_media?.GRN).length, (d) => some(d.resources.listen, (x) => x.source === 'Global Recordings Network')],
-    ['watch',            (r) => vals(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x))],
-    ['buy',              (r) => vals(r.buy).length, (d) => some(d.resources.use, (x) => x.kind === 'buy')],
-    ['se_apps',          (r) => vals(r.se_apps?.android).length || vals(r.se_apps?.ios).length, (d) => some(d.resources.use, (x) => x.kind === 'app')],
+    ['links.YouVersion', (r) => linkRows(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
+    ['links.eBible',     (r) => linkRows(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
+    ['links.Bible.is',   (r) => linkRows(r.links_media?.['Bible.is']).length, (d) => some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => x.source === 'Faith Comes By Hearing' && x.name !== 'Bible.is Gospel Film')],
+    ['links.GRN',        (r) => linkRows(r.links_media?.GRN).length, (d) => some(d.resources.listen, (x) => x.source === 'Global Recordings Network')],
+    ['watch',            (r) => linkRows(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x) && x.source !== 'Faith Comes By Hearing')],
+    ['buy',              (r) => linkRows(r.buy).length, (d) => some(d.resources.use, (x) => x.kind === 'buy')],
+    ['se_apps',          anyApp, (d) => some(d.resources.use, (x) => x.kind === 'app')],
   ];
   const failures = [];
   console.error('data audit (languages with raw field → languages we emitted from it):');

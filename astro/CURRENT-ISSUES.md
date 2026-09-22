@@ -22,22 +22,20 @@ parity, not a regression.
 - **Fix path:** confirm the real URL scheme for these with the API developer, then add
   the mapping in `extract.mjs` (search for `hasSab` and the `use`/`read` sections).
 
-### 2. Dump-vs-old-SQLite gaps — see `DUMP-API-REQUESTS.md`
-A full diff of the JSON build against the old SQLite dump (download old prebuilt DB →
-`extract_sqlite.mjs` → diff) found these missing, all fixable server-side (the data is in the
-DB and the committed granular API). Tracked for the developer in
-[`DUMP-API-REQUESTS.md`](DUMP-API-REQUESTS.md):
-- **Bible.is audio (~2082 languages)** — old split Bible.is read/listen via the `BibleIs`
-  code; the dump gives one URL with no type, so the projector emits read only and the listen
-  entries are lost. **Biggest loss.**
+### 2. Dump-vs-old-SQLite gaps — mostly RESOLVED (see `DUMP-API-REQUESTS.md`)
+A full diff of the JSON build against the old SQLite dump found several gaps. As of 2026-09-22
+the dev delivered most: `watch`/`buy`/`se_apps`/`links_media` were restructured into nested maps
+carrying **titles/organizations**, and Bible.is read/listen/view is now split via
+`links_media["Bible.is"].media_type` (1–8) — restoring the ~2082 lost Bible.is audio entries.
+`extract.mjs` consumes the new shapes (and still the old flat shape). **Still open:**
 - **Study tools (~610)** — no `study` field in the dump at all.
-- **Titles/organizations** dropped for `watch` (`watch_what`/`organization`), `buy`
-  (`buy_what`), apps (`Cell_Phone_Title`), and link editions (`company_title`) — visible as
-  generic labels ("Printed edition", "YouTube", "eBible edition").
+- **eBible / other_websites titles** — still flat `{0:url}` (eBible title lives in `eBible_list`,
+  not the `links.company_title` column that was added).
+- **buy title key** — arrives as `testament`; projector accepts either, pending a rename.
 
-Until the dump adds these, the projector uses generic fallbacks. `SE_STRICT=1 npm run extract`
-audits a dump and fails when a field has data but nothing is projected (catches shape changes),
-and reports `watch`/`buy` title coverage. It is **not** in CI (CI must still deploy).
+`SE_STRICT=1 npm run extract` audits a dump and fails when a field has data but nothing is
+projected (its raw-detectors are shape-agnostic, so a nested/flat change is caught), and reports
+`watch`/`buy` title coverage. It is **not** in CI (CI must still deploy).
 
 ### 3. Countries with zero languages are dropped
 `countries.json` is built by inverting languages → countries, so a country code that no

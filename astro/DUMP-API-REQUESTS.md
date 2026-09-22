@@ -10,6 +10,20 @@ The dump is already inconsistent about this: `se_media.playlist_video` carries
 `{ title:{…}, filename:{…} }`, but `watch` and `buy` are bare URL lists. The ask is to make
 the rest consistent with the playlist pattern.
 
+## Status (2026-09-22)
+
+Most of this is **done** — the dev added the columns and restructured `watch`, `buy`,
+`se_apps`, and `links_media` into nested `{ field:{…} }` maps (like `playlist_video`), and
+`extract.mjs` now consumes them: watch/buy/app/link **titles** are back, and Bible.is
+read/listen/view is split via `links_media["Bible.is"].media_type` (1–8). Still open:
+
+- **`study` table** — still absent from the dump (~610 languages have no study/tools resource).
+- **`eBible` title** — `links_media.eBible` is still flat `{0:url}` with no title (comes from
+  `eBible_list.title`, a different table than the `links.company_title` that was added).
+- **`other_websites` title** — still flat `{0:url}`.
+- **naming nit:** buy's title arrives under the key `testament` (not `buy_what`/`title`); the
+  projector accepts either, so this is cosmetic — worth renaming for consistency with `watch`.
+
 ## Columns at a glance
 
 One row per DB column the dump should carry but currently doesn't:
