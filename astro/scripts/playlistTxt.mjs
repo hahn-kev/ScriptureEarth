@@ -40,7 +40,7 @@ export function parsePlaylistTxt(text) {
     const title = (cols[1] && cols[1].trim()) || `Clip ${cols[0]}`;
     const url = absUrl(cols[3]);
     if (!url) continue;
-    const clip = { title, url };
+    const clip = { index: Number(cols[0]), title, url };
     const img = (cols[2] ?? '').trim();
     if (img) {
       if (imagesMode && subfolder) clip.image = `${ASSET_BASE}/data/~images/${subfolder}/${encodeURIComponent(img)}`;

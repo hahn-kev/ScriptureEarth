@@ -140,6 +140,23 @@ function res(group, kind, fmt, name, source, url, external, meta = {}) {
   return { group, kind, format: fmt, name, source, url, external, meta: cleaned };
 }
 
+// "Download whole playlist" — ScriptureEarth's PHP zip endpoints (public GET, stream a
+// zip with Content-Disposition: attachment). Audio takes the mp3 filenames; video takes
+// the clip index numbers from the .txt + the .txt name. Only SE-hosted media can zip.
+const ZIP_BASE = 'https://www.scriptureearth.org';
+const SAFE_BOOKS = /^[0-9a-zñA-ZÑ., _|()-]+$/; // the audio endpoint's own validation
+function audioZipUrl(iso, clips) {
+  const books = clips.map((c) => decodeURIComponent(base(c.url))).filter(Boolean);
+  const joined = books.join('|');
+  if (!books.length || !SAFE_BOOKS.test(joined)) return null; // server would reject
+  return `${ZIP_BASE}/00-PlaylistAudioSaveZip.php?st=eng&iso=${iso}&Books=${encodeURIComponent(joined)}`;
+}
+function videoZipUrl(iso, playlistFile, clips) {
+  const idxs = clips.filter((c) => /\.mp4(\?|$)/i.test(c.url || '') && Number.isFinite(c.index)).map((c) => c.index);
+  if (!idxs.length || !/^[a-zA-Z0-9._-]+$/.test(playlistFile)) return null;
+  return `${ZIP_BASE}/00-PlaylistDownloadVideoZip.php?st=eng&iso=${iso}&PlaylistVideoFilename=${encodeURIComponent(playlistFile)}&checkBoxes=${encodeURIComponent(idxs.join('|'))}`;
+}
+
 // --- canonical country name per code (first seen; verified conflict-free) ---
 const countryName = new Map();
 function countriesOf(r) {
@@ -251,7 +268,7 @@ for (const e of entries) {
     const first = clips[0];
     R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth',
       first ? first.url : null, first ? ext(first.url) : false,
-      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file) }));
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file), zipUrl: audioZipUrl(iso, clips) }));
   }
   for (const l of linkRows(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', s(l.title) || 'GRN recordings', 'Global Recordings Network', url(l), ext(url(l))));
 
@@ -277,7 +294,7 @@ for (const e of entries) {
     const first = clips[0];
     R.watch.push(res('watch', 'video', 'Video', it.title || playlistTitle(it.file), 'ScriptureEarth',
       first ? first.url : null, first ? /^https?:/.test(first.url) : false,
-      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file) }));
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file), zipUrl: videoZipUrl(iso, base(it.file), clips) }));
   }
   for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', s(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
 

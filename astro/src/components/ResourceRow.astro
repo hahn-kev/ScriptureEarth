@@ -24,7 +24,9 @@ const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist he
   {rowPlayer
     ? <span class="clip-actions">
         <button type="button" class="act" data-play data-src={r.url} data-kind={mediaKind}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</button>
-        <a class="act dl" href={r.url} download>Download</a>
+        {r.meta?.zipUrl
+          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer">Download all</a>
+          : <a class="act dl" href={r.url} download>Download</a>}
       </span>
     : r.url
       ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
