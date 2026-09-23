@@ -52,24 +52,37 @@ function vals(m) {
 }
 const ext = (u) => /^https?:/i.test(String(u || ''));
 const s = (v) => (typeof v === 'string' ? v.trim() : '');
-// A resource group in the dump is either the OLD flat shape { "0": url, "1": url }
-// or the CURRENT nested shape { url:{0:..}, title:{0:..}, organization:{0:..}, ... }
-// (parallel numeric-keyed submaps). Normalize both to [{ url, title, organization, ...}].
+// The dump has used three shapes for a resource group over time; normalize all to
+// [{ url, title, organization, ... }]. The format has changed repeatedly, so tolerate
+// every shape we've seen:
+//   flat:  { "0": url, "1": url }
+//   rows:  { "0": { url, title, ... }, "1": {...} }   (numeric keys → row objects)  ← current
+//   cols:  { url:{0:..}, title:{0:..}, ... }           (field keys → parallel maps)
 function linkRows(obj) {
   if (!obj || typeof obj !== 'object') return [];
   const entries = Object.entries(obj);
   if (!entries.length) return [];
+  const norm = (row) => ({ ...row, url: row.url || row.URL });
   if (entries.every(([, v]) => typeof v === 'string')) {
-    return vals(obj).map((u) => ({ url: u })); // flat shape
+    return vals(obj).map((u) => ({ url: u })); // flat
   }
-  const subs = entries.filter(([, v]) => v && typeof v === 'object'); // nested shape
+  if (entries.every(([k]) => /^\d+$/.test(k))) { // rows
+    return entries
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([, v]) => v)
+      .filter((v) => v && typeof v === 'object')
+      .map(norm)
+      .filter((v) => v.url);
+  }
+  const subs = entries.filter(([, v]) => v && typeof v === 'object'); // cols
   const idxs = new Set();
   for (const [, v] of subs) for (const k of Object.keys(v)) idxs.add(k);
   const out = [];
   for (const i of [...idxs].sort((x, y) => Number(x) - Number(y))) {
     const row = {};
     for (const [name, v] of subs) if (v[i] !== undefined && v[i] !== '') row[name] = v[i];
-    if (row.url || row.URL) out.push(row);
+    const n = norm(row);
+    if (n.url) out.push(n);
   }
   return out;
 }
@@ -85,17 +98,31 @@ function asset(iso, kind, file) {
   const s = String(file || '');
   return /^https?:/i.test(s) ? s : `${ASSET_BASE}/data/${iso}/${kind}/${base(s)}`;
 }
-// Playlists come as { title:{0:..}, filename:{0:url} } in the current dump (older
-// captures used a flat { 0:file } with no title). Normalize to [{file, title}].
+// Playlists have used the same three shapes as other groups; the file lives under
+// `filename` (or `url`). Normalize to [{ file, title }].
+//   rows: { 0:{ title, filename } }  ← current    cols: { title:{0}, filename:{0} }    flat: { 0:file }
 function playlistItems(pl) {
   if (!pl || typeof pl !== 'object') return [];
-  if (pl.filename && typeof pl.filename === 'object') {
+  const entries = Object.entries(pl);
+  if (!entries.length) return [];
+  if (entries.every(([, v]) => typeof v === 'string')) {
+    return vals(pl).map((f) => ({ file: f, title: null })); // flat
+  }
+  if (entries.every(([k]) => /^\d+$/.test(k))) { // rows
+    return entries
+      .sort((a, b) => Number(a[0]) - Number(b[0]))
+      .map(([, v]) => v)
+      .filter((v) => v && typeof v === 'object')
+      .map((v) => ({ file: v.filename || v.url || v.URL, title: s(v.title) || null }))
+      .filter((v) => v.file);
+  }
+  if (pl.filename && typeof pl.filename === 'object') { // cols
     const titles = pl.title || {};
     return Object.entries(pl.filename)
       .filter(([, f]) => typeof f === 'string' && f.trim())
-      .map(([k, f]) => ({ file: f, title: (typeof titles[k] === 'string' && titles[k].trim()) ? titles[k].trim() : null }));
+      .map(([k, f]) => ({ file: f, title: s(titles[k]) || null }));
   }
-  return vals(pl).map((f) => ({ file: f, title: null }));
+  return [];
 }
 // Fallback title when the dump gives no playlist title: drop .txt + trailing language
 // code, special-case JESUS Film, else split CamelCase/separators into words.
@@ -248,8 +275,9 @@ for (const e of entries) {
     for (const app of linkRows(data)) R.use.push(res('use', 'app', 'App', s(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
   }
   for (const l of linkRows(r.se_google_play)) R.use.push(res('use', 'app', 'App', s(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
+  for (const l of linkRows(r.se_iPhone)) R.use.push(res('use', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
   for (const l of linkRows(lm.AppleStore)) R.use.push(res('use', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
-  for (const b of linkRows(r.buy)) R.use.push(res('use', 'buy', 'Buy', s(b.testament) || s(b.buy_what) || s(b.title) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
+  for (const b of linkRows(r.buy)) R.use.push(res('use', 'buy', 'Buy', s(b.title) || s(b.testament) || s(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
 
   // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
   // toward read availability (as extract_sqlite.mjs did for the SAB flag) w/o a link.
@@ -356,7 +384,8 @@ function auditData(ents, langs) {
   const isPlaylist = (x) => x.meta && x.meta.playlistFile;
   // raw detectors are shape-agnostic (linkRows handles flat and nested) so a shape
   // change shows up as emitted==0 rather than silently reading raw==0 too.
-  const anyApp = (r) => Object.values(r.se_apps || {}).some((sec) => linkRows(sec).length);
+  const anyApp = (r) => Object.values(r.se_apps || {}).some((sec) => linkRows(sec).length)
+    || linkRows(r.se_google_play).length || linkRows(r.se_iPhone).length || linkRows(r.links_media?.AppleStore).length;
   const checks = [
     ['se_media.text',    (r) => vals(r.se_media?.text?.OT).length || vals(r.se_media?.text?.NT).length, (d) => some(d.resources.read, (x) => x.kind === 'pdf')],
     ['se_media.audio',   (r) => vals(r.se_media?.audio?.OT).length || vals(r.se_media?.audio?.NT).length, (d) => some(d.resources.listen, (x) => x.kind === 'audio' && /Testament/.test(x.name))],

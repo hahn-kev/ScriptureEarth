@@ -27,11 +27,12 @@ A full diff of the JSON build against the old SQLite dump found several gaps. As
 the dev delivered most: `watch`/`buy`/`se_apps`/`links_media` were restructured into nested maps
 carrying **titles/organizations**, and Bible.is read/listen/view is now split via
 `links_media["Bible.is"].media_type` (1–8) — restoring the ~2082 lost Bible.is audio entries.
-`extract.mjs` consumes the new shapes (and still the old flat shape). **Still open:**
+`extract.mjs` consumes every shape the dump has used. As of 2026-09-23 buy's title is the
+`title` key, `eBible` has `title`+`description`, and new `se_iPhone`/`se_ePub` fields exist.
+**Still open:**
 - **Study tools (~610)** — no `study` field in the dump at all.
-- **eBible / other_websites titles** — still flat `{0:url}` (eBible title lives in `eBible_list`,
-  not the `links.company_title` column that was added).
-- **buy title key** — arrives as `testament`; projector accepts either, pending a rename.
+- **`se_ePub`** — bare filename `url` (no resolvable path) + junk title; not emitted yet.
+- **`other_websites`** — sometimes only `organization`, no title (minor).
 
 `SE_STRICT=1 npm run extract` audits a dump and fails when a field has data but nothing is
 projected (its raw-detectors are shape-agnostic, so a nested/flat change is caught), and reports
