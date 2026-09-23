@@ -29,7 +29,9 @@ carrying **titles/organizations**, and Bible.is read/listen/view is now split vi
 `links_media["Bible.is"].media_type` (1–8) — restoring the ~2082 lost Bible.is audio entries.
 `extract.mjs` consumes every shape the dump has used. As of 2026-09-23 buy's title is the
 `title` key, `eBible` has `title`+`description`, and new `se_iPhone`/`se_ePub` fields exist.
-**Still open:**
+Audio playlists now emit per-track mp3 links (parsed from the JS-object audio `.txt`), and video
+playlist clips carry thumbnails (`data/~images/<subfolder>/<img>` from the video `.txt`'s image
+column). **Still open:**
 - **Study tools (~610)** — no `study` field in the dump at all.
 - **`se_ePub`** — bare filename `url` (no resolvable path) + junk title; not emitted yet.
 - **`other_websites`** — sometimes only `organization`, no title (minor).

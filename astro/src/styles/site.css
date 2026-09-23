@@ -584,6 +584,14 @@ section.block {
 .res-row:first-of-type {
   border-top: 0;
 }
+.res-row .clip-thumb {
+  flex: 0 0 auto;
+  width: 64px;
+  height: 36px;
+  object-fit: cover;
+  border-radius: 4px;
+  background: var(--border);
+}
 .res-row .fmt {
   font-family: var(--mono);
   font-size: 0.74rem;

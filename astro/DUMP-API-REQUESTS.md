@@ -19,6 +19,10 @@ and `se_ePub`. NOTE: the dump has now settled on an **array-of-objects** shape
 (`{ "0": { title, url, … } }`) for watch/buy/links/playlists/apps; `extract.mjs`'s `linkRows()`
 tolerates that plus the two earlier shapes, so future flips won't silently break us.
 
+Playlists are now fully used: audio playlists emit per-track mp3 links (parsed from the
+JS-object audio `.txt`), and video clips show thumbnails (`data/~images/<subfolder>/<img>` when
+the video `.txt` header's 3rd field is `images`).
+
 Still open / to confirm:
 - **`study` table** — still absent from the dump (~610 languages have no study/tools resource).
 - **`se_ePub`** — present but `url` is a bare filename (e.g. `Keley-i Bible.epub`) with no

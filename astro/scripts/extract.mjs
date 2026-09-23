@@ -177,32 +177,41 @@ function testament(iso, map, kind, label, unit) {
     kind === 'audio' ? { chapters: count } : { books: count });
 }
 
-// --- playlist videos: gather (iso, filename) pairs, fetch clip listings once ---
-const playlistClips = new Map();
+// --- playlists: gather (iso, filename) pairs, fetch clip/track listings once ---
+const playlistClips = new Map();       // video: iso\tbasename → [{title,url,image?}]
+const playlistAudioClips = new Map();  // audio: iso\tbasename → [{title,url}]
 async function poolMap(items, concurrency, fn) {
   let next = 0;
   const worker = async () => { while (next < items.length) await fn(items[next++]); };
   const n = Math.min(concurrency, items.length);
   if (n > 0) await Promise.all(Array.from({ length: n }, worker));
 }
-{
+function gatherPlaylists(field) {
   const seen = new Set();
   const pairs = [];
   for (const e of entries) {
     const iso = e.attributes?.iso;
-    for (const it of playlistItems(e.relationships?.se_media?.playlist_video)) {
+    for (const it of playlistItems(e.relationships?.se_media?.[field])) {
       const key = `${iso}\t${base(it.file)}`;
       if (!iso || seen.has(key)) continue;
       seen.add(key);
       pairs.push({ iso, filename: it.file, key });
     }
   }
+  return pairs;
+}
+{
+  const videoPairs = gatherPlaylists('playlist_video');
+  const audioPairs = gatherPlaylists('playlist_audio');
   if (process.env.SE_SKIP_PLAYLISTS) {
-    console.error(`skipping ${pairs.length} playlist txt files (SE_SKIP_PLAYLISTS set — video playlists get no clip URLs)`);
+    console.error(`skipping ${videoPairs.length} video + ${audioPairs.length} audio playlist txt files (SE_SKIP_PLAYLISTS set — playlists get no clip URLs)`);
   } else {
-    console.error(`fetching ${pairs.length} playlist txt files...`);
-    await poolMap(pairs, 12, async (p) => {
-      playlistClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE }));
+    console.error(`fetching ${videoPairs.length} video + ${audioPairs.length} audio playlist txt files...`);
+    await poolMap(videoPairs, 12, async (p) => {
+      playlistClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE, kind: 'video' }));
+    });
+    await poolMap(audioPairs, 12, async (p) => {
+      playlistAudioClips.set(p.key, await loadPlaylistClips({ iso: p.iso, filename: p.filename, cacheDir: PLAYLIST_CACHE, kind: 'audio' }));
     });
   }
 }
@@ -238,7 +247,11 @@ for (const e of entries) {
   if (otAud) R.listen.push(otAud);
   if (ntAud) R.listen.push(ntAud);
   for (const it of playlistItems(media.playlist_audio)) {
-    R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth', null, false));
+    const clips = playlistAudioClips.get(`${iso}\t${base(it.file)}`) || [];
+    const first = clips[0];
+    R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth',
+      first ? first.url : null, first ? ext(first.url) : false,
+      { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file) }));
   }
   for (const l of linkRows(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', s(l.title) || 'GRN recordings', 'Global Recordings Network', url(l), ext(url(l))));
 
@@ -390,7 +403,7 @@ function auditData(ents, langs) {
     ['se_media.text',    (r) => vals(r.se_media?.text?.OT).length || vals(r.se_media?.text?.NT).length, (d) => some(d.resources.read, (x) => x.kind === 'pdf')],
     ['se_media.audio',   (r) => vals(r.se_media?.audio?.OT).length || vals(r.se_media?.audio?.NT).length, (d) => some(d.resources.listen, (x) => x.kind === 'audio' && /Testament/.test(x.name))],
     ['playlist_video',   (r) => playlistItems(r.se_media?.playlist_video).length, (d) => some(d.resources.watch, isPlaylist)],
-    ['playlist_audio',   (r) => playlistItems(r.se_media?.playlist_audio).length, (d) => some(d.resources.listen, (x) => x.format === 'MP3' && !x.url)],
+    ['playlist_audio',   (r) => playlistItems(r.se_media?.playlist_audio).length, (d) => some(d.resources.listen, (x) => x.meta && x.meta.playlistFile)],
     ['links.YouVersion', (r) => linkRows(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
     ['links.eBible',     (r) => linkRows(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
     ['links.Bible.is',   (r) => linkRows(r.links_media?.['Bible.is']).length, (d) => some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => x.source === 'Faith Comes By Hearing' && x.name !== 'Bible.is Gospel Film')],
