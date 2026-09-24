@@ -42,6 +42,10 @@ function apply(chrome, names, root = document) {
     const b = baked(n, 'placeholder');
     n.setAttribute('placeholder', (chrome && chrome[n.getAttribute('data-i18n-ph')]) || b);
   });
+  root.querySelectorAll('[data-i18n-label]').forEach((n) => {
+    const b = baked(n, 'aria-label');
+    n.setAttribute('aria-label', (chrome && chrome[n.getAttribute('data-i18n-label')]) || b);
+  });
   root.querySelectorAll('[data-i18n-name]').forEach((n) => {
     const b = baked(n);
     const k = n.getAttribute('data-i18n-name');
@@ -53,6 +57,7 @@ function apply(chrome, names, root = document) {
 function toEnglish(root = document) {
   root.querySelectorAll('[data-i18n]').forEach((n) => { n.textContent = baked(n); });
   root.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.setAttribute('placeholder', baked(n, 'placeholder')); });
+  root.querySelectorAll('[data-i18n-label]').forEach((n) => { n.setAttribute('aria-label', baked(n, 'aria-label')); });
   root.querySelectorAll('[data-i18n-name]').forEach((n) => { n.textContent = baked(n); });
   document.documentElement.removeAttribute('data-i18n-pending');
 }

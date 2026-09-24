@@ -59,5 +59,15 @@
   "footer.about": "Tungkol",
   "footer.ministry": "Isang ministeryo ng SIL Global",
   "footer.note": "Isang static na muling pagbuo ng ScriptureEarth discovery site.",
-  "footer.updated": "Huling na-update"
+  "footer.updated": "Huling na-update",
+
+  "geo.here": "Nagba-browse mula sa",
+  "geo.orNearby": "o kalapit",
+  "geo.dismiss": "Isara",
+  "region.Africa": "Africa",
+  "region.Americas": "Americas",
+  "region.Asia": "Asya",
+  "region.Europe": "Europa",
+  "region.Oceania": "Oceania",
+  "region.Other": "Iba pa"
 }

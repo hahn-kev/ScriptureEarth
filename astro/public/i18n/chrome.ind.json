@@ -59,5 +59,15 @@
   "footer.about": "Tentang",
   "footer.ministry": "Pelayanan dari SIL Global",
   "footer.note": "Versi statis dari situs penemuan ScriptureEarth.",
-  "footer.updated": "Terakhir diperbarui"
+  "footer.updated": "Terakhir diperbarui",
+
+  "geo.here": "Anda mengakses dari",
+  "geo.orNearby": "atau di sekitar",
+  "geo.dismiss": "Tutup",
+  "region.Africa": "Afrika",
+  "region.Americas": "Amerika",
+  "region.Asia": "Asia",
+  "region.Europe": "Eropa",
+  "region.Oceania": "Oseania",
+  "region.Other": "Lainnya"
 }

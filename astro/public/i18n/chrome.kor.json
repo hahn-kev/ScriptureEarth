@@ -59,5 +59,15 @@
   "footer.about": "소개",
   "footer.ministry": "SIL Global의 사역",
   "footer.note": "ScriptureEarth 탐색 사이트의 정적 재구축 버전입니다.",
-  "footer.updated": "마지막 업데이트"
+  "footer.updated": "마지막 업데이트",
+
+  "geo.here": "접속 위치:",
+  "geo.orNearby": "또는 인근",
+  "geo.dismiss": "닫기",
+  "region.Africa": "아프리카",
+  "region.Americas": "아메리카",
+  "region.Asia": "아시아",
+  "region.Europe": "유럽",
+  "region.Oceania": "오세아니아",
+  "region.Other": "기타"
 }
