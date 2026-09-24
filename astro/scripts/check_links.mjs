@@ -65,7 +65,8 @@ function parseArgs(argv) {
   };
   for (let i = 0; i < argv.length; i += 1) {
     const v = argv[i];
-    if (v === '--delay') a.delay = Number(argv[++i]);
+    if (v === '--') continue; // pnpm forwards the arg separator; npm strips it
+    else if (v === '--delay') a.delay = Number(argv[++i]);
     else if (v === '--host-concurrency') a.hostConcurrency = Number(argv[++i]);
     else if (v === '--global-concurrency') a.globalConcurrency = Number(argv[++i]);
     else if (v === '--timeout') a.timeout = Number(argv[++i]);
