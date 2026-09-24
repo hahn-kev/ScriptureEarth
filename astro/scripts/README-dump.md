@@ -136,5 +136,5 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 | `setup-data.mjs` | `pnpm run setup:data` — worktree bootstrap: download (or fetch) the dump and download+unzip the playlist cache into the shared folder, else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
 | `download.mjs` | Helpers for `setup-data.mjs`: streaming `download()`, `driveUrl()`, and a dependency-free ZIP extractor (`unzipInto()`, stored + deflate, zip-slip guarded). |
 | `fetch_dump.mjs` | Download the JSON dump (same `?v=&key=` auth as the rest of `/api/`). Detects gzip; validates it's the language dump; saves an inspectable `scripture.unexpected.*` on a surprise. |
-| `extract.mjs` | **Projector** — reads `data/scripture.json` → `content/{languages,countries,search-index}.json`. Fetches playlist `.txt` listings for video clip URLs. |
+| `extract.mjs` | **Projector** — reads `data/scripture.json` → `content/{languages,countries,search-index,lang-map}.json`. Fetches playlist `.txt` listings for video clip URLs. |
 | `playlistTxt.mjs` | Resolves PlaylistVideo `.txt` listings to clip URLs (cached under `playlist-txt-cache/`). |

@@ -1,0 +1,55 @@
+---
+// /language/ — chooser / not-found landing for legacy deep links (REDIRECTS.md §L6).
+//
+// functions/index.php.js resolves ?idx= and ?iso= at the edge (bundled lang-map.json) and
+// 301s straight to the language page. Only two cases reach this page:
+//   ?iso=<x>   an ISO shared by several entries (96 of ~4,100) — pick one below
+//   ?idx=/?iso= that matched nothing — not-found fallback with search + browse links
+// Only the shared-ISO card groups are baked here, so the page stays small.
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import LangCard from '../../components/LangCard.astro';
+
+const langs = (await getCollection('languages')).map((l) => l.data);
+const byIso: Record<string, any[]> = {};
+for (const d of langs) (byIso[String(d.identity.iso).toLowerCase()] ??= []).push(d);
+const multi = Object.entries(byIso)
+  .filter(([, list]) => list.length > 1)
+  .map(([iso, list]) => ({ iso, list: list.sort((a, b) => a.identity.slug.localeCompare(b.identity.slug)) }));
+---
+<Base title="Find a language — ScriptureEarth">
+  <section class="block shell">
+    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><span data-i18n="nav.languages">Languages</span></nav>
+
+    <div id="choose" class="sec-head" hidden>
+      <div><p class="eyebrow">Several entries</p><h2>Which <code id="choose-iso"></code> did you mean?</h2></div>
+    </div>
+    {multi.map(({ iso, list }) => (
+      <div class="lang-grid opts" data-iso={iso} hidden>
+        {list.map((d) => <LangCard d={d} />)}
+      </div>
+    ))}
+
+    <div id="notfound" class="sec-head">
+      <div><p class="eyebrow">Not found</p><h2>We couldn’t find that language</h2></div>
+    </div>
+    <p id="fallback">
+      Try the <a href="/">search</a> on the home page, or <a href="/browse/">browse all languages</a>
+      and <a href="/countries/">countries</a>.
+    </p>
+  </section>
+
+  <script is:inline>
+    (() => {
+      const iso = (new URLSearchParams(location.search).get('iso') || '').trim().toLowerCase();
+      const group = iso && document.querySelector(`.opts[data-iso="${CSS.escape(iso)}"]`);
+      if (!group) return; // not-found fallback is already visible
+      document.getElementById('notfound').hidden = true;
+      document.getElementById('fallback').hidden = true;
+      document.getElementById('choose-iso').textContent = iso;
+      document.getElementById('choose').hidden = false;
+      group.hidden = false;
+      if (window.__seApplyI18n) window.__seApplyI18n(group);
+    })();
+  </script>
+</Base>

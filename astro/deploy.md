@@ -13,6 +13,7 @@ is always run from this `astro/` dir so it picks up `functions/` alongside `dist
 | Trigger | Workflow | What happens |
 |---|---|---|
 | push to `main` | `.github/workflows/deploy.yml` | fetch dump → build → `pnpm run deploy` → **production** |
+| manual | `.github/workflows/deploy.yml` (Run workflow) | same |
 | PR to `main` touching `astro/**` | `.github/workflows/preview.yml` | same build, `wrangler pages deploy --branch <pr-branch>` → per-branch **preview URL** posted as a PR comment |
 | PR to `main` touching `astro/**` | `.github/workflows/size-benchmark.yml` | build, diff `dist/assets/sizes.json` against production, sticky comment, fail on budget breach |
 
@@ -54,10 +55,18 @@ First-time only, if recreating the project:
 - **`public/_redirects`** (in `dist/`) — legacy path redirects: `00<loc>.php` → `/?lang=<loc>`, and the
   vanity `/‹iso›[-rod[-var]]` → `/language/‹slug›/` collapse (see `REDIRECTS.md`).
 - **`functions/index.php.js`** — handles the legacy **query-string** deep links (`?iso=`, `?idx=`,
-  `?sortby=country`) that `_redirects` can't read. It is **scoped to `/index.php` only**, so every other
+  `?sortby=country`) that `_redirects` can't read, resolving `idx`/`iso` through `content/lang-map.json`
+  (written by the extract step, bundled by wrangler). It is **scoped to `/index.php` only**, so every other
   path is served as a pure static file and is not counted as a Functions invocation.
 - **`public/_headers`** — immutable caching for `/_astro/*` and `/i18n/*`; `precompress_dist.mjs` appends
   the `Content-Encoding: br` rule for the search index.
+
+## Go-live checklist (Cloudflare dashboard, not this repo)
+- Add the custom domain to the Pages project (Pages → Custom domains).
+- SSL/TLS → **Always Use HTTPS** on.
+- One Redirect Rule: `www.scriptureearth.org/*` → apex (301). `_redirects` cannot express host redirects.
+- Keep the legacy PHP host reachable: media, the `/api/db_dump.php` build source, and the CMS still live there
+  (the static site links out to `scriptureearth.org/data/...` assets).
 
 ## Notes
 - **Routing:** absolute paths + trailing slashes work at the `pages.dev` root as-is; no base-path config.

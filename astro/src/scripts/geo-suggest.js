@@ -89,6 +89,7 @@ function render(mount, primary, nearby) {
   x.type = 'button';
   x.className = 'geo-x';
   x.setAttribute('aria-label', 'Dismiss');
+  x.setAttribute('data-i18n-label', 'geo.dismiss');
   x.textContent = '×';
   x.addEventListener('click', () => {
     mount.hidden = true;

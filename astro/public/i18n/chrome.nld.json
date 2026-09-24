@@ -59,5 +59,15 @@
   "footer.about": "Over ons",
   "footer.ministry": "Een bediening van SIL Global",
   "footer.note": "Een statische herbouw van de ScriptureEarth-ontdekkingssite.",
-  "footer.updated": "Laatst bijgewerkt"
+  "footer.updated": "Laatst bijgewerkt",
+
+  "geo.here": "U bezoekt vanuit",
+  "geo.orNearby": "of dichtbij",
+  "geo.dismiss": "Sluiten",
+  "region.Africa": "Afrika",
+  "region.Americas": "Amerika",
+  "region.Asia": "Azië",
+  "region.Europe": "Europa",
+  "region.Oceania": "Oceanië",
+  "region.Other": "Overige"
 }

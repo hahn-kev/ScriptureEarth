@@ -59,5 +59,15 @@
   "footer.about": "关于",
   "footer.ministry": "SIL Global 的一项事工",
   "footer.note": "ScriptureEarth 探索网站的静态重建版本。",
-  "footer.updated": "最后更新"
+  "footer.updated": "最后更新",
+
+  "geo.here": "您来自",
+  "geo.orNearby": "或附近",
+  "geo.dismiss": "关闭",
+  "region.Africa": "非洲",
+  "region.Americas": "美洲",
+  "region.Asia": "亚洲",
+  "region.Europe": "欧洲",
+  "region.Oceania": "大洋洲",
+  "region.Other": "其他"
 }

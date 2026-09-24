@@ -25,7 +25,7 @@ Catalog of languages and countries with scripture resources (read / listen / wat
 
 **i18n:** sync boot in `src/layouts/Base.astro` (`?lang=` → `localStorage se-loc` → `navigator.language` → `eng`). Bundled `src/scripts/i18n.js` fetches `/i18n/chrome.<loc>.json`, `names.<loc>.json`, `autonyms.json` with `?v=` from `src/lib/i18nVersion.ts`. Name chain: locale names → autonyms → baked English. 15 locales hardcoded in **both** `Base.astro` and `i18n.js`. RTL: `arb`, `fas`. `public/i18n/locales.json` unused by `src`.
 
-**Redirects:** `public/_redirects` (path-only, first-match-wins) + `functions/index.php.js` (query-string `/index.php` only). Functions run **before** `_redirects`. Vanity `/:iso` → `/language/<same>/` 301. Guard `200` rewrites for real routes/assets **above** the ISO catch-all. HTTP/www: Cloudflare dashboard, not this repo. Details: `REDIRECTS.md`.
+**Redirects:** `public/_redirects` (path-only, first-match-wins) + `functions/index.php.js` (query-string `/index.php` only; imports the generated `content/lang-map.json` for `?idx=`/`?iso=` lookups — extract before deploy). Functions run **before** `_redirects`. Shared-ISO `?iso=` → `/language/` chooser page. Vanity `/:iso` → `/language/<same>/` 301. Guard `200` rewrites for real routes/assets **above** the ISO catch-all. HTTP/www: Cloudflare dashboard, not this repo. Details: `REDIRECTS.md`.
 
 ## Key Directories
 
@@ -89,7 +89,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 
 - Trailing slashes always (`trailingSlash: 'always'`, `build.format: 'directory'`). Links: `/language/${slug}/`.
 - `GROUPS`: `read|listen|watch|use` (detail resource sections). `PILLS`: `read|listen|watch|app|buy` (cards/facets). `availability.watch` can be true with empty `resources.watch`.
-- Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, names `data-i18n-name={idx}`.
+- Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, aria-labels `data-i18n-label`, names `data-i18n-name={idx}`.
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
 - CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.
@@ -110,7 +110,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 | `scripts/build_search_index.mjs` | JSON → `public/search-index.txt` (`auto` stays null) |
 | `scripts/precompress_dist.mjs` | In-place brotli on `dist/search-index.txt` + `_headers` |
 | `scripts/build_sizes.mjs`, `scripts/check_sizes.mjs` | Size-regression gate (`bench/SIZE-BENCH-SPEC.md`) |
-| `public/_redirects`, `functions/index.php.js` | Legacy URL map |
+| `public/_redirects`, `functions/index.php.js`, `src/pages/language/index.astro` | Legacy URL map (+ bundled `content/lang-map.json`, + shared-ISO chooser) |
 | `public/_headers` | Long-cache `/_astro/*` and `/i18n/*` only |
 
 Known gaps / fidelity notes live in `CURRENT-ISSUES.md`; outstanding asks to the API developer in `DUMP-API-REQUESTS.md`. Other docs: `README.md`, `deploy.md`, `REDIRECTS.md`, `bench/README.md`.

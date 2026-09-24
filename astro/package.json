@@ -15,6 +15,7 @@
     "extract:i18n": "node scripts/extract_i18n.mjs",
     "gen:geo": "node scripts/gen_geo.mjs",
     "gen:icons": "node scripts/gen_icons.mjs",
+    "check:links": "node scripts/check_links.mjs",
     "dev": "astro dev",
     "build": "astro build",
     "build:dump": "pnpm run extract && astro build",

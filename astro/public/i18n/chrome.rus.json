@@ -59,5 +59,15 @@
   "footer.about": "О проекте",
   "footer.ministry": "Служение SIL Global",
   "footer.note": "Статическая перестройка сайта ScriptureEarth.",
-  "footer.updated": "Последнее обновление"
+  "footer.updated": "Последнее обновление",
+
+  "geo.here": "Вы из",
+  "geo.orNearby": "или рядом",
+  "geo.dismiss": "Закрыть",
+  "region.Africa": "Африка",
+  "region.Americas": "Америка",
+  "region.Asia": "Азия",
+  "region.Europe": "Европа",
+  "region.Oceania": "Океания",
+  "region.Other": "Другие"
 }
