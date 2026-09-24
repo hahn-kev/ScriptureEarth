@@ -2,6 +2,7 @@
 import locales from '../../public/i18n/locales.json';
 import { I18N_VERSION } from '../lib/i18nVersion';
 import '../styles/site.css';
+import '../styles/icons.css';
 
 interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
 const { title, lang = 'en', dir = 'ltr' } = Astro.props;
@@ -54,23 +55,23 @@ const buildDate = buildTimestamp.slice(0, 10);
         </picture>
       <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
     </a>
-    <nav class="main"><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></nav>
+    <nav class="main"><a href="/browse/"><span class="ic ic-languages" aria-hidden="true"></span><span data-i18n="nav.languages">Languages</span></a><a href="/countries/"><span class="ic ic-countries" aria-hidden="true"></span><span data-i18n="nav.countries">Countries</span></a></nav>
     <form class="site-search" role="search" action="/">
-      <span class="mag" aria-hidden="true">⌕</span>
+      <span class="ic ic-search mag" aria-hidden="true"></span>
       <input type="search" name="q" placeholder="Search by language, code, or country…" data-i18n-ph="search.ph" />
     </form>
-    <select class="locale-pick" id="locale-picker" aria-label="Language">
+    <label class="locale-wrap"><span class="ic ic-locale" aria-hidden="true"></span><select class="locale-pick" id="locale-picker" aria-label="Language">
       {Object.entries(locales).map(([code, meta]) => (
         <option value={code}>{meta.label}</option>
       ))}
-    </select>
+    </select></label>
   </div></header>
 
   <slot />
 
   <footer class="site"><div class="shell">
     <div class="fin">
-      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></div>
+      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/"><span class="ic ic-languages" aria-hidden="true"></span><span data-i18n="nav.languages">Languages</span></a><a href="/countries/"><span class="ic ic-countries" aria-hidden="true"></span><span data-i18n="nav.countries">Countries</span></a></div>
       <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span></div>
     </div>
     <div class="cc">

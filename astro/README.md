@@ -39,6 +39,7 @@ pnpm run preview             # serve dist/
 - `pnpm run extract` regenerates `content/` (and `public/search-index.txt`) from `data/scripture.json` without building.
   Add `SE_SKIP_PLAYLISTS=1` for a fast dev build (skips the per-playlist `.txt` fetch — never deploy such a build).
 - `pnpm run extract:i18n` regenerates the per-locale UI catalogs — rarely needed (see note below).
+- `pnpm run gen:icons` regenerates `src/styles/icons.css` from the icon list in `src/lib/icons.mjs` (see Icons below).
 - `pnpm run bench:search-index` / `pnpm run bench:size` — the two size gates (see `bench/`).
 
 ## Layout
@@ -52,6 +53,15 @@ pnpm run preview             # serve dist/
 - `scripts/` — `fetch_dump.mjs` (dump API → `data/scripture.json`), `extract.mjs` (projector → content JSON),
   `build_search_index.mjs`, `precompress_dist.mjs`, `build_sizes.mjs`/`check_sizes.mjs`, i18n/geo generators.
 - `content/`, `data/`, `public/search-index.txt`, `dist/` — **generated / local; git-ignored.**
+
+## Icons
+Labels carry a [Material Symbols](https://icon-sets.iconify.design/material-symbols/) icon (Apache-2.0) so the
+site stays navigable for people who can't read the text; brand marks Material lacks (YouTube, Google Play, Apple)
+come from [mdi](https://icon-sets.iconify.design/mdi/) (Apache-2.0). To keep bandwidth low there is **no icon font and no
+extra request**: `scripts/gen_icons.mjs` pulls just the icons named in `src/lib/icons.mjs` from the Iconify API and
+writes them into `src/styles/icons.css` with `@iconify/utils` as CSS `mask-image` data URIs (~2 KB brotli, cached with the site CSS).
+Use one as `<span class="ic ic-<name>" aria-hidden="true"></span>`; it sizes to `1em` and inherits `color`.
+The generated CSS is committed — rerun `pnpm run gen:icons` only when the list changes.
 
 ## i18n
 UI shows in English by default; the other locales are a **client-side** enhancement (`src/scripts/i18n.js`

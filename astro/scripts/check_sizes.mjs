@@ -193,7 +193,10 @@ async function main() {
 
   if (verdict === 'fail') {
     console.error('Cold-load size exceeds the fail-band budget.');
-    process.exit(1);
+    // With --verdict the caller (CI) reads the verdict file and gates in a later step,
+    // after posting the report comment — so don't fail this step too, or the comment
+    // never gets posted. Without it (local `pnpm run bench:size`) fail directly.
+    process.exit(args.verdict ? 0 : 1);
   }
   process.exit(0);
 }

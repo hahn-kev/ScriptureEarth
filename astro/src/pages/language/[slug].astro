@@ -17,7 +17,7 @@ const avail = PILLS.filter((p) => d.availability[p.key]);
 ---
 <Base title={`${name} — ScriptureEarth`}>
   <section class="block shell">
-    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><a href="/browse/" data-i18n="nav.languages">Languages</a><span>›</span><span>{name}</span></nav>
+    <nav class="crumbs"><a href="/"><span class="ic ic-home" aria-hidden="true"></span><span data-i18n="crumb.home">Home</span></a><span>›</span><a href="/browse/" data-i18n="nav.languages">Languages</a><span>›</span><span>{name}</span></nav>
     <div class="with-side">
       <div>
         <div class="rec-head"><h1 data-i18n-name={String(d.idx)}>{name}</h1>{d.identity.variant_name && <span class="muted">{d.identity.variant_name}</span>}</div>
@@ -33,7 +33,7 @@ const avail = PILLS.filter((p) => d.availability[p.key]);
         {activeGroups.length === 0 && <p class="muted" data-i18n="detail.noresources">No resources catalogued yet for this language.</p>}
         {activeGroups.map((g) => (
           <div class="res-group" id={g.key}>
-            <div class="rg-head"><span class="lead-dot" data-r={g.key}></span><h3 data-i18n={`group.${g.key}`}>{g.label}</h3><span class="n">{d.resources[g.key].length}</span></div>
+            <div class="rg-head"><span class={`ic ic-${g.key}`} data-r={g.key} aria-hidden="true"></span><h3 data-i18n={`group.${g.key}`}>{g.label}</h3><span class="n">{d.resources[g.key].length}</span></div>
             {d.resources[g.key].map((r: any) => <ResourceRow group={g.key} r={r} />)}
           </div>
         ))}
@@ -42,7 +42,7 @@ const avail = PILLS.filter((p) => d.availability[p.key]);
       <aside class="side">
         <h4 data-i18n="detail.onthispage">On this page</h4>
         <div class="toc">
-          {activeGroups.map((g) => (<a href={`#${g.key}`}><span data-i18n={`group.${g.key}`}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
+          {activeGroups.map((g) => (<a href={`#${g.key}`}><span class={`ic ic-${g.key}`} data-r={g.key} aria-hidden="true"></span><span data-i18n={`group.${g.key}`}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
         </div>
         {d.countries.length > 0 && (
           <>

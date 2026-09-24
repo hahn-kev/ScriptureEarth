@@ -9,12 +9,12 @@ const langs = (await getCollection('languages')).map((l) => l.data)
 ---
 <Base title="ScriptureEarth — Browse all languages">
   <section class="block shell">
-    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><span data-i18n="browse.crumb">Browse all</span></nav>
+    <nav class="crumbs"><a href="/"><span class="ic ic-home" aria-hidden="true"></span><span data-i18n="crumb.home">Home</span></a><span>›</span><span data-i18n="browse.crumb">Browse all</span></nav>
     <div class="sec-head"><div><p class="eyebrow" data-i18n="catalog.eyebrow">The catalog</p><h2 data-i18n="browse.h2">All languages</h2></div>
       <span class="facet-count"><span class="tnum" id="count">{langs.length}</span> <span data-i18n="stats.languages">languages</span></span></div>
     <div class="facets" id="facets" aria-label="Filters">
       <button class="facet on" type="button" data-r="all" data-i18n="facet.all">All</button>
-      {PILLS.map((p) => <button class="facet" type="button" data-r={p.key} data-i18n={`pill.${p.key}`}>{p.label}</button>)}
+      {PILLS.map((p) => <button class="facet" type="button" data-r={p.key}><span class={`ic ic-${p.key}`} aria-hidden="true"></span><span data-i18n={`pill.${p.key}`}>{p.label}</span></button>)}
     </div>
     <div class="lang-grid" id="grid">{langs.map((d) => <LangCard d={d} />)}</div>
   </section>
