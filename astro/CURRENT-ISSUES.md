@@ -83,3 +83,22 @@ duplicated run is cheap.
 Pages projects can't be renamed. Moving to a better name means creating a new project,
 deploying once, and moving the custom domain. The name is referenced in `package.json`
 (`deploy`), `.github/workflows/preview.yml`, and `scripts/check_sizes.mjs` (baseline URL).
+
+## Front end
+
+### 8. `search-index.txt` is not content-hashed
+The rewrite spec (ticket 07) called for a content-hashed, immutable search index with a
+hash-keyed localStorage cache. Today `/search-index.txt` is an unhashed `public/` asset served
+with Cloudflare's default `must-revalidate` + ETag, and `src/scripts/search.js` keeps nothing in
+localStorage, so correctness is fine (a rebuild is picked up on the next 304 check) — the cost is
+one conditional request per search session instead of an immutable hit. Hashing it means emitting
+a manifest the home page reads and updating the `_redirects` guard + `precompress_dist.mjs`.
+
+### 9. Country names are not localized
+Locale catalogs cover UI chrome (`chrome.<loc>.json`) and language names (`names.<loc>.json`);
+there is no `countries.<loc>.json`, so country names on cards, detail pages and `/countries/` stay
+English in every locale (ticket 14 wrinkle). The dump carries `countries_names` per locale, so the
+catalog could be seeded from it and applied via a `data-i18n-country=<CC>` hook.
+
+### 10. The `/language/` resolver and `/404` pages are English-only
+Their few strings have no `data-i18n` keys (adding keys means touching all 14 chrome catalogs).

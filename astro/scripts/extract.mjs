@@ -448,8 +448,14 @@ function auditData(ents, langs) {
   console.error(`  watch titles: ${wTitled}/${wRows}   buy titles: ${bTitled}/${bRows}`);
   if (wRows > 0 && wTitled === 0) failures.push('watch: 0 rows have a real title (dump omits watch_what/organization)');
   if (bRows > 0 && bTitled === 0) failures.push('buy: 0 rows have a real title (dump omits buy_what/organization)');
-  if (langs.length < Number(process.env.SE_MIN_LANGS || 4000)) failures.push(`only ${langs.length} languages (< ${process.env.SE_MIN_LANGS || 4000})`);
   return failures;
+}
+
+// Hard floor, independent of SE_STRICT: a truncated or partial dump must never reach a deploy.
+const MIN_LANGS = Number(process.env.SE_MIN_LANGS || 4000);
+if (languages.length < MIN_LANGS) {
+  console.error(`FATAL: only ${languages.length} languages projected (< SE_MIN_LANGS=${MIN_LANGS}) — refusing to write content/.`);
+  process.exit(1);
 }
 
 const auditFailures = auditData(entries, languages);

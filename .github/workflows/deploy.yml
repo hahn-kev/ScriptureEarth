@@ -1,6 +1,7 @@
 name: Build & Deploy
 
-# Production deploy of the static Astro site (astro/) on every push to main:
+# Production deploy of the static Astro site (astro/) on every push to main, plus a
+# daily scheduled rebuild so the site picks up database changes without a code push:
 #   fetch JSON dump → project to content/ → astro build → Cloudflare Pages.
 # The publish step is skipped (build only) when the Cloudflare secrets are absent,
 # so the build still runs and fails loudly on data problems without deploy access.
@@ -15,6 +16,8 @@ name: Build & Deploy
 on:
   push:
     branches: [main]
+  schedule:
+    - cron: '0 6 * * *' # daily 06:00 UTC — refresh from the live dump
   workflow_dispatch:
 
 permissions:
