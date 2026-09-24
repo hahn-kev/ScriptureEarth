@@ -34,16 +34,11 @@
 		$first .= '"idx":		        '.$idx.',';
         $first .= '"idx_query_string":	"idx='.$idx.'",';
 		$first .= '"language_name": {';
-		$first .= '"English":			"'.$LN_English.'",';
-		$first .= '"Spanish":			"'.$LN_Spanish.'",';
-		$first .= '"Portuguese":		"'.$LN_Portuguese.'",';
-		$first .= '"French":			"'.$LN_French.'",';
-		$first .= '"Dutch":				"'.$LN_Dutch.'",';
-		$first .= '"German":			"'.$LN_German.'",';
-		$first .= '"Chinese":			"'.$LN_Chinese.'",';
-		$first .= '"Korean":			"'.$LN_Korean.'",';
-		$first .= '"Russian":			"'.$LN_Russian.'",';
-		$first .= '"Arabic":			"'.$LN_Arabic.'",';
+
+		foreach ($LNames as $key => $LName) {
+			$first .= '"'.$key.'":			"'.$LName.'",';										// e.g., '"English":	"[English Language Name]",'
+		}
+
 		$first .= '"minority":			""';
 		$first .= '},';
 		$first .= '"alternate_language_count":		'.$alt_ln.',';                              // how many
@@ -104,12 +99,15 @@
 		$first .= '"Bible.is_Gospel_Film":	'.$BibleIsGospelFilm.',';
 		$first .= '"YouVersion":		'.$YouVersion.',';
 		$first .= '"eBible":			'.$eBible.',';
+		$first .= '"Kalaam_websites":	'.$Kalaam.',';
+		$first .= '"other_websites":	'.$websites.',';
+		$first .= '"AppleStore":		'.$AppleStore.',';
+		$first .= '"email":				'.$email.',';
 		$first .= '"GRN":				'.$GRN;
 		$first .= '},';
 		$first .= '"buy":				'.$buy.',';
 		$first .= '"maps":				'.$map.',';
 		$first .= '"watch":				'.$watch.',';
-		$first .= '"websites":			'.$websites.',';
 		$first .= '"other_titles":		'.$other_titles.',';
 		$first .= '"SIL_link":			'.$SILlink;
 		$first .= '}},';

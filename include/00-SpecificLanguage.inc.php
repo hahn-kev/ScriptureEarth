@@ -32,15 +32,6 @@
 	body {
 		background-color: white;
 	}
-	a {
-		color: navy;
-		text-decoration: none;
-		/*margin-left: 10px;*/
-	}
-	tr, td {
-		margin: 0;
-		padding: 0;
-	}
 
 	li.aboutText {
 		display: block;
@@ -54,140 +45,19 @@
 	a.aboutWord:hover {
 		color: red;
 	}
-	img.iconActions {
-		margin-top: 4px;
-		margin-bottom: 4px;
-		padding: 0;
-		vertical-align: middle;
-		border-style: none;
-		width: 30px;
-		height: 30px;
-		min-width: 30px;
-		margin-right: 4px;
-	}
-	div.linePointer {
-		cursor: pointer;
-		display: inline;
-	}
-	div.linePointer:hover {
-		border-bottom: 2px solid red;
-	}
-
-	/* for the tables */
-	#Dis_BibleIsReadAudio, #Dis_BibleIsRead, #Dis_BibleIsReadAudioVideo, #Dis_BibleIsAudio, #Dis_BibleIsAudioVideo,
-	#Dis_BibleIsVideo, #Dis_BibleIsReadVideo,
-	#Dis_SAB, #Dis_BibleIs, #Dis_viewer, #Dis_OT_PDF, #Dis_NT_PDF, #Dis_OT_Audio, #Dis_NT_Audio, #Dis_PlaylistAudio, #Dis_BibleIsGospelFilm,
-	#Dis_PlaylistVideo, #Dis_watch, #Dis_YouVersion, #Dis_buy, #Dis_GRN, #Dis_study, #Dis_otherTitles, #Dis_otherTitles_download,
-	#Dis_links, #Dis_eBible, #Dis_SILlink, #Dis_SB, #Dis_GooglePlay, #Dis_All, #Dis_PlaylistVideo, #Dis_PlaylistVideo_download, #Dis_App,
-	#Dis_BibleIsSAB, #Dis_BibleIsGospelFilmSAB, #Dis_YouVersion, #Dis_NotAndroidiOS, #Dis_moreLinks, #Dis_maps, #Dis_OT_Audio_download,
-	#Dis_NT_Audio_download, #Dis_otherTitles_videoDownload, #Dis_Map {
-		display: none;
-	}
-	
-	 /* style the tab */
-	.tab, .CCtab {
-		overflow: hidden;
-		border: 1px solid #ccc;
-		background-color: #f1f1f1;
-	}
-	/* style the buttons that are used to open the tab content */
-	.tab button {
-		background-color: inherit;
-		float: left;
-		border: none;
-		outline: none;
-		cursor: pointer;
-		padding-top: 34px;
-		padding-bottom: 12px;
-		transition: 0.4s;
-	}
-	.CCtab button {
-		background-color: inherit;
-		/*float: left;
-		border: none;
-		outline: none;*/
-		font-size: .9em;
-		cursor: pointer;
-		padding-top: 10px;
-		padding-bottom: 10px;
-		padding-left: 10px;
-		padding-right: 10px;
-		margin-left: 10px;
-		margin-right: 10px;
-		/*transition: 0.4s;*/
-	}
-	/* change background color of buttons on hover */
-	.tab button:hover, .CCtab button:hover {
-		background-color: #ddd;
-	}
-	/* create an active/current tablink class */
-	.tab button.active, .CCtab button.active {
-		background-color: #ccc;
-	}
-	/* tab icon width */
-	.tablinks {
-		width: 14.28%;
-	}
-	.CCtablinks {
-	}
-	/* individual width and height of the icons */
-	#tabText {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabAudio {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabVideo {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabApp {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabOther {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabMap {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	#tabAll {
-		width: 60px;
-		height: 60px;
-		margin-top: 21px;
-	}
-	/* text to the icons */
-	figcaption {
-		font-size: 130%;
-		text-align: center;
-	}
-
-	@media only screen and (max-width: 480px) {
-		/* reddraw the mobile icons */
-		.tab button {
-			padding-top: 4px;
-			height: 95px;
-		}
-	}
 </style>
 
 <?php
 $check_iOS = 0;
+$smartPhone = 0;
 if (isset($_SERVER['HTTP_USER_AGENT'])) {
 	//if (preg_match('/Macintosh|iPhone|iPod|iPad/', $_SERVER['HTTP_USER_AGENT'])) {
 	if (preg_match('/iPhone|iPod|iPad/', $_SERVER['HTTP_USER_AGENT'])) {
 		/* This is iOS */
 		$check_iOS = 1;
+	}
+	if (preg_match('/Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i', $_SERVER['HTTP_USER_AGENT'])) {
+		$smartPhone = 1;
 	}
 }
 
@@ -375,6 +245,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		}
 	}
 
+	$AppleStore = 0;
 	$GooglePlay = 0;
 	$Kalaam = 0;
 	$iTunes = 0;
@@ -382,6 +253,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 	$linksMaps = 0;
 	$linksEmail = 0;
 	if ($links) {
+		$query="SELECT * FROM links WHERE ISO_ROD_index = '$ISO_ROD_index' AND AppleStore = 1";
+		$result_AS=$db->query($query);
+		$AppleStore = $result_AS->num_rows;					// number of rows
+
 		$query="SELECT * FROM links WHERE ISO_ROD_index = '$ISO_ROD_index' AND GooglePlay = 1";
 		$result_GP=$db->query($query);
 		$GooglePlay = $result_GP->num_rows;					// number of rows
@@ -395,7 +270,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		$iTunes = $result_iTunes->num_rows;					// number of rows
 
 		// onestory, itunes, facebook, deaf\.?bible, and anything else
-		$query="SELECT * FROM links WHERE ISO_ROD_index = '$ISO_ROD_index' AND company <> 'iTunes Play Store' AND email = 0 AND map = 0 AND buy = 0 AND BibleIs = 0 AND BibleIsGospelFilm = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `Kalaam` = 0 ORDER BY `URL`";
+		$query="SELECT * FROM links WHERE ISO_ROD_index = '$ISO_ROD_index' AND company <> 'iTunes Play Store' AND email = 0 AND map = 0 AND buy = 0 AND BibleIs = 0 AND BibleIsGospelFilm = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `AppleStore` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `Kalaam` = 0 ORDER BY `URL`";
 		$result_moreLinks=$db->query($query);
 		$moreLinks = $result_moreLinks->num_rows;			// number of rows
 
@@ -450,7 +325,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 
 /*
 	*************************************************************************************************************
-		Get the Language name to display AND display the Text, Audio, Video, App, Other and All bottons.
+		Get the Language name to display.
 	*************************************************************************************************************
 */
 	?>
@@ -480,237 +355,91 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		}
 		?>
 	</h1>
-
+<?php
+/*
+	*************************************************************************************************************
+		Display the Text, Audio, Video, App, Other, and All buttons.
+	*************************************************************************************************************
+*/
+?>
 <script>
 	setTitle("<?php echo ($whichBible == '' ? '' : $whichBible . ' ') . $LN . ($ISO == 'qqq' ? '' : '['.$ISO.']'); ?>");		// qqq equals Deaf
 
-		/*
-			$BibleIsLink = 1: Read and Listen			$BibleIsReadAudio
-			$BibleIsLink = 2: Read						$BibleIsRead
-			$BibleIsLink = 3: Read and Listen			$BibleIsReadAudio
-			$BibleIsLink = 4: Read, Listen, and View	$BibleIsReadAudioVideo
-			$BibleIsLink = 5: Listen					$BibleIsAudio
-			$BibleIsLink = 6: Listen and View			$BibleIsAudioVideo
-			$BibleIsLink = 7: View						$BibleIsVideo
-			$BibleIsLink = 8: Read and View				$BibleIsReadVideo
-		*/
 	// Object.entries() takes an object like { a: 1, b: 2, c: 3 } and turns it into an array of key-value pairs: [ [ 'a', 1 ], [ 'b', 2 ], [ 'c', 3 ] ].
-	const DisplayText = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsRead': <?php echo $BibleIsRead; ?>, 'Dis_BibleIsReadAudio': <?php echo $BibleIsReadAudio; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_BibleIsReadVideo': <?php echo $BibleIsReadVideo; ?>, 'Dis_viewer': <?php echo $viewer; ?>, 'Dis_SB': <?php echo $SB_PDF; ?>, 'Dis_OT_PDF': <?php echo $OT_PDF; ?>, 'Dis_NT_PDF': <?php echo $NT_PDF; ?>, 'Dis_YouVersion': <?php echo $YouVersion; ?>, 'Dis_otherTitles': <?php echo $otherTitles; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>, 'Dis_eBible': <?php echo $eBible; ?>, 'Dis_buy': <?php echo $buy; ?>, 'Dis_linksEmail':  <?php echo $linksEmail; ?>, 'Dis_SB': <?php echo $SB_PDF; ?>};
+	const DisplayText = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsRead': <?php echo $BibleIsRead; ?>, 'Dis_BibleIsReadAudio': <?php echo $BibleIsReadAudio; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_BibleIsReadVideo': <?php echo $BibleIsReadVideo; ?>, 'Dis_viewer': <?php echo $viewer; ?>, 'Dis_SB': <?php echo $SB_PDF; ?>, 'Dis_OT_PDF': <?php echo $OT_PDF; ?>, 'Dis_NT_PDF': <?php echo $NT_PDF; ?>, 'Dis_YouVersion': <?php echo $YouVersion; ?>, 'Dis_otherTitles': <?php echo $otherTitles; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>, 'Dis_eBible': <?php echo $eBible; ?>, 'Dis_buy': <?php echo $buy; ?>, 'Dis_linksEmail':  <?php echo $linksEmail; ?>};
 	const DisplayAudio = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsAudio': <?php echo $BibleIsAudio; ?>, 'Dis_BibleIsReadAudio': <?php echo $BibleIsReadAudio; ?>, 'Dis_BibleIsAudioVideo': <?php echo $BibleIsAudioVideo; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_OT_Audio': <?php echo $OT_Audio; ?>, 'Dis_NT_Audio': <?php echo $NT_Audio; ?>, 'Dis_OT_Audio_download': <?php echo $OT_Audio_download; ?>, 'Dis_NT_Audio_download': <?php echo $NT_Audio_download; ?>, 'Dis_PlaylistAudio': <?php echo $PlaylistAudio; ?>, 'Dis_other_titles': <?php echo $other_titles; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>};
 	const DisplayVideo = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsVideo': <?php echo $BibleIsVideo; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_BibleIsAudioVideo': <?php echo $BibleIsAudioVideo; ?>, 'Dis_BibleIsReadVideo': <?php echo $BibleIsReadVideo; ?>, 'Dis_BibleIsGospelFilm': <?php echo $BibleIsGospelFilm; ?>, 'Dis_BibleIsGospelFilmSAB': <?php echo $BibleIsGospelFilmSAB; ?>, 'Dis_PlaylistVideo': <?php echo $PlaylistVideo; ?>, 'Dis_PlaylistVideo_download': <?php echo $PlaylistVideo_download; ?>, 'Dis_watch': <?php echo $watch; ?>, 'Dis_otherTitles_videoDownload': <?php echo $otherTitles_videoDownload; ?>, 'Dis_otherTitles_videoDownload': <?php echo $otherTitles_videoDownload; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>};
-	const DisplayApp = {'Dis_App': <?php echo $App; ?>, 'Dis_GooglePlay': <?php echo $GooglePlay; ?>, 'Dis_iTunes': <?php echo $iTunes; ?>, 'Dis_NotAndroidiOS': <?php echo $NotAndroidiOS; ?>};
+	const DisplayApp = {'Dis_App': <?php echo $App; ?>, 'Dis_GooglePlay': <?php echo $GooglePlay; ?>, 'Dis_AppleStore': <?php echo $AppleStore; ?>, 'Dis_iTunes': <?php echo $iTunes; ?>, 'Dis_NotAndroidiOS': <?php echo $NotAndroidiOS; ?>};
 	const DisplayOther = {'Dis_buy': <?php echo $buy; ?>, 'Dis_GRN': <?php echo $GRN; ?>, 'Dis_study': <?php echo $study; ?>, 'Dis_SILlink': <?php echo $SILlink; ?>, 'Dis_moreLinks': <?php echo $moreLinks; ?>, 'Dis_linksMaps': <?php echo $linksMaps; ?>, 'Dis_eBible': <?php echo $eBible; ?>, 'Dis_Kalaam': <?php echo $Kalaam; ?>};
 	const DisplayMap = {'Dis_Map': <?php echo $SE_Map; ?>};
-	const DisplayAll = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsRead': <?php echo $BibleIsRead; ?>, 'Dis_BibleIsAudio': <?php echo $BibleIsAudio; ?>, 'Dis_BibleIsVideo': <?php echo $BibleIsVideo; ?>, 'Dis_BibleIsReadAudio': <?php echo $BibleIsReadAudio; ?>, 'Dis_BibleIsReadVideo': <?php echo $BibleIsReadVideo; ?>, 'Dis_BibleIsAudioVideo': <?php echo $BibleIsAudioVideo; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_viewer': <?php echo $viewer; ?>, 'Dis_OT_PDF': <?php echo $OT_PDF; ?>, 'Dis_NT_PDF': <?php echo $NT_PDF; ?>, 'Dis_OT_Audio': <?php echo $OT_Audio; ?>, 'Dis_NT_Audio': <?php echo $NT_Audio; ?>, 'Dis_PlaylistAudio': <?php echo $PlaylistAudio; ?>, 'Dis_BibleIsGospelFilm': <?php echo $BibleIsGospelFilm; ?>, 'Dis_PlaylistVideo': <?php echo $PlaylistVideo; ?>, 'Dis_watch': <?php echo $watch; ?>, 'Dis_YouVersion': <?php echo $YouVersion; ?>, 'Dis_buy': <?php echo $buy; ?>, 'Dis_GRN': <?php echo $GRN; ?>, 'Dis_study': <?php echo $study; ?>, 'Dis_otherTitles': <?php echo $other_titles; ?>, 'Dis_otherTitles_videoDownload': <?php echo $otherTitles_videoDownload; ?>, 'Dis_links': <?php echo $links; ?>, 'Dis_linksEmail':  <?php echo $linksEmail; ?>, 'Dis_eBible': <?php echo $eBible; ?>, 'Dis_SILlink': <?php echo $SILlink; ?>, 'Dis_SB': <?php echo $SB_PDF; ?>, 'Dis_App': <?php echo $App; ?>, 'Dis_iTunes': <?php echo $iTunes; ?>, 'Dis_GooglePlay': <?php echo $GooglePlay; ?>, 'Dis_Kalaam': <?php echo $Kalaam; ?>, 'Dis_PlaylistVideo': <?php echo $PlaylistVideo; ?>, 'Dis_PlaylistVideo_download': <?php echo $PlaylistVideo_download; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>, 'Dis_BibleIsGospelFilmSAB': <?php echo $BibleIsGospelFilmSAB; ?>, 'Dis_NotAndroidiOS': <?php echo $NotAndroidiOS; ?>, 'Dis_moreLinks': <?php echo $moreLinks; ?>, 'Dis_linksMaps': <?php echo $linksMaps; ?>, 'Dis_OT_Audio_download': <?php echo $OT_Audio_download; ?>, 'Dis_NT_Audio_download': <?php echo $NT_Audio_download; ?>};
-
-	// set display = "table" for all "DisplayZZZZZZ" Object.entries()
-	function menuEnableText() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayText)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableAudio() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayAudio)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableVideo() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayVideo)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableApp() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayApp)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableOther() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayOther)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableMap() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayMap)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuEnableAll() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayAll)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "table";
-				}
-			}
-		}
-	}
-	function menuDisableAll() {
-		for (let [ dis_key, dis_value ] of Object.entries(DisplayAll)) {
-			if (document.getElementById(dis_key)) {
-				if (dis_value != 0) {
-					document.getElementById(dis_key).style.display = "none";
-				}
-			}
-		}
-		document.getElementById("Dis_Map").style.display = "none";
-	}
+	const DisplayAll = {'Dis_SAB': <?php echo $SAB; ?>, 'Dis_BibleIsRead': <?php echo $BibleIsRead; ?>, 'Dis_BibleIsAudio': <?php echo $BibleIsAudio; ?>, 'Dis_BibleIsVideo': <?php echo $BibleIsVideo; ?>, 'Dis_BibleIsReadAudio': <?php echo $BibleIsReadAudio; ?>, 'Dis_BibleIsReadVideo': <?php echo $BibleIsReadVideo; ?>, 'Dis_BibleIsAudioVideo': <?php echo $BibleIsAudioVideo; ?>, 'Dis_BibleIsReadAudioVideo': <?php echo $BibleIsReadAudioVideo; ?>, 'Dis_viewer': <?php echo $viewer; ?>, 'Dis_OT_PDF': <?php echo $OT_PDF; ?>, 'Dis_NT_PDF': <?php echo $NT_PDF; ?>, 'Dis_OT_Audio': <?php echo $OT_Audio; ?>, 'Dis_NT_Audio': <?php echo $NT_Audio; ?>, 'Dis_PlaylistAudio': <?php echo $PlaylistAudio; ?>, 'Dis_BibleIsGospelFilm': <?php echo $BibleIsGospelFilm; ?>, 'Dis_PlaylistVideo': <?php echo $PlaylistVideo; ?>, 'Dis_watch': <?php echo $watch; ?>, 'Dis_YouVersion': <?php echo $YouVersion; ?>, 'Dis_buy': <?php echo $buy; ?>, 'Dis_GRN': <?php echo $GRN; ?>, 'Dis_study': <?php echo $study; ?>, 'Dis_otherTitles': <?php echo $other_titles; ?>, 'Dis_otherTitles_videoDownload': <?php echo $otherTitles_videoDownload; ?>, 'Dis_links': <?php echo $links; ?>, 'Dis_linksEmail':  <?php echo $linksEmail; ?>, 'Dis_eBible': <?php echo $eBible; ?>, 'Dis_SILlink': <?php echo $SILlink; ?>, 'Dis_SB': <?php echo $SB_PDF; ?>, 'Dis_App': <?php echo $App; ?>, 'Dis_iTunes': <?php echo $iTunes; ?>, 'Dis_GooglePlay': <?php echo $GooglePlay; ?>, 'Dis_AppleStore': <?php echo $AppleStore; ?>, 'Dis_Kalaam': <?php echo $Kalaam; ?>, 'Dis_PlaylistVideo': <?php echo $PlaylistVideo; ?>, 'Dis_PlaylistVideo_download': <?php echo $PlaylistVideo_download; ?>, 'Dis_BibleIsSAB': <?php echo $BibleIsSAB; ?>, 'Dis_BibleIsGospelFilmSAB': <?php echo $BibleIsGospelFilmSAB; ?>, 'Dis_NotAndroidiOS': <?php echo $NotAndroidiOS; ?>, 'Dis_moreLinks': <?php echo $moreLinks; ?>, 'Dis_linksMaps': <?php echo $linksMaps; ?>, 'Dis_OT_Audio_download': <?php echo $OT_Audio_download; ?>, 'Dis_NT_Audio_download': <?php echo $NT_Audio_download; ?>};
 
 	// set the icons for the largest size
+
 	function iconEnableText() {
-		document.getElementById('tabText').style.width = "85px";
-		document.getElementById('tabText').style.height = "85px";
-		document.getElementById('tabText').style.marginTop = "1px";
+		document.getElementById('tabText').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabText').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabText').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableAudio() {
-		document.getElementById('tabAudio').style.width = "85px";
-		document.getElementById('tabAudio').style.height = "85px";
-		document.getElementById('tabAudio').style.marginTop = "1px";
+		document.getElementById('tabAudio').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabAudio').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabAudio').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableVideo() {
-		document.getElementById('tabVideo').style.width = "85px";
-		document.getElementById('tabVideo').style.height = "85px";
-		document.getElementById('tabVideo').style.marginTop = "1px";
+		document.getElementById('tabVideo').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabVideo').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabVideo').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableAppt() {
-		document.getElementById('tabApp').style.width = "85px";
-		document.getElementById('tabApp').style.height = "85px";
-		document.getElementById('tabApp').style.marginTop = "1px";
+		document.getElementById('tabApp').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabApp').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabApp').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableOther() {
-		document.getElementById('tabOther').style.width = "85px";
-		document.getElementById('tabOther').style.height = "85px";
-		document.getElementById('tabOther').style.marginTop = "1px";
+		document.getElementById('tabOther').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabOther').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabOther').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableMap() {
-		document.getElementById('tabMap').style.width = "85px";
-		document.getElementById('tabMap').style.height = "85px";
-		document.getElementById('tabMap').style.marginTop = "1px";
+		document.getElementById('tabMap').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabMap').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabMap').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
 	function iconEnableAll() {
-		document.getElementById('tabAll').style.width = "85px";
-		document.getElementById('tabAll').style.height = "85px";
-		document.getElementById('tabAll').style.marginTop = "1px";
+		document.getElementById('tabAll').style.width = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabAll').style.height = '<?php echo $smartPhone == 0 ? "85px" : "45px"; ?>';
+		document.getElementById('tabAll').style.marginTop = '<?php echo $smartPhone == 0 ? "1px" : "11px"; ?>';
 	}
+
 	function iconDisableAll() {
-		document.getElementById('tabText').style.width = "65px";
-		document.getElementById('tabText').style.height = "65px";
+		document.getElementById('tabText').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabText').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabText').style.marginTop = "21px";
 
-		document.getElementById('tabAudio').style.width = "65px";
-		document.getElementById('tabAudio').style.height = "65px";
+		document.getElementById('tabAudio').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabAudio').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabAudio').style.marginTop = "21px";
 
-		document.getElementById('tabVideo').style.width = "65px";
-		document.getElementById('tabVideo').style.height = "65px";
+		document.getElementById('tabVideo').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabVideo').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabVideo').style.marginTop = "21px";
 
-		document.getElementById('tabApp').style.width = "65px";
-		document.getElementById('tabApp').style.height = "65px";
+		document.getElementById('tabApp').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabApp').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabApp').style.marginTop = "21px";
 
-		document.getElementById('tabOther').style.width = "65px";
-		document.getElementById('tabOther').style.height = "65px";
+		document.getElementById('tabOther').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabOther').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabOther').style.marginTop = "21px";
 
-		document.getElementById('tabMap').style.width = "65px";
-		document.getElementById('tabMap').style.height = "65px";
+		document.getElementById('tabMap').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabMap').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabMap').style.marginTop = "21px";
 
-		document.getElementById('tabAll').style.width = "65px";
-		document.getElementById('tabAll').style.height = "65px";
+		document.getElementById('tabAll').style.width = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
+		document.getElementById('tabAll').style.height = '<?php echo $smartPhone == 0 ? "65px" : "35px"; ?>';
 		document.getElementById('tabAll').style.marginTop = "21px";
-	}
-			
-	// Display the "DisplayZZZZZ" Object.entries()
-	function openMenuTab(evt, menuTabName) {
-		// return if count = 0
-		if (menuTabName == 'Text' && textCount === 0) {
-			return;
-		}
-		if (menuTabName == 'Audio' && audioCount === 0) {
-			return;
-		}
-		if (menuTabName == 'Video' && videoCount === 0) {
-			return;
-		}
-		if (menuTabName == 'App' && appCount === 0) {
-			return;
-		}
-		if (menuTabName == 'Other' && otherCount === 0) {
-			return;
-		}
-		if (menuTabName == 'Map' && mapCount === 0) {
-			return;
-		}
-
-		// set none to "tablinks" class names and set the "event" class name to "active"
-		let tablinks;
-		tablinks = document.getElementsByClassName("tablinks");							// Get all elements with class="tablinks" and remove the class "active"
-		for (let i = 0; i < tablinks.length; i++) {
-			tablinks[i].className = tablinks[i].className.replace(" active", "");
-		}
-		evt.currentTarget.className += " active";										// change the "active" class to the button that opened the tab
-
-		// set all of the "DisplayZZZZZ" Object.entries()
-		if (menuTabName != 'All') {
-			menuDisableAll();
-		}
-		iconDisableAll();
-		switch (menuTabName) {
-			case 'Text':
-				menuEnableText();
-				iconEnableText();
-				break;
-			case 'Audio':
-				menuEnableAudio();
-				iconEnableAudio();
-				break;
-			case 'Video':
-				menuEnableVideo();
-				iconEnableVideo();
-				break;
-			case 'App':
-				menuEnableApp();
-				iconEnableAppt();
-				break;
-			case 'Other':
-				menuEnableOther();
-				iconEnableOther();
-				break;
-			case 'Map':
-				menuEnableMap();
-				iconEnableMap();
-				break;
-			case 'All':
-				menuEnableAll();
-				iconEnableAll();
-				break;
-			default:
-				document.write('<p>This is\'t supposed to happen! (menu tabs)</p>');
-		}
 	}
 </script>
 
@@ -719,6 +448,32 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 <br />
 
 <?php
+/*
+	*************************************************************************************************************
+		Get the autonym language name, if there is any, to display.
+	*************************************************************************************************************
+*/
+	$query_autonym="SELECT autonym FROM autonyms WHERE ISO = '$ISO'";				// then look to the autonym_lang_name table
+	$result_autonym=$db->query($query_autonym);
+	if ($result_autonym->num_rows > 0) {
+		?>
+		<br />
+		<h2 id='<?php echo $ISO; ?>_1'>
+			<div class='autonymLanguageNames' style='width: 100%; '><?php echo translate('Self-designation of the speakers’ language:', $st, 'sys'); ?>
+				<span class='autonymLanguageName'>
+				<?php
+				// display autonym language names
+				$r_autonym = $result_autonym->fetch_array(MYSQLI_ASSOC);
+				$autonym_lang_name=trim($r_autonym['autonym']);
+				$autonym_lang_name = htmlspecialchars($autonym_lang_name, ENT_QUOTES, 'UTF-8');
+				echo $autonym_lang_name;
+				?>
+				</span>
+			</div>
+		</h2>
+		<?php
+	}
+
 /*
 	*************************************************************************************************************
 		Get the alternate language name, if there is any, to display.
@@ -730,7 +485,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		?>
 		<br />
 		<h2 id='<?php echo $ISO; ?>'>
-			<div class='alternativeLanguageNames' style='width: 100%; '><?php echo translate('Alternative Language Names:', $st, 'sys'); ?>
+			<div class='alternativeLanguageNames' style='width: 100%; '><?php echo translate('Alternative language names:', $st, 'sys'); ?>
 				<span class='alternativeLanguageName'>
 				<?php
 				$i_alt=0;
@@ -749,6 +504,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					}
 					$i_alt++;
 				}
+				echo '<span style="font-size: 85%; ">';
 				$i_alt=0;
 				$preth = 0;
 				$temp_array = [];
@@ -764,7 +520,8 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						continue;
 					}
 					if ($preth === 0) {
-						echo ' (';
+						//echo ', (';
+						echo ', ';
 						$preth = 1;
 					}
 					$r_temp = $result_temp->fetch_array(MYSQLI_ASSOC);
@@ -779,9 +536,11 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						$i_alt++;
 					}
 				}
-				if ($preth == 1) {
-					echo ')';
-				}
+				//if ($preth == 1) {
+					//echo ')';
+				//}
+				echo '</span>';
+				echo '</span>';
 				?>
 			</div>
 		</h2>
@@ -819,11 +578,14 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		<div style='width: 100%; '>
 			<div class='Country' style='margin-bottom: 8px; '><?php echo translate('Country', $st, 'sys'); ?>:&nbsp;<span class='Country'><?php echo $country; ?></span></div>
 			<?php if ($ISO != 'qqq') { ?>
-				<div class='languageCode'><?php echo translate('Language Code', $st, 'sys'); ?>:&nbsp;<a href='https://www.ethnologue.com/language/<?php echo $ISO; ?>/' target='_blank'><?php echo $ISO; ?></a>&nbsp;&nbsp;&nbsp;&nbsp;<span style='font-size: 90%; font-weight: normal; '>(<?php echo translate('Index', $st, 'sys'); ?>:&nbsp;<?php echo $ISO_ROD_index; ?>)</span></div>
+				<div class='languageCode'><?php echo translate('Language Code', $st, 'sys'); ?>:&nbsp;<a href='https://www.ethnologue.com/language/<?php echo $ISO; ?>/' target='_blank'><?php echo $ISO; ?></a><br />
+				&nbsp;&nbsp;&nbsp;&nbsp;<span style='font-size: 90%; font-weight: normal; color: white; '>(<?php echo translate('Index', $st, 'sys'); ?>:&nbsp;<?php echo $ISO_ROD_index; ?>)</span></div>
+			<?php } else { ?>
+				<div class='SLI'>&nbsp;&nbsp;&nbsp;&nbsp;<?php echo translate('SLI', $st, 'sys'); ?>:&nbsp;<?php echo $ROD_Code; ?><br />
+				&nbsp;&nbsp;&nbsp;<span style='font-size: 90%; font-weight: normal; color: white; '>(<?php echo translate('Index', $st, 'sys'); ?>:&nbsp;<?php echo $ISO_ROD_index; ?>)</span></div>
 			<?php } ?>
 		</div>
 	</h2>
-	&nbsp;<br />
 	<?php
 
 /*
@@ -834,17 +596,15 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 	?>
 	<div style='width: 92%; margin-left: auto; margin-right: auto; '>
 		<div class="tab">
-			<button class="tablinks" onclick="openMenuTab(event, 'Text')"><img id="tabText" class='iconActions' src='../images/DisText.jpg' alt='<?php echo translate('Text', $st, 'sys'); ?>' title='<?php echo translate('Text', $st, 'sys'); ?>' /><figcaption><?php echo translate('Text', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'Audio')"><img id="tabAudio" class='iconActions' src='../images/DisAudio.jpg' alt='<?php echo translate('Audio', $st, 'sys'); ?>' title='<?php echo translate('Audio', $st, 'sys'); ?>' /><figcaption><?php echo translate('Audio', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'Video')"><img id="tabVideo" class='iconActions' src='../images/DisVideo.jpg' alt='<?php echo translate('Video', $st, 'sys'); ?>' title='<?php echo translate('Video', $st, 'sys'); ?>' /><figcaption><?php echo translate('Video', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'App')"><img id="tabApp" class='iconActions' src='../images/DisApp.jpg' alt='<?php echo translate('App', $st, 'sys'); ?>' title='<?php echo translate('App', $st, 'sys'); ?>' /><figcaption><?php echo translate('App', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'Other')"><img id="tabOther" class='iconActions' src='../images/DisOther.jpg' alt='<?php echo translate('Other', $st, 'sys'); ?>' title='<?php echo translate('Other', $st, 'sys'); ?>' /><figcaption><?php echo translate('Other', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'Map')"><img id="tabMap" class='iconActions' src='../images/DisMap.jpg' alt='<?php echo translate('Map', $st, 'sys'); ?>' title='<?php echo translate('Map', $st, 'sys'); ?>' /><figcaption><?php echo translate('Map', $st, 'sys'); ?></figcaption></button>
-			<button class="tablinks" onclick="openMenuTab(event, 'All')"><img id="tabAll" class='iconActions' src='../images/DisAll.jpg' alt='<?php echo translate('All', $st, 'sys'); ?>' title='<?php echo translate('All', $st, 'sys'); ?>' /><figcaption><?php echo translate('All', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'Text')"><img id="tabText" class='iconActions' src='../images/text_round_icon.png' alt='<?php echo translate('Text', $st, 'sys'); ?>' /><figcaption><?php echo translate('Text', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'Audio')"><img id="tabAudio" class='iconActions' src='../images/audio_round_icon.png' alt='<?php echo translate('Audio', $st, 'sys'); ?>' /><figcaption><?php echo translate('Audio', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'Video')"><img id="tabVideo" class='iconActions' src='../images/video_round_icon.png' alt='<?php echo translate('Video', $st, 'sys'); ?>' /><figcaption><?php echo translate('Video', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'App')"><img id="tabApp" class='iconActions' src='../images/app_round_icon.png' alt='<?php echo translate('App', $st, 'sys'); ?>' /><figcaption><?php echo translate('App', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'Other')"><img id="tabOther" class='iconActions' src='../images/other_round_icon.png' alt='<?php echo translate('Other', $st, 'sys'); ?>' /><figcaption><?php echo translate('Other', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'Map')"><img id="tabMap" class='iconActions' src='../images/map_round_icon.png' alt='<?php echo translate('Map', $st, 'sys'); ?>' /><figcaption><?php echo translate('Map', $st, 'sys'); ?></figcaption></button>
+			<button class="tablinks" onclick="openMenuTab(event, 'All')"><img id="tabAll" class='iconActions' src='../images/all_round_icon.png' alt='<?php echo translate('All', $st, 'sys'); ?>' /><figcaption><?php echo translate('All', $st, 'sys'); ?></figcaption></button>
 		</div>
 	</div>
-	<?php
-?>
 	<div id='individualLanguage'>
 <?php
 /*
@@ -933,11 +693,11 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				if ($SABurl != '') {
 					echo '<tr>';
 						echo '<td style="width: 45px; ">';
-							echo "<div class='linePointer' onclick='SAB_Scriptoria_Other(\"$SABurl\")'><img class='iconActions' ";
-							echo "src='../images/SAB-readListen-icon.png' alt='".translate('Read/Listen/View', $st, 'sys')."' title='".translate('Read/Listen/View', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick='SAB_Scriptoria_Other(\"$SABurl\")'><img loading='lazy' class='iconActions' ";
+							echo "src='../images/SAB-readListen-icon.png' alt='".translate('Read/Listen/View', $st, 'sys')."' /></div>";
 						echo '</td>';
 						echo '<td>';
-							echo "<div class='linePointer' title='".translate('Read/Listen/View', $st, 'sys')."' onclick='SAB_Scriptoria_Other(\"$SABurl\")'>" . translate('Read/Listen/View', $st, 'sys');
+							echo "<div class='linePointer' onclick='SAB_Scriptoria_Other(\"$SABurl\")'>" . translate('Read/Listen/View', $st, 'sys');
 							if ($description != '') {
 								echo '&nbsp;&nbsp;&nbsp;&nbsp;' . $description;
 							}
@@ -949,8 +709,8 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					$SABindex++;
 					echo '<tr>';
 						echo '<td style="width: 45px; ">';
-							echo "<div class='linePointer' onclick='SAB_Scriptoria_Index(\"$subfolder\")'><img class='iconActions' ";
-							echo "src='../images/SAB-readListen-icon.png' alt='".translate('Read/Listen/View', $st, 'sys')."' title='".translate('Read/Listen/View', $st, 'sys')."'/></div>";
+							echo "<div class='linePointer' onclick='SAB_Scriptoria_Index(\"$subfolder\")'><img loading='lazy' class='iconActions' ";
+							echo "src='../images/SAB-readListen-icon.png' alt='".translate('Read/Listen/View', $st, 'sys')."'/></div>";
 						echo '</td>';
 						echo '<td>';
 							echo "<div class='linePointer' onclick='SAB_Scriptoria_Index(\"$subfolder\")'>" . translate('Read/Listen/View', $st, 'sys') . " ";
@@ -1044,7 +804,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'><img class='iconActions' src='../images/$BibleIsIcon' alt='$BibleIsActText' title='$BibleIsActText' /></div>";
+						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'><img loading='lazy' class='iconActions' src='../images/$BibleIsIcon' alt='$BibleIsActText' title='$BibleIsActText' /></div>";
 					echo "</td>";
 					echo "<td>";
 						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'>" . $BibleIsActText . " ";
@@ -1079,7 +839,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='window.open(\"".$URL."\")'><img class='iconActions' src='../images/gospelFilm-icon.jpg' alt='".$BibleIsGospel."' title='".$BibleIsGospel."' /></div>";
+						echo "<div class='linePointer' onclick='window.open(\"".$URL."\")'><img loading='lazy' class='iconActions' src='../images/gospelFilm-icon.jpg' alt='".$BibleIsGospel."' title='".$BibleIsGospel."' /></div>";
 					echo "</td>";
 					echo "<td>";
 							echo "<div class='linePointer' onclick='window.open(\"".$URL."\")' title='".$BibleIsGospel."'>";
@@ -1117,10 +877,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		<tr>
 			<td style='width: 45px; '>
 				<?php
-				echo "<div class='linePointer' onclick=\"window.open('./viewer/views.php?iso=$ISO&ROD_Code=$ROD_Code&Variant_Code=$Variant_Code&ROD_Var=$ROD_Var&rtl=$rtl&st=$st')\"><img class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' title='".translate('Study', $st, 'sys')."' /></div>";
+				echo "<div class='linePointer' onclick=\"window.open('./viewer/views.php?iso=$ISO&ROD_Code=$ROD_Code&Variant_Code=$Variant_Code&ROD_Var=$ROD_Var&rtl=$rtl&st=$st')\"><img loading='lazy' class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' /></div>";
 			echo "</td>";
 			echo "<td>";
-				echo "<div class='linePointer' onclick=\"window.open('./viewer/views.php?iso=$ISO&ROD_Code=$ROD_Code&Variant_Code=$Variant_Code&ROD_Var=$ROD_Var&rtl=$rtl&st=$st')\" title='".translate('Viewer for the Language Name', $st, 'sys')."'>".translate('Go to', $st, 'sys')." ".translate('the online viewer', $st, 'sys')."</div>";
+				echo "<div class='linePointer' onclick=\"window.open('./viewer/views.php?iso=$ISO&ROD_Code=$ROD_Code&Variant_Code=$Variant_Code&ROD_Var=$ROD_Var&rtl=$rtl&st=$st')\">".translate('Go to', $st, 'sys')." ".translate('the online viewer', $st, 'sys')."</div>";
 				?>
 			</td>
 		</tr>
@@ -1145,10 +905,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						$description = trim($r_SB['description']);
 						if ($Item == 'B') {							// $Item == 'B' (Bible)
 							$whole_Bible=trim($r_SB['Scripture_Bible_Filename']);
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$whole_Bible')\"><img class='iconActions' src='images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' title='".translate('Read', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$whole_Bible')\"><img loading='lazy' loading='lazy' class='iconActions' src='images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' /></div>";
 							echo "</td>";
 							echo "<td>";
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$whole_Bible')\" title='".translate('Read the Bible.', $st, 'sys')."'>".translate('Read', $st, 'sys')." ".translate('the Bible', $st, 'sys')." (PDF)";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$whole_Bible')\">".translate('Read', $st, 'sys')." ".translate('the Bible', $st, 'sys')." (PDF)";
 							if ($description != '') {
 								echo " ($description)";
 							}
@@ -1156,10 +916,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						}
 						else {										// $Item == 'S' (Read a Scripture portion plus the NT)
 							$complete_Scripture=trim($r_SB['Scripture_Bible_Filename']);
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$complete_Scripture')\"><img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' title='".translate('Read', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$complete_Scripture')\"><img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' /></div>";
 							echo "</td>";
 							echo "<td>";
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$complete_Scripture')\" title='".translate('Read a Scripture portion.', $st, 'sys')."' target='_blank'>".translate('Read', $st, 'sys')." ".translate('a Scripture portion', $st, 'sys')." (PDF)";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$complete_Scripture')\" target='_blank'>".translate('Read', $st, 'sys')." ".translate('a Scripture portion', $st, 'sys')." (PDF)";
 							if ($description != '') {
 								echo " ($description)";
 							}
@@ -1184,10 +944,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					<tr>
 						<td style='width: 45px; '>
 							<?php
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$OT_PDF_Filename')\"><img  class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' title='".translate('Read', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$OT_PDF_Filename')\"><img loading='lazy' class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' /></div>";
 						echo "</td>";
 						echo "<td>";
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$OT_PDF_Filename')\" title='".translate('Read the Old Testament.', $st, 'sys')."' target='_blank'>".translate('Read', $st, 'sys')." ".translate('the Old Testament', $st, 'sys')." (PDF)</div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$OT_PDF_Filename')\" target='_blank'>".translate('Read', $st, 'sys')." ".translate('the Old Testament', $st, 'sys')." (PDF)</div>";
 							?>
 						</td>
 					</tr>
@@ -1204,7 +964,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						<tr>
 							<td style='width: 45px; '>
 								<?php
-								echo "<img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')."' title='".translate('Read', $st, 'sys')."' />";
+								echo "<img loading='lazy' class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')."' />";
 							echo '</td>';
 							echo '<td>';
 								echo "<form name='PDF_OT' id='PDF_OT'>";
@@ -1282,10 +1042,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					<tr>
 						<td style='width: 45px; '>
 							<?php
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$NT_PDF_Filename')\"><img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' title='".translate('Read', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$NT_PDF_Filename')\"><img loading='lazy' class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')." (PDF)"."' /></div>";
 						echo "</td>";
 						echo "<td>";
-							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$NT_PDF_Filename')\" title='".translate('Read the New Testament.', $st, 'sys')."'>".translate('Read', $st, 'sys')." ".translate('the New Testament', $st, 'sys')." (PDF)</div>";
+							echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$NT_PDF_Filename')\">".translate('Read', $st, 'sys')." ".translate('the New Testament', $st, 'sys')." (PDF)</div>";
 							?>
 						</td>
 					</tr>
@@ -1303,7 +1063,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						<tr>
 							<td style='width: 45px; '>
 								<?php
-								echo "<img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')."' title='".translate('Read', $st, 'sys')."' />";
+								echo "<img loading='lazy' class='iconActions' src='../images/read-icon.jpg' alt='".translate('Read', $st, 'sys')."' />";
 							echo '</td>';
 							echo '<td>';
 								echo "<form name='PDF_NT'>";
@@ -1387,16 +1147,16 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<td style='width: 45px; '>
 					<?php
 					if ($other_PDF != '') {
-						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$other_PDF')\"><img class='iconActions' src='../images/read-icon.jpg' alt='".translate('Books', $st, 'sys')."' title='".translate('Books', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$other_PDF')\"><img loading='lazy' class='iconActions' src='../images/read-icon.jpg' alt='".translate('Books', $st, 'sys')."' /></div>";
 						echo "</td>";
 						echo "<td>";
-						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$other_PDF')\" title='".translate('Read this title.', $st, 'sys')."'>".translate('Read', $st, 'sys');
+						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/PDF/$other_PDF')\">".translate('Read', $st, 'sys');
 					}
 					else {
-						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/audio/$other_audio')\"><img class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Books', $st, 'sys')."' title='".translate('Books', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/audio/$other_audio')\"><img loading='lazy' class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Books', $st, 'sys')."' /></div>";
 						echo "</td>";
 						echo "<td>";
-						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/audio/$other_audio')\" title='".translate('Listen this title.', $st, 'sys')."'>".translate('Listen', $st, 'sys');
+						echo "<div class='linePointer' onclick=\"window.open('./data/$ISO/audio/$other_audio')\">".translate('Listen', $st, 'sys');
 					}
 					if ($other_title == '') {
 						echo "&nbsp;$other</div>";
@@ -1404,6 +1164,38 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					else {
 						echo "&nbsp;$other:&nbsp;$other_title</div>";
 					}
+					?>
+				</td>
+			</tr>
+			<?php
+		}
+		echo '</table>';
+	}
+
+/*
+	*************************************************************************************************************
+		Is it AppleStore? (links table)
+	*************************************************************************************************************
+*/
+	if ($AppleStore && $Internet) {
+		echo '<table id="Dis_AppleStore">';
+		while ($r2 = $result_AS->fetch_array(MYSQLI_ASSOC)) {
+			$company_title=trim($r2['company_title']);
+			$company=trim($r2['company']);
+			$URL=trim($r2['URL']);
+			?>
+			<tr>
+				<td style='width: 45px; '>
+					<?php
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Apple Store', $st, 'sys')."' /></div>";
+				echo "</td>";
+				echo "<td>";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
+					echo $company;
+					if ($company_title != '' && !is_null($company_title)) {
+						echo ' ' . $company_title;
+					}
+					echo '</div>';
 					?>
 				</td>
 			</tr>
@@ -1427,10 +1219,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to organization.', $st, 'sys')."'><img class='iconActions' src='../images/Google_Play-icon.jpg' alt='".translate('Google Play', $st, 'sys')."' title='".translate('Google Play', $st, 'sys')."' /></div>";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/Google_Play-icon.jpg' alt='".translate('Google Play', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to organization.', $st, 'sys')."'>".translate('Link', $st, 'sys')." : ";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
 					echo $company;
 					if ($company_title != '' && !is_null($company_title)) {
 						echo ' ' . $company_title;
@@ -1458,10 +1250,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to organization.', $st, 'sys')."'><img class='iconActions' src='../images/kalaam-icon.jpg' alt='".translate('Kalaam Media', $st, 'sys')."' title='".translate('Kalaam', $st, 'sys')."' /></div>";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/kalaam-icon.jpg' alt='".translate('Kalaam Media', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to organization.', $st, 'sys')."'>".translate('Link', $st, 'sys')." : ";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
 					echo $company;
 					if ($company_title != '' && !is_null($company_title)) {
 						echo ' ' . $company_title;
@@ -1527,7 +1319,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' title='" . translate('Download the app for', $st, 'sys') . " $Cell_Phone_Title' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img class='iconActions' src='../images/android_module-icon.jpg' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' title='" . translate('Download the app for', $st, 'sys') . " $Cell_Phone_Title' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img loading='lazy' class='iconActions' src='../images/android_module-icon.jpg' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
 						echo "<div class='linePointer' title='" . translate('Download the app for', $st, 'sys') . " $Cell_Phone_Title' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'>" . translate('Download', $st, 'sys') . " " . translate('the app for', $st, 'sys') . ' ' . ($Cell_Phone_Title == 'Android App' ? 'Android' : $Cell_Phone_Title);
@@ -1542,7 +1334,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='iOSAssetPackage(\"".$Cell_Phone_File."\")'><img class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='iOSAssetPackage(\"".$Cell_Phone_File."\")'><img loading='lazy' class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
 						echo "<div class='linePointer' title='" . translate('Download the Scripture Earth app for iOS', $st, 'sys') . "' onclick='iOSAssetPackage(\"".$Cell_Phone_File."\")'>" . translate('Download the Scripture Earth app for iOS', $st, 'sys');
@@ -1560,7 +1352,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='window.open(\"https://apps.apple.com/us/app/scripture-earth/id1580089704\", \"_blank\");'><img class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='window.open(\"https://apps.apple.com/us/app/scripture-earth/id1580089704\", \"_blank\");'><img loading='lazy' class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
 					echo "<div class='linePointer' title='" . translate('The ScriptureEarth App is available in the Apple Store.', $st, 'sys') . "' onclick='window.open(\"https://apps.apple.com/us/app/scripture-earth/id1580089704\", \"_blank\");'>" . translate('The ScriptureEarth App is available in the Apple Store.', $st, 'sys');
@@ -1594,12 +1386,12 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<td style='width: 45px; '>
 					<?php
 					if (preg_match('/itunes/i', $URL) || preg_match('/\.apple\./i', $URL)) {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/iTunes-icon.jpg' alt='iTunes' title='iTunes' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/iTunes-icon.jpg' alt='iTunes' title='iTunes' />";
 					}
 					echo "</div>";
 				echo "</td>";
 				echo "<td>";
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('iTunes', $st, 'sys')."'>".translate('Link', $st, 'sys')." : ";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
 					echo $company;
 					if ($company_title != '' && !is_null($company_title)) {
 						echo ' ' . $company_title;
@@ -1640,13 +1432,13 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 								$OT_Book = array();
 								$OT_Book_Chapter = array();
 								$a_index = 0;
-								echo "<div class='linePointer' title='".translate('Listen to the Old Testament.', $st, 'sys')."' onclick='ListenAudio(document.form_OT_Chapters_mp3.OT_Chapters_mp3, true, \"OTListenNow\", $OTNT)'><img  class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' title='".translate('Listen', $st, 'sys')."' /></div>";
+								echo "<div class='linePointer' onclick='ListenAudio(document.form_OT_Chapters_mp3.OT_Chapters_mp3, true, \"OTListenNow\", $OTNT)'><img loading='lazy' class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' /></div>";
 							echo '</td>';
 						echo '<td>';
 						?>
 						<div class='OTAudio'>
 						<?php
-						echo "<div class='linePointer' title='".translate('Listen to the Old Testament.', $st, 'sys')."' onclick='ListenAudio(document.form_OT_Chapters_mp3.OT_Chapters_mp3, true, \"OTListenNow\", $OTNT)'>".translate('Listen', $st, 'sys')." ".translate('to the audio Old Testament:', $st, 'sys').'</div>';
+						echo "<div class='linePointer' onclick='ListenAudio(document.form_OT_Chapters_mp3.OT_Chapters_mp3, true, \"OTListenNow\", $OTNT)'>".translate('Listen', $st, 'sys')." ".translate('to the audio Old Testament:', $st, 'sys').'</div>';
 						?>
 						<div id='OTAudioSelects' style='display: inline; vertical-align: middle; '>
 						<?php
@@ -1807,14 +1599,14 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						$NT_Book = array();
 						$NT_Book_Chapter = array();
 						$a_index = 0;
-						echo "<div class='linePointer' title='".translate('Listen to the New Testament.', $st, 'sys')."' onclick='ListenAudio(document.form_NT_Chapters_mp3.NT_Chapters_mp3, true, \"NTListenNow\", $OTNT)'><img class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' title='".translate('Listen', $st, 'sys')."' />";
+						echo "<div class='linePointer' onclick='ListenAudio(document.form_NT_Chapters_mp3.NT_Chapters_mp3, true, \"NTListenNow\", $OTNT)'><img loading='lazy' class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' />";
 						echo "</div>";
 						echo "</td>";
 						echo "<td>";
 						?>
 						<div class='NTAudio'>
 						<?php
-						echo "<div class='linePointer' title='".translate('Listen to the New Testament.', $st, 'sys')."' onclick='ListenAudio(document.form_NT_Chapters_mp3.NT_Chapters_mp3, true, \"NTListenNow\", $OTNT)'>".translate('Listen', $st, 'sys')." ".translate('to the audio New Testament:', $st, 'sys').'</a>';
+						echo "<div class='linePointer' onclick='ListenAudio(document.form_NT_Chapters_mp3.NT_Chapters_mp3, true, \"NTListenNow\", $OTNT)'>".translate('Listen', $st, 'sys')." ".translate('to the audio New Testament:', $st, 'sys').'</a>';
 						echo '</div>';
 						?>
 						<div id='NTAudioSelects' style='display: inline; '>
@@ -1980,10 +1772,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr style='margin-top: -2px; '>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='OTTableClick()'><img class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' title='".translate('Download', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='OTTableClick()'><img loading='lazy' class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
-						echo "<div class='linePointer' title='".translate('Download the audio Old Testament files.', $st, 'sys')."' onclick='OTTableClick()'>".translate('Download', $st, 'sys')." ".translate('the Old Testament audio files', $st, 'sys')."</div>";
+						echo "<div class='linePointer' onclick='OTTableClick()'>".translate('Download', $st, 'sys')." ".translate('the Old Testament audio files', $st, 'sys')."</div>";
 						?>
 					</td>
 				</tr>
@@ -2070,10 +1862,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr style='margin-top: -2px; '>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='NTTableClick()'><img class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' title='".translate('Download', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='NTTableClick()'><img loading='lazy' class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
-						echo "<div class='linePointer' title='".translate('Download the audio New Testament files.', $st, 'sys')."' onclick='NTTableClick()'>".translate('Download', $st, 'sys')." ".translate('the New Testament audio files', $st, 'sys')."</div>";
+						echo "<div class='linePointer' onclick='NTTableClick()'>".translate('Download', $st, 'sys')." ".translate('the New Testament audio files', $st, 'sys')."</div>";
 						?>
 					</td>
 				</tr>
@@ -2168,24 +1960,37 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		$result_Playlist=$db->query($query);
 		$num3=$result_Playlist->num_rows;
 		if ($num3 > 0) {
+			?>
+			<style>
+				/* font-family: 'CharisSIL-R'; doesn't work */
+				@font-face {
+					font-family: 'CharisSIL-R';
+					src: url('fonts/CharisSILCompact-R.woff') format('woff');
+					src: url('fonts/CharisSILCompact-R.woff2') format('woff2');
+				}
+			</style>
+			<?php
 			echo '<table id="Dis_PlaylistAudio">';
 			while ($r_Playlist = $result_Playlist->fetch_array(MYSQLI_ASSOC)) {
 				$PlaylistAudioTitle = $r_Playlist['PlaylistAudioTitle'];
 				$PlaylistAudioFilename = $r_Playlist['PlaylistAudioFilename'];
 				$ArrayPlaylistAudio = [];
+				/********************************************************************
+					Display Playlist Audio
+				*********************************************************************/
 				?>
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='PlaylistAudio_$z($z, $num3)'><img class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' title='".translate('Listen', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='PlaylistAudio_$z($z, $num3)'><img loading='lazy' class='iconActions' src='../images/listen-icon.jpg' alt='".translate('Listen', $st, 'sys')."' /></div>";
 						?>
 					</td>
 					<td>
 						<?php
-						echo "<div class='linePointer' title='".translate('Listen', $st, 'sys')." $PlaylistAudioTitle' onclick='PlaylistAudio_$z($z, $num3)'>".translate('Listen', $st, 'sys').": $PlaylistAudioTitle</div>";
+						echo "<div class='linePointer' onclick='PlaylistAudio_$z($z, $num3)'>".translate('Listen', $st, 'sys').": $PlaylistAudioTitle</div>";
 						// Get and display Playlist
 						?>
-						<div id="PlaylistAudioListenNow_<?php echo $z; ?>" class='ourPlaylistAudioNow' style='margin-top: 0px; '>
+						<div id="PlaylistAudioListenNow_<?php echo $z; ?>" class='ourPlaylistAudioNow' style='margin-top: 0px; font-family: "CharisSIL-R"; '>
 							<script>
 								$(document).ready(function(){
 									new jPlayerPlaylist({
@@ -2198,11 +2003,11 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 											// the data on a remote server
 											$lines1 = @file($filename);
 											foreach ($lines1 as $line1) {
-												$ArrayPlaylistAudio[] = $line1;
+												$ArrayPlaylistAudio[] = $line1;								// this is required because it is accessed later on in the audio download
 											}
 											// the data on the same server as the PHP script
 											$homepage = file_get_contents($filename);						// returns a string
-											echo $homepage;												// this is required because it is accessed later on in the audio download
+											echo $homepage;													// ** displays the playlist audio
 										} else {
 											echo "The text file $filename does not exist.";
 										}
@@ -2259,7 +2064,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 										<div class="jp-current-time" style="margin-top: -4px; "></div>
 										<div class="jp-duration" style="margin-top: -4px; "></div>
 									</div>
-									<div class="jp-playlist" style="background-color: #999; ">
+									<div class="jp-playlist" style="background-color: #999; font-family: 'CharisSIL-R'; ">
 										<ul>
 											<li></li>
 										</ul>
@@ -2269,13 +2074,18 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						</div>
 					</td>
 				</tr>
+				<?php
+				/*********************************************************************
+					Download Playlist Audio
+				*********************************************************************/
+				?>
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='PlaylistTableClick_$z()'><img class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' title='".translate('Download', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='PlaylistTableClick_$z()'><img loading='lazy' class='iconActions' src='../images/download-icon.jpg' alt='".translate('Download', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
-						echo "<div class='linePointer' title='".translate('Download', $st, 'sys')." $PlaylistAudioTitle' onclick='PlaylistTableClick_$z()'>".translate('Download', $st, 'sys').": ". $PlaylistAudioTitle ."</div>";
+						echo "<div class='linePointer' onclick='PlaylistTableClick_$z()'>".translate('Download', $st, 'sys').": ". $PlaylistAudioTitle ."</div>";
 						//$homepage = preg_replace('/{\s*title:\s*[\'"]([^\'"]+)[\'"],\s*mp3:\s*[\'"]([^\'"]+)[\'"]\s*},?\s*/', '$1^$2|', $homepage);
 						$homepage = '';
 						foreach ($ArrayPlaylistAudio as $APLA) {
@@ -2326,7 +2136,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 								echo "<td style='width: {$width}px; vertical-align: top; '>";
 									// $single[0] = text name
 									// $single[1] = filename
-									$temp = filesize($single[1]);
+									$temp = filesize("$single[1]");		// the file is on the same server as the PHP script
 									$temp = intval($temp/1024);			// MB
 									$ZipFile = round($temp/1024, 2);
 									$ZipFile = round($ZipFile, 1);
@@ -2366,7 +2176,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 								else {
 									ZipFilesPlaylist_<?php echo $z; ?> -= ZipFileSize;
 								}
-								ZipFilesPlaylist_<?php echo $z; ?> = Math.round(ZipFilesPlaylist_<?php echo $z; ?>*100)/100;		// rounded just does integers!
+								ZipFilesPlaylist_<?php echo $z; ?> = Math.round(ZipFilesPlaylist_<?php echo $z; ?>*100)/100;	// rounded just does integers!
 								if (ZipFilesPlaylist_<?php echo $z; ?> <= 0.049) {
 									document.getElementById("Playlist_Download_MB_<?php echo $z; ?>").style.display = 'none';
 								}
@@ -2420,21 +2230,21 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				$SEVideoPlaylistArray = [];
 				
 				$PLVideo = $PlaylistVideoFilename;
-				$ISO_dialect = $ISO;
+				$ISO_temp = $ISO;
 
 				/*******************************************************************************************************************
 						set $PLVideo in order to set $PlaylistVideoTitle for the 'tool tip' (see about 100 lines below)
 				********************************************************************************************************************/
 				// JESUSFilm-bzs.txt, etc.
 				if (preg_match('/^[a-zA-Z]+-('.$ISO.'[a-zA-Z0-9]*)(-|\.)/', $PlaylistVideoFilename, $matches)) {	// get the ISO code and if there is anything attached before the '-'
-					$ISO_dialect = $matches[1];
+					$ISO_temp = $matches[1];
 					preg_match('/^([a-zA-Z]+)-/i', $PlaylistVideoFilename, $matches);		// get the left most letters before the '-'
 					$PLVideo = strtolower($matches[1]);										// to lower case ('jesusfilm', etc.)
 				}
 				// bzj-ScriptureAnim.txt, etc.
 				elseif (preg_match('/^('.$ISO.'[a-zA-Z0-9]*)-/', $PlaylistVideoFilename, $matches)) {	// get the ISO code and if there is anything attached before the '-'
-					$ISO_dialect = $matches[1];
-					if (preg_match('/-([a-zA-Z]+)(-|\.)/i', $PlaylistVideoFilename, $matches)) {	// get the left most letters before the '-'
+					$ISO_temp = $matches[1];
+					if (preg_match('/-([a-zA-Z]+)(-|\.)/i', $PlaylistVideoFilename, $matches)) {		// get the left most letters before the '-'
 						if (empty($matches[1])) {
 							//die('ERROR. Non-alphabetic characters in '.$matches[0]);					// produces "PHP Warning:  Undefined array key 1 in /home/se/public_html/include/00-SpecificLanguage.inc.php"
 						}
@@ -2569,12 +2379,12 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='PlaylistVideo($SEVideoPlaylist, \"PlaylistVideoNow_$z\", $mobile)'><img class='iconActions' src='../images/$videoIcon' alt='".translate('View', $st, 'sys')."' title='".translate('View', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick='PlaylistVideo($SEVideoPlaylist, \"PlaylistVideoNow_$z\", $mobile)'><img loading='lazy' class='iconActions' src='../images/$videoIcon' alt='".translate('View', $st, 'sys')."' /></div>";
 						?>
 					</td>
 					<td>
 						<?php
-						echo "<div class='linePointer' title='".translate('View', $st, 'sys')." $PlaylistVideoTitle' onclick='PlaylistVideo($SEVideoPlaylist, \"PlaylistVideoNow_$z\", $mobile)'>".translate('View', $st, 'sys').' '.$PlaylistVideoTitle . "</div>";
+						echo "<div class='linePointer' onclick='PlaylistVideo($SEVideoPlaylist, \"PlaylistVideoNow_$z\", $mobile)'>".translate('View', $st, 'sys').' '.$PlaylistVideoTitle . "</div>";
 						// Get and display Playlist
 						?>
 					</td>
@@ -2622,14 +2432,14 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 							}
 							if ($image != 2) {																			// != 2 ScriptureAnim to make sure the first picture is skipped
 								if ($image == 1) {
-									echo "<img src='./data/~images/$bookName/";
+									echo "<img loading='lazy' src='./data/~images/$bookName/";
 								}
 								else if ($image == 0) {
-									echo "<img src='./data/$ISO/video/";
+									echo "<img loading='lazy' src='./data/$ISO/video/";
 								}
 								else {
 								}
-								echo $VideoConvertWithTab[2]."' alt='".translate('View', $st, 'sys')." ".$VideoName."' title='".translate('View', $st, 'sys')." ".$VideoName."' />";
+								echo $VideoConvertWithTab[2]."' alt='".translate('View', $st, 'sys')." ".$VideoName."' />";
 								echo '</div>';
 								if (count($VideoConvertWithTab) < 3) {
 									echo '</div>';
@@ -2678,15 +2488,15 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 											$SEVideoPlaylistIndex++;
 										}
 										if ($image == 1) {
-											echo "<img src='./data/~images/$bookName/";
+											echo "<img loading='lazy' src='./data/~images/$bookName/";
 										}
 										else if ($image == 0) {
-											echo "<img src='./data/$ISO/video/";
+											echo "<img loading='lazy' src='./data/$ISO/video/";
 										}
 										else {
-											echo "<img src='./data/~images/ScriptureAnim/";
+											echo "<img loading='lazy' src='./data/~images/ScriptureAnim/";
 										}
-										echo $VideoConvertWithTab[2]."' alt='".translate('View', $st, 'sys')." ".$VideoConvertWithTab[1]."' title='".translate('View', $st, 'sys')." ".$VideoConvertWithTab[1]."' />";
+										echo $VideoConvertWithTab[2]."' alt='".translate('View', $st, 'sys')." ".$VideoConvertWithTab[1]."' />";
 										echo '<div style="text-align: center; margin-bottom: 12px; font-size: .7em; font-weight: normal; ">'.$VideoConvertWithTab[1].'</div></div>';
 									echo '</td>';
 								}
@@ -2850,18 +2660,18 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			$SEVideoPlaylistArray = [];
 
 			$PLVideo = $PlaylistVideoFilename;
-			$ISO_dialect = $ISO;
+			$ISO_temp = $ISO;
 			// JESUSFilm-bzs.txt or
 			$found = preg_match('/^[a-zA-Z]+-('.$ISO.'[a-zA-Z0-9]*)(-|\.)/', $PlaylistVideoFilename, $matches);	// get the ISO code and if there is anything attached before the '-'
 			if ($found) {
-				$ISO_dialect = $matches[1];
+				$ISO_temp = $matches[1];
 				preg_match('/^([a-zA-Z]+)-/i', $PlaylistVideoFilename, $matches);		// get the left most letters before the '-'
 				$PLVideo = strtolower($matches[1]);										// to lower case
 			}
 			// bzj-ScriptureAnim.txt
 			$found = preg_match('/^('.$ISO.'[a-zA-Z0-9]*)-/', $PlaylistVideoFilename, $matches);	// get the ISO code and if there is anything attached before the '-'
 			if ($found) {
-				$ISO_dialect = $matches[1];
+				$ISO_temp = $matches[1];
 				if (preg_match('/-([a-zA-Z0-9ñáéíóú]+)(-|\.)/i', $PlaylistVideoFilename, $matches)) {	// get the left most letters before the '-'
 					$PLVideo = strtolower($matches[1]);									// to lower case
 				}
@@ -2944,12 +2754,12 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<div class='linePointer' onclick='PlaylistVideo(orgVideoPixels_$z, \"PlaylistVideoDownload_$z\", $mobile)'><img class='iconActions' src='../images/MP4-icon.jpg' alt='".translate('Download', $st, 'sys')."' title='".translate('Download', $st, 'sys')."' /></div>";
+					echo "<div class='linePointer' onclick='PlaylistVideo(orgVideoPixels_$z, \"PlaylistVideoDownload_$z\", $mobile)'><img loading='lazy' class='iconActions' src='../images/MP4-icon.jpg' alt='".translate('Download', $st, 'sys')."' /></div>";
 					?>
 				</td>
 				<td>
 					<?php
-					echo "<div class='linePointer' title='".translate('Download', $st, 'sys')." $PlaylistVideoTitle' onclick='PlaylistVideo(orgVideoPixels_$z, \"PlaylistVideoDownload_$z\", $mobile)'>".translate('Download', $st, 'sys') . ' ' . $PlaylistVideoTitle . '</div>';
+					echo "<div class='linePointer' onclick='PlaylistVideo(orgVideoPixels_$z, \"PlaylistVideoDownload_$z\", $mobile)'>".translate('Download', $st, 'sys') . ' ' . $PlaylistVideoTitle . '</div>';
 					// Get and display Playlist Download
 					?>
 				</td>
@@ -3159,10 +2969,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'><img class='iconActions' src='../images/$BibleIsIcon' alt='$BibleIsActText' title='$BibleIsActText' /></div>";
+						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'><img loading='lazy' class='iconActions' src='../images/$BibleIsIcon' alt='$BibleIsActText' title='$BibleIsActText' /></div>";
 					echo "</td>";
 					echo "<td>";
-						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")' title='".translate('Read/Listen/View from Bible.is', $st, 'sys')."'>" . $BibleIsActText . " ";
+						echo "<div class='linePointer' onclick='LinkedCounter(\"BibleIs_".$counterName."_".$GetName."_".$ISO."\", \"".$URL."\")'>" . $BibleIsActText . " ";
 						echo translate('on Bible.is', $st, 'sys');
 						if ($BibleIsVersion!='') {
 							echo ' ' . $BibleIsVersion;
@@ -3193,7 +3003,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick='window.open(\"".$URL."\")'><img class='iconActions' src='../images/gospelFilm-icon.jpg' alt='".$BibleIsGospel."' title='".$BibleIsGospel."' /></div>";
+						echo "<div class='linePointer' onclick='window.open(\"".$URL."\")'><img loading='lazy' class='iconActions' src='../images/gospelFilm-icon.jpg' alt='".$BibleIsGospel."' title='".$BibleIsGospel."' /></div>";
 					echo "</td>";
 					echo "<td>";
 						echo "<div class='linePointer' onclick='window.open(\"".$URL."\")' title='".$BibleIsGospel."'>";
@@ -3248,10 +3058,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/YouVersion-icon.jpg' alt='".translate('Read', $st, 'sys')."' title='".translate('Read', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/YouVersion-icon.jpg' alt='".translate('Read', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"  title='".translate('Read from YouVersion (Bible.com)', $st, 'sys')."'>" . translate($text1, $st, 'sys') . ' ' . translate($text2, $st, 'sys') . ': ' . $organization . '</div>';
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\">" . translate($text1, $st, 'sys') . ' ' . translate($text2, $st, 'sys') . ': ' . $organization . '</div>';
 						?>
 					</td>
 				</tr>
@@ -3300,7 +3110,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/BibleSearch-icon.jpg' alt='".translate('Study', $st, 'sys')."' title='".translate('Study', $st, 'sys')."' /></div>";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/BibleSearch-icon.jpg' alt='".translate('Study', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
 					echo "<div class='linePointer' onclick=\"window.open('$URL')\">" . translate($text1, $st, 'sys') . ' ' . translate($text2, $st, 'sys') . ': ' . $organization . '</div>';
@@ -3348,16 +3158,16 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 					<?php
 					switch ($Cell_Phone_Title) {
 						case 'MySword (Android)':
-							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img class='iconActions' src='../images/mysword-icon.jpg' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img loading='lazy' class='iconActions' src='../images/mysword-icon.jpg' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 							break;
 						case 'GoBible (Java)':
-							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img class='iconActions' src='../images/CellPhoneIcon.png' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img loading='lazy' class='iconActions' src='../images/CellPhoneIcon.png' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 							break;
 						case 'iPhone':		// only one "iPhone" record in the table (9/19/2023)
-							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('Cell Phone', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img loading='lazy' class='iconActions' src='../images/iOS_App.jpg' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 							break;
 						case 'ePub':
-							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img class='iconActions' src='../images/epub_icon.png' alt='".translate('Cell Phone', $st, 'sys')."' title='".translate('ePub', $st, 'sys')."' /></div>";
+							echo "<div class='linePointer' onclick='CellPhoneModule(\"$st\", \"$ISO\", \"$ROD_Code\", \"$Cell_Phone_File\")'><img loading='lazy' class='iconActions' src='../images/epub_icon.png' alt='".translate('Cell Phone', $st, 'sys')."' /></div>";
 							break;
 						default:
 							echo 'This is not suppose to happend. (Cell Phone).<br />';
@@ -3428,7 +3238,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 				<td style='width: 45px; '>
 					<div class='linePointer' onclick="myWatchVideo('video_<?php echo $k; ?>')">
-						<img class='iconActions' src='../images/watch-icon.jpg'  alt="<?php echo translate('View', $st, 'sys'); ?>" title="<?php echo translate('View', $st, 'sys'); ?>" />
+						<img loading='lazy' class='iconActions' src='../images/watch-icon.jpg'  alt="<?php echo translate('View', $st, 'sys'); ?>" />
 					</div>
 				</td>
 				<td>
@@ -3450,7 +3260,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 							continue;
 						}
 						?>
-						<video id="video_<?php echo $k ?>" style="max-width: 100%; display: none; " controls="true" width="1080">
+						<video loading="lazy" id="video_<?php echo $k ?>" style="max-width: 100%; display: none; " controls="true" width="1080">
 							<?php
 							if (file_exists($URL_path . 'mp4')) {
 								echo '<source src="'.$URL_path . 'mp4" type="video/mp4">';
@@ -3482,20 +3292,20 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						// JESUS Film
 						?>
 						<div class='linePointer' onclick="window.open('<?php echo $URL ?>')">
-							<img class='iconActions' src='../images/JFM-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
+							<img loading='lazy' class='iconActions' src='../images/JFM-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
 						</div>
 						<?php
 						/*if (substr($URL, 0, strlen("http://api.arclight.org/videoPlayerUrl")) == "http://api.arclight.org/videoPlayerUrl") {
 							?>
 								<div class='linePointer' onclick="window.open('JESUSFilmView.php?<?php echo $URL ?>','clip','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=890,height=690,top=300,left=300'); return false;" title="<?php echo $LN ?>">
-								<img class='iconActions' src='../images/JESUS-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
+								<img loading='lazy' class='iconActions' src='../images/JESUS-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
 						</div>
 							<?php
 						}
 						else {
 							?>
 								<div class='linePointer' onclick="window.open('<?php echo $URL ?>','clip','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width=520,height=380,top=200,left=300'); return false;" title="<?php echo $LN ?>">
-								<img class='iconActions' src='../images/JESUS-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
+								<img loading='lazy' class='iconActions' src='../images/JESUS-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
 						</div>
 							<?php
 						}*/
@@ -3505,13 +3315,13 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						//     href="#" onclick="w=screen.availWidth; h=screen.availHeight; window.open('<?php echo $URL ? >','clip','toolbar=no,location=no,directories=no,status=no,menubar=no,scrollbars=yes,resizable=yes,copyhistory=no,width='+w+',height='+h+',top=0,left=0'); return false;" title="< ?php echo $LN ? >">
 						?>
 							<div class='linePointer' onclick="window.open('<?php echo $URL ?>')">
-								<img class='iconActions' src='../images/youtube-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
+								<img loading='lazy' class='iconActions' src='../images/youtube-icon.jpg' alt="<?php echo translate('View', $st, 'sys') ?>" title="<?php echo translate('View', $st, 'sys') ?>" />
 							</div>
 						<?php
 					}
 					else {
 						echo "<div class='linePointer' onclick=\"window.open('$URL')\">";
-						echo "<img class='iconActions' src='../images/$watchIcon' alt=\"".translate('View', $st, 'sys')."\" title=\"".translate('View', $st, 'sys')."\" />";
+						echo "<img loading='lazy' class='iconActions' src='../images/$watchIcon' alt=\"".translate('View', $st, 'sys')."\" title=\"".translate('View', $st, 'sys')."\" />";
 						echo '</div>';
 					}
 					?>
@@ -3570,7 +3380,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<?php
 			/*<tr style='margin-top: -2px; '>
 				<td style='width: 45px; '>
-				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video."')\"><img class='iconActions' src='../images/SEvideoIcon.jpg' alt='".translate('View', $st, 'sys')."' title='".translate('View', $st, 'sys')."' /></div>";
+				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video."')\"><img loading='lazy' class='iconActions' src='../images/SEvideoIcon.jpg' alt='".translate('View', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
 					echo '<video width="640" controls>';
@@ -3584,10 +3394,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr style='margin-top: -2px; '>
 				<td style='width: 45px; '>
 				<?php
-				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video. "')\"><img class='iconActions' src='../images/SEvideoIcon.jpg' alt='".translate('View', $st, 'sys')."' /></div>";
+				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video. "')\"><img loading='lazy' class='iconActions' src='../images/SEvideoIcon.jpg' alt='".translate('View', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
-				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video."')\" title='".translate('View the video.', $st, 'sys')."'>".translate('View', $st, 'sys').' '.$other. ' ' . $other_title . ' (MP4)</div>';
+				echo "<div class='linePointer' onclick=\"window.open('./data/".$ISO.'/video/'.$download_video."')\">".translate('View', $st, 'sys').' '.$other. ' ' . $other_title . ' (MP4)</div>';
 				?>
 				</td>
 			</tr>
@@ -3641,10 +3451,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						<tr>
 							<td style='width: 45px; '>
 								<?php
-								echo "<div class='linePointer' onclick='eBibleClick($eBibleCount)'><img class='iconActions' src='../images/eBible-icon.jpg' alt='".translate('Scripture Resources from eBible.org', $st, 'sys')."' title='".translate('Scripture Resources from eBible.org', $st, 'sys')."' /></div>";
+								echo "<div class='linePointer' onclick='eBibleClick($eBibleCount)'><img loading='lazy' class='iconActions' src='../images/eBible-icon.jpg' alt='".translate('Scripture Resources from eBible.org', $st, 'sys')."' /></div>";
 							echo "</td>";
 							echo "<td>";
-								echo "<div class='linePointer' title='".translate('Scripture Resources from eBible.org', $st, 'sys')."' onclick='eBibleClick($eBibleCount)'>".translate('Scripture Resources from eBible.org', $st, 'sys').' - </div>';
+								echo "<div class='linePointer' onclick='eBibleClick($eBibleCount)'>".translate('Scripture Resources from eBible.org', $st, 'sys').' - </div>';
 								echo '<div id="vernacularTitle_'.$eBibleCount.'" style="display: inline; text-align: center; "></div>';
 								echo "<div id='eBibleClick_$eBibleCount' style='display: none; '>";
 								// start of eBible AJAX
@@ -3693,10 +3503,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 						// to make up for the extra whitespace.
 						// In a PHP file it doesn't seem to matter as long as it is in PHP.
 						// $ScriptureDescription
-						//echo "<a href='#' style='font-size: .9em; ' title='".translate('Download the module.', $st, 'sys')."' onclick='Study(\"$ISO\", \"ROD_Code\", \"$ScriptureURL\")'><img class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' title='".translate('Study', $st, 'sys')."' />&nbsp;&nbsp;<span class='lineAction'>".translate('Download', $st, 'sys')."</span> ".translate('the New Testament', $st, 'sys')."</a><span style='font-size: .85em; '>&nbsp;";
-						//echo "<a href='#' style='font-size: .9em; ' title='".translate('Download the module.', $st, 'sys')."' onclick='Study(\"$ISO\", \"ROD_Code\", \"$ScriptureURL\")'><img class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' title='".translate('Study', $st, 'sys')."' />&nbsp;&nbsp;<span class='lineAction'>".translate('Download', $st, 'sys')."</span> ";
+						//echo "<a href='#' style='font-size: .9em; ' onclick='Study(\"$ISO\", \"ROD_Code\", \"$ScriptureURL\")'><img loading='lazy' class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' />&nbsp;&nbsp;<span class='lineAction'>".translate('Download', $st, 'sys')."</span> ".translate('the New Testament', $st, 'sys')."</a><span style='font-size: .85em; '>&nbsp;";
+						//echo "<a href='#' style='font-size: .9em; ' onclick='Study(\"$ISO\", \"ROD_Code\", \"$ScriptureURL\")'><img loading='lazy' class='iconActions' src='../images/study-icon.jpg' alt='".translate('Study', $st, 'sys')."' />&nbsp;&nbsp;<span class='lineAction'>".translate('Download', $st, 'sys')."</span> ";
 						echo "<div class='linePointer' onclick='Study(\"$st\", \"$ISO\", \"ROD_Code\", \"$ScriptureURL\")'>";
-						echo "<img class='iconActions' style='margin-top: 4px; ' src='../images/TheWord-icon.jpg' alt='".translate('Study', $st, 'sys')."' title='".translate('Study', $st, 'sys')."' />";
+						echo "<img loading='lazy' class='iconActions' style='margin-top: 4px; ' src='../images/TheWord-icon.jpg' alt='".translate('Study', $st, 'sys')."' />";
 						echo "</div>";
 					echo "</td>";
 					echo "<td>";
@@ -3767,24 +3577,24 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<td style='width: 45px; '>
 					<?php
 					if (preg_match('/onestory/i', $URL)) {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/onestory-icon.jpg' alt='OneStory' title='OneStory' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/onestory-icon.jpg' alt='OneStory' title='OneStory' />";
 					}
 					elseif (preg_match('/\.facebook\./i', $URL)) {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/facebook-icon.jpg' alt='Facebook' title='Facebook' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/facebook-icon.jpg' alt='Facebook' title='Facebook' />";
 					}
 					elseif (preg_match('/\bdeaf\.?bible\./i', $URL)) {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/deaf_bible_icon.png' alt='Deaf Bible' title='Deaf Bible' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/deaf_bible_icon.png' alt='Deaf Bible' title='Deaf Bible' />";
 					}
 					elseif (preg_match('/savelonggod/i', $URL)) {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/SILPapuaNewGuinea_icon.png' alt='SIL Papua New Guinea' title='SIL Papua New Guinea' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/SILPapuaNewGuinea_icon.png' alt='SIL Papua New Guinea' title='SIL Papua New Guinea' />";
 					}
 					else {
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/links-icon.jpg' alt='".translate('Link', $st, 'sys')."' title='".translate('Link', $st, 'sys')."' />";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/links-icon.jpg' alt='".translate('Link', $st, 'sys')."' />";
 					}
 					echo "</div>";
 				echo "</td>";
 				echo "<td>";
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to the organization.', $st, 'sys')."'>".translate('Link', $st, 'sys')." : ";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
 					echo $company;
 					if ($company_title != '' && !is_null($company_title)) {
 						echo ' ' . $company_title;
@@ -3816,10 +3626,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/buy-icon.jpg' alt='".translate('Buy', $st, 'sys')."' title='".translate('Buy', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/buy-icon.jpg' alt='".translate('Buy', $st, 'sys')."' /></div>";
 					echo '</td>';
 					echo '<td>';
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Buy from organization.', $st, 'sys')."'>".translate('Buy from', $st, 'sys')." $organization: $buy_what</div>";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Buy from', $st, 'sys')." $organization: $buy_what</div>";
 						?>
 					</td>
 				</tr>
@@ -3836,10 +3646,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/buy-icon.jpg' alt='".translate('Buy', $st, 'sys')."' title='".translate('Buy', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/buy-icon.jpg' alt='".translate('Buy', $st, 'sys')."' /></div>";
 					echo '</td>';
 					echo '<td>';
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Buy from organization.', $st, 'sys')."'>".translate('Buy from', $st, 'sys')." ".translate('to', $st, 'sys')." ";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Buy from', $st, 'sys')." ".translate('to', $st, 'sys')." ";
 						if ($company_title != '' && $company_title != NULL) {
 							echo "$company_title: ";
 						}
@@ -3905,7 +3715,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<tr>
 					<td style='width: 45px; '>
 						<?php
-						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/GRN-icon.jpg' alt='".translate('Read', $st, 'sys')."' title='".translate('Read', $st, 'sys')."' /></div>";
+						echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/GRN-icon.jpg' alt='".translate('Read', $st, 'sys')."' /></div>";
 					echo "</td>";
 					echo "<td>";
 						echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='Global Recordings Network'>" . translate($text1, $st, 'sys') . ' ' . translate($text2, $st, 'sys') . ': ' . $organization . '</div>';
@@ -3930,10 +3740,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 		<tr>
 			<td style='width: 45px; '>
 				<?php
-				echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/sil-icon.jpg' alt='".translate('Check SIL.org', $st, 'sys')."' title='".translate('Check SIL.org', $st, 'sys')."' /></div>";
+				echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/sil-icon.jpg' alt='".translate('Check SIL.org', $st, 'sys')."' /></div>";
 			echo "</td>";
 			echo "<td>";
-				echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Check SIL.org', $st, 'sys')."'>".translate('Check SIL.org', $st, 'sys')." ".translate('for language and culture resources in this language.', $st, 'sys')."</div>";
+				echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Check SIL.org', $st, 'sys')." ".translate('for language and culture resources in this language.', $st, 'sys')."</div>";
 				//if ($company_title != "" && $company_title != NULL) {
 				//   echo "$company_title: ";
 				//}
@@ -3960,10 +3770,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img class='iconActions' src='../images/globe-icon.png' alt='".translate('Map', $st, 'sys')."' title='".translate('Map', $st, 'sys')."' /></div>";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\"><img loading='lazy' class='iconActions' src='../images/globe-icon.png' alt='".translate('Map', $st, 'sys')."' /></div>";
 				echo "</td>";
 				echo "<td>";
-					echo "<div class='linePointer' onclick=\"window.open('$URL')\" title='".translate('Link to the organization.', $st, 'sys')."'>".translate('Link', $st, 'sys')." : ";
+					echo "<div class='linePointer' onclick=\"window.open('$URL')\">".translate('Link', $st, 'sys')." : ";
 					echo $company;
 					if ($company_title != '' && !is_null($company_title)) {
 						if ($company_title == 'language map') {
@@ -3997,10 +3807,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			<tr>
 				<td style='width: 45px; '>
 					<?php
-					echo "<img class='iconActions' src='../images/email-icon.jpg' alt='Email' title='Email' />";
+					echo "<img loading='lazy' class='iconActions' src='../images/email-icon.jpg' alt='Email' title='Email' />";
 				echo "</td>";
 				echo "<td>";
-					if (strpos('+()0123456789 ', substr($URL, 0, 1) !== false)) {									// if string contains the first character in $URL
+					if (strpos('+()0123456789 ', substr($URL, 0, 1)) !== false) {									// if string contains the first character in $URL
 						echo "<div class='linePointer'>$company_title : $URL</div>";
 					}
 					else {
@@ -4020,7 +3830,6 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 	*************************************************************************************************************
 */
 	if ($Internet && $SE_Map) {
-		$temp_CC = $ISO_Country;
 		echo '<table id="Dis_Map" style="width: 100%; margin-top: 0px; ">';
 		?>
 		<tr>
@@ -4029,24 +3838,22 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 				<div style='width: 92%; margin-left: auto; margin-right: auto; '>
 					<div class="CCtab" style="text-align: center; ">
 						<?php
+						$ISOorROD = $ISO == 'qqq' ? $ROD_Code : ($ROD_Code == '00000' ? $ISO : $ISO.'_'.$ROD_Code);
 						foreach ($CC_countries as $countryKey => $countryValue) {
-							echo '<button class="CCtablinks" onclick="CCCountry(\''.$countryKey.'\',\''.$ISO.'\',\''.$countryValue.'\')" value="'.$countryKey.'">'.$countryValue.'</button>';
+							// the CCCountry function is down below (see SE map country)
+							echo '<button class="CCtablinks" onclick="CCCountry(\''.$countryKey.'\',\''.$ISOorROD.'\',\''.$countryValue.'\')" value="'.$countryKey.'">'.$countryValue.'</button>';
 						}
 						?>
 					</div>
 				<h3 id='countryLabel' style='font-size: 1.3em; margin-top: 40px; text-align: center; '></h3>
 				</div>
 				<?php
-				if ($ISO == 'azb' && $ROD_Code == '07458') {
-					echo '<iframe id="CC_c" name="iframe_a" title="Iframe" class="mapIframe" src="../maps/'.$temp_CC.'/'.$ISO.'_'.$ROD_Code.'.htm"></iframe>';
-				}
-				else {
-					echo '<iframe id="CC_c" name="iframe_a" title="Iframe" class="mapIframe" src=""></iframe>';
-				}
-				echo '<div class="mapKey">';
+				// document.getElementById("CC_c") is in function CCCountry (see SE map country)
+				echo '<iframe loading="lazy" style="display: none; " id="CC_c" name="iframe_a" title="Iframe" class="mapIframe" src=""></iframe>';
+				echo '<div id="mapKey" style="display: none; " class="mapKey">';
 					echo '<p><span style="color: #a8226d; font-weight: bold; ">'.translate('red: language you have selected', $st, 'sys').'</span></p>';
-					echo '<p><span style="color: #4d25c5; font-weight: bold; ">'.translate('purple: subfamily for this language', $st, 'sys').'</span></p>';
-					echo '<p><span style="color: #2a83cb; font-weight: bold; ">'.translate('blue: all of the other languages for this country', $st, 'sys').'</span></p>';
+					echo '<p><span style="color: #4d25c5; font-weight: bold; ">'.translate('purple: subgroup for this language', $st, 'sys').'</span></p>';
+					echo '<p><span style="color: #2a83cb; font-weight: bold; ">'.translate('blue: other languages spoken in this country', $st, 'sys').'</span></p>';
 				echo '</div>';
 				?>
 			</td>
@@ -4063,19 +3870,7 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 
 <script>
 	function iOSAssetPackage(URL) {
-		if (URL.startsWith("http://") || URL.startsWith("https://")) {
-			if (URL.endsWith(".zip")) {
-				const link = document.createElement("a");
-				link.href = URL;
-				link.download = URL.substr(URL.lastIndexOf('/')+1);
-				link.click();
-			}
-			else {
-				window.open(URL, '_blank');
-			}
-		}
-		else if (URL.startsWith("asset://")) {
-			//			URL = URL.replace("asset://", "https://");
+		if (URL.startsWith("http://") || URL.startsWith("https://") || URL.startsWith("asset://")) {
 			const link = document.createElement("a");
 			link.href = URL;
 			link.download = URL.substr(URL.lastIndexOf('/')+1);
@@ -4100,12 +3895,10 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
         }
     }
     function SAB_Scriptoria_Index(subfolder) {
-        //var x = document.getElementById("SAB_Book"+index).selectedIndex;
-        //var y = document.getElementById("SAB_Book"+index).options;
-		//if (y[x].text != "< ?php echo translate('Choose One...', $st, 'sys'); ?>") {
-			//window.open("./data/< ?php echo $ISO; ?>/" + subfolder + "index.html", "SABPage");
-			window.open("./data/<?php echo $ISO; ?>/" + subfolder, "SABPage");
-		//}
+		let iso = "<?php echo $ISO; ?>";
+		let subfolde = subfolder.slice(4, -1);										// get '[ISO]ZZZZ' from 'sab/[ISO]ZZZZ/'
+		console.log(subfolde);
+		window.open("./data/"+iso+"/sab/"+subfolde+"/", "SABPage");
 	}
     function SAB_Scriptoria_Other(url) {
 		window.open(url, "SABLink");
@@ -4120,141 +3913,168 @@ $SynchronizedTextAndAudio = 0;								// in SAB below
 			window.open("./data/<?php echo $ISO; ?>/" + subfolder + "index.html", "SABPage");
 		}
 	}
-/*
-	*************************************************************************************************************
-		Set the counts for individual const "DisplayZZZZ" Object.entries().
-	*************************************************************************************************************
-*/
-	textCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayText)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				textCount = 1;
-				break;
+	/*
+		*************************************************************************************************************
+			Set the counts for individual const "DisplayZZZZ" Object.entries().
+		*************************************************************************************************************
+	*/
+		textCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayText)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					textCount = 1;
+					break;
+				}
 			}
 		}
-	}
-	audioCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayAudio)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				audioCount = 1;
-				break;
+		audioCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayAudio)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					audioCount = 1;
+					break;
+				}
 			}
 		}
-	}
-	videoCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayVideo)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				videoCount = 1;
-				break;
+		videoCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayVideo)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					videoCount = 1;
+					break;
+				}
 			}
 		}
-	}
-	appCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayApp)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				appCount = 1;
-				break;
+		appCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayApp)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					appCount = 1;
+					break;
+				}
 			}
 		}
-	}
-	otherCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayOther)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				otherCount = 1;
-				break;
+		otherCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayOther)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					otherCount = 1;
+					break;
+				}
 			}
 		}
-	}
-	mapCount = 0;
-	for (let [dis_key, dis_value] of Object.entries(DisplayMap)) {
-		if (document.getElementById(dis_key)) {
-			if (dis_value != 0) {
-				mapCount = 1;
-				break;
+		mapCount = 0;
+		for (let [dis_key, dis_value] of Object.entries(DisplayMap)) {
+			if (document.getElementById(dis_key)) {
+				if (dis_value != 0) {
+					mapCount = 1;
+					break;
+				}
 			}
 		}
-	}
 
-/*
-	*************************************************************************************************************
-		If the count is 0 then gray with icon.
-	*************************************************************************************************************
-*/
-	if (textCount === 0) {
-		document.getElementById('tabText').style.cursor = 'none';
-		//document.getElementById('tabApp').style.filter = "contrast(30%) brightness(40%)";
-		document.getElementById('tabText').style.filter = "opacity(20%) grayscale(100%)";
-	}
-	if (audioCount === 0) {
-		document.getElementById('tabAudio').style.cursor = 'none';
-		document.getElementById('tabAudio').style.filter = "opacity(20%) grayscale(100%)";
-	}
-	if (videoCount === 0) {
-		document.getElementById('tabVideo').style.cursor = 'none';
-		document.getElementById('tabVideo').style.filter = "opacity(20%) grayscale(100%)";
-	}
-	if (appCount === 0) {
-		document.getElementById('tabApp').style.cursor = 'auto';
-		document.getElementById('tabApp').style.filter = "opacity(20%) grayscale(100%)";
-	}
-	if (otherCount === 0) {
-		document.getElementById('tabOther').style.cursor = 'auto';
-		document.getElementById('tabOther').style.filter = "opacity(20%) grayscale(100%)";
-	}
-	if (mapCount === 0) {
-		document.getElementById('tabMap').style.cursor = 'auto';
-		document.getElementById('tabMap').style.filter = "opacity(20%) grayscale(100%)";
-	}
+	/*
+		*************************************************************************************************************
+			If the count is 0 then gray with icon.
+		*************************************************************************************************************
+	*/
+		if (textCount === 0) {
+			document.getElementById('tabText').style.cursor = 'none';
+			//document.getElementById('tabApp').style.filter = "contrast(30%) brightness(40%)";
+			document.getElementById('tabText').style.filter = "opacity(20%) grayscale(100%)";
+		}
+		if (audioCount === 0) {
+			document.getElementById('tabAudio').style.cursor = 'none';
+			document.getElementById('tabAudio').style.filter = "opacity(20%) grayscale(100%)";
+		}
+		if (videoCount === 0) {
+			document.getElementById('tabVideo').style.cursor = 'none';
+			document.getElementById('tabVideo').style.filter = "opacity(20%) grayscale(100%)";
+		}
+		if (appCount === 0) {
+			document.getElementById('tabApp').style.cursor = 'auto';
+			document.getElementById('tabApp').style.filter = "opacity(20%) grayscale(100%)";
+		}
+		if (otherCount === 0) {
+			document.getElementById('tabOther').style.cursor = 'auto';
+			document.getElementById('tabOther').style.filter = "opacity(20%) grayscale(100%)";
+		}
+		if (mapCount === 0) {
+			document.getElementById('tabMap').style.cursor = 'auto';
+			document.getElementById('tabMap').style.filter = "opacity(20%) grayscale(100%)";
+		}
 
-/*
-	*************************************************************************************************************
-		If the count is 1 display a larger icon and start first with "Text".
-	*************************************************************************************************************
-*/
-	if (textCount == 1) {
-		document.getElementById("tabText").click();
-	}
-	else if (audioCount == 1) {
-		document.getElementById("tabAudio").click();
-	}
-	else if (videoCount == 1) {
-		document.getElementById("tabVideo").click();
-	}
-	else if (appCount == 1) {
-		document.getElementById("tabApp").click();
-	}
-	else if (otherCount == 1) {
-		document.getElementById("tabOther").click();
-	}
-	else if (mapCount == 1) {
-		document.getElementById("tabMap").click();
-	}
-	else { // (allCount == 1)
-		document.getElementById("tabAll").click();
-	}
+	/*
+		*************************************************************************************************************
+			If the count is 1 display a larger icon and start first with "Text".
+		*************************************************************************************************************
+	*/
+		if (textCount == 1) {
+			document.getElementById("tabText").click();
+		}
+		else if (audioCount == 1) {
+			document.getElementById("tabAudio").click();
+		}
+		else if (videoCount == 1) {
+			document.getElementById("tabVideo").click();
+		}
+		else if (appCount == 1) {
+			document.getElementById("tabApp").click();
+		}
+		else if (otherCount == 1) {
+			document.getElementById("tabOther").click();
+		}
+		else if (mapCount == 1) {
+			document.getElementById("tabMap").click();
+		}
+		else { // (allCount == 1)
+			document.getElementById("tabAll").click();
+		}
 
-/*
-	*************************************************************************************************************
-		country map
-	*************************************************************************************************************
-*/
-	function CCCountry(countryKey, ISO, countryValue) {
-		var x = document.getElementById("CC_c");
-		x.src = "./maps/" + countryKey + "/" + ISO + ".htm";
-		var y = document.getElementById("countryLabel");
-		y.innerHTML = countryValue;
-	}
+	/*
+		*************************************************************************************************************
+			SE map country
+		*************************************************************************************************************
+	*/
+		function CCCountry(countryKey, ISOorROD, countryValue) {
+			// if-url-exist
+			function ifUrlExist(url) {
+				var http = new XMLHttpRequest();
+				http.open('HEAD', url, false);										// get back "HEAD"
+				http.send();
+				return http.status != 404;											// returns true of false
+			}
 
-	$(function() {
-		CCCountry("<?php echo array_keys($CC_countries)[0]; ?>", "<?php echo $ISO; ?>", "<?php echo array_values($CC_countries)[0]; ?>");
-	});
-// end
+			const hasUrl = ifUrlExist('/maps/'+countryKey+'/'+ISOorROD+'.htm');
+			console.log(hasUrl);
 
+			var y = document.getElementById("countryLabel");
+			if (hasUrl) {															// true or false
+				// macrolanguage string (see 00-MainScript.ini.php)
+				if (macroLanguage.includes(ISOorROD.substring(0, 3))) {
+					//this is a macrolanguage
+					y.innerHTML = countryValue + ": <?php echo translate('is a macro language.', $st, 'sys'); ?>";
+				}
+				else {
+					y.innerHTML = countryValue;
+				}
+				var x = document.getElementById("CC_c");
+				x.src = "./maps/" + countryKey + "/" + ISOorROD + ".htm";
+				x.style.display = "inline-block";
+				var mapKey = document.getElementById("mapKey");
+				mapKey.style.display = "inline-block";
+			}
+			else {
+				y.innerHTML = "<?php echo translate('Could this language be in more than one location?', $st, 'sys'); ?>";
+			}
+		}
+
+		$(function() {
+			<?php
+				$ISOorROD = $ISO == 'qqq' ? $ROD_Code : (($ROD_Code == '00000' || $ROD_Code == '') ? $ISO : $ISO.'_'.$ROD_Code);
+			?>
+			CCCountry("<?php echo array_keys($CC_countries)[0]; ?>", "<?php echo $ISOorROD; ?>", "<?php echo array_values($CC_countries)[0]; ?>");
+		});
 </script>
 
-<script type='text/javascript' language='javascript' src='_js/user_events.js'></script>
+<!--script type='text/javascript' language='javascript' src='_js/user_events.js'></script-->

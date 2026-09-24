@@ -1,7 +1,8 @@
 <?php
-
+// Created by Scott Starker - 8/2024
+// Updated by Scott Starker - 9/2025, 11/2025
 /*
-	fetch form AWStatsScripts.js - downloads, ISO_countries, and html tables => 
+	fetch form countryChaange.js - downloads, ISO_countries, and html tables => allCountry.php?cc=$_GET['cc']&m=(int)$_GET&y=(int)$_GET
 	
 	SELECTs FROM downloads table
 		extension
@@ -15,11 +16,13 @@
 	returns 2 'json' in 1 string
 */
 
-if (isset($_GET['cc'])) $CCode = $_GET['cc']; else { die('Hack!'); }					// cc = countryCode
-if (isset($_GET['m'])) $month = $_GET['m']; else { die('Hack!'); }
-if (isset($_GET['y'])) $year = $_GET['y']; else { die('Hack!'); }
+if (isset($_GET['cc'])) $CCode = $_GET['cc']; else { die('Did you make a mistake?'); }					// cc = countryCode
+if (isset($_GET['m'])) $month = (int)$_GET['m']; else { die('Did you make a mistake?'); }
+if ($month != 1 && $month != 2 && $month != 3 && $month != 4 && $month != 5 && $month != 6 && $month != 7 && $month != 8 && $month != 9 && $month != 10 && $month != 11 && $month != 12 && $month != 13) { die('Did you make a mistake?'); }	// only months 1-12 or 13 (year) are allowed
+if (isset($_GET['y'])) $year = (int)$_GET['y']; else { die('Did you make a mistake?'); }
+if ($year < 2020 || $year > 2100) { die('Did you make a mistake?'); }									// only years 2020-2100 are allowed
 
-if (substr($_SERVER['REMOTE_ADDR'], 0, 7) == '192.168' || substr($_SERVER['REMOTE_ADDR'], 0, 9) == '127.0.0.1') {	// Is the script local?
+if (substr($_SERVER['REMOTE_ADDR'], 0, 7) == '192.168' || substr($_SERVER['REMOTE_ADDR'], 0, 9) == '127.0.0.1' || substr($_SERVER['REMOTE_ADDR'], 0, 9) == '172.20.0.') {	// Is the script local?
 	$awstats_db = 'awstats_gui_log';
 	$scripture_db = 'scripture';
 }
@@ -32,22 +35,22 @@ require_once './include/conn.inc.php';													// connect to the database na
 $db = get_my_db();																		// '' won't work
 	
 // languages names per ISO
-// just get ...-timing.txt (sab)
 if ($month == 13) {																		// a year
-	$query="SELECT `extension`, SUM(`dHit`) `Hits`, SUM(`dBandwidth`) `Bandwidth` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` <> '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' AND `$awstats_db`.`downloads`.`extension` = 'txt' AND `$awstats_db`.`downloads`.`download` LIKE '%-timing.txt' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
+	$query="SELECT `extension`, SUM(`dHit`) `Hits` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` = '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
 }
 else {
-	$query="SELECT `extension`, SUM(`dHit`) `Hits`, SUM(`dBandwidth`) `Bandwidth` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`month` = $month AND `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` <> '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' AND `$awstats_db`.`downloads`.`extension` = 'txt' AND `$awstats_db`.`downloads`.`download` LIKE '%-timing.txt' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
-}
-$result_txt = $db->query($query) or die('Query failed: ' . $db->error . '</body></html>');
-
-if ($month == 13) {																		// a year
-	$query="SELECT `extension`, SUM(`dHit`) `Hits`, SUM(`dBandwidth`) `Bandwidth` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` = '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
-}
-else {
-	$query="SELECT `extension`, SUM(`dHit`) `Hits`, SUM(`dBandwidth`) `Bandwidth` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`month` = $month AND `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` = '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
+	$query="SELECT `extension`, SUM(`dHit`) `Hits` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`month` = $month AND `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` = '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' GROUP BY `$awstats_db`.`downloads`.`extension` ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
 }
 $result_iso = $db->query($query) or die('Query failed: ' . $db->error . '</body></html>');
+
+// just get ...-timing.txt (sab)
+if ($month == 13) {																		// a year
+	$query="SELECT SUM(`dHit`) `Hits` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` <> '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' AND `$awstats_db`.`downloads`.`extension` = 'txt' AND `$awstats_db`.`downloads`.`download` LIKE '%-timing.txt' ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
+}
+else {
+	$query="SELECT SUM(`dHit`) `Hits` FROM `$awstats_db`.`downloads` INNER JOIN `$scripture_db`.`ISO_countries` ON `$awstats_db`.`downloads`.`month` = $month AND `$awstats_db`.`downloads`.`year` = $year AND `$awstats_db`.`downloads`.`isoPlus` <> '' AND `$awstats_db`.`downloads`.`iso` = `$scripture_db`.`ISO_countries`.`ISO` AND `$scripture_db`.`ISO_countries`.`ISO_countries` = '$CCode' AND `$awstats_db`.`downloads`.`extension` = 'txt' AND `$awstats_db`.`downloads`.`download` LIKE '%-timing.txt' ORDER BY `$awstats_db`.`downloads`.`dHit` DESC";
+}
+$result_txt = $db->query($query) or die('Query failed: ' . $db->error . '</body></html>');
 
 $extension = '';
 $numOfHits = 0;
@@ -75,33 +78,38 @@ else {
 	// JSON 1
 	$first = '{';
 	$n = 0;
-	while ($row_iso = $result_iso->fetch_assoc()) {										// iterate through "get everything"
+	while ($row_iso = $result_iso->fetch_assoc()) {										// iterate through "get almost everything"
 		$n++;
 		$extension = $row_iso['extension'];
+		if ($extension == 'txt') {
+			$extension = 'txt|';
+		}
 		$numOfHits = (int) $row_iso['Hits'];
-		$numOfBandwidth = (int) $row_iso['Bandwidth'];
 		$first .= '"'.($n-1).'": {';
 		$first .= '"extension":                     	"'.$extension.'",';
-		$first .= '"numOfHits":				        	'.$numOfHits.',';
-		$first .= '"numOfBandwidth":		    	    '.$numOfBandwidth.'},';
+		$first .= '"numOfHits":				        	'.$numOfHits.'},';
 	}
 
-	if ($result_txt->num_rows >= 1) {													// fetch "get just"; 'txt' and '%-timing.txt'
+	if ($result_txt->num_rows >= 1) {													// fetch "get just 'txt' and '%-timing.txt'"
 		$row_txt = $result_txt->fetch_assoc();
-		$n++;
-		$extension = $row_txt['extension'];
+		//$extension = $row_txt['extension'];
 		$numOfHits = (int) $row_txt['Hits'];
-		$numOfBandwidth = (int) $row_txt['Bandwidth'];
-		$first .= '"'.($n-1).'": {';
-		$first .= '"extension":                     	"'.$extension.'|",';			// "extension": "txt|"
-		$first .= '"numOfHits":				        	'.$numOfHits.',';
-		$first .= '"numOfBandwidth":		    	    '.$numOfBandwidth.'},';
+		if ($numOfHits != 0) {
+			$n++;
+			$first .= '"'.($n-1).'": {';
+			$first .= '"extension":                     	"txt",';						// "extension": "txt"
+			$first .= '"numOfHits":				        	'.$numOfHits.'},';
+		}
 	}
 	
 	$first = rtrim($first, ',');
 	$first .= '}';
 	$marks = [];
-	$marks = json_decode($first);														// string to JSON array
+	$marks = json_decode($first, true);													// string to JSON array
+
+	usort($marks, function($a, $b) {													// usort to sort the array for number of accesses (numOfHits)
+		return ($a['numOfHits'] < $b['numOfHits']) ? 1 : 0; 
+	});
 	
 	// An associative array
 	//$json_string = json_encode($marks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
@@ -134,7 +142,7 @@ else {
 		$second .= '}';
 	
 		$marksTwo = [];
-		$marksTwo = json_decode($second);												// string to JSON array
+		$marksTwo = json_decode($second, true);											// string to JSON array
 		
 		// An associative array
 		//$json_string = json_encode($marks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);

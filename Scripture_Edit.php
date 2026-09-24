@@ -69,7 +69,7 @@ define('RIGHT_ON', true);
 
 // To hold error messages
 $messages = [];
- 
+
 // Default input values (later, sanitized $_POST inputs)
 $inputs = ['iso' => ''];
 $inputs = ['rod' => ''];
@@ -116,7 +116,7 @@ if (isset($_POST['btnSubmit'])) {
         <br />
         <label for='iso_idx'>ISO code or idx to edit: </label>
         <input type="text" id="iso_idx" name="iso_idx" autofocus size='18' maxtlength='4' pattern="([a-z]{3}|0-9]{1,4})" placeholder="3 lowercase or number" title="ISO code or index number" value='' />
-        &nbsp;&nbsp;<input type="button" value="OK" id="iso_idx_goto" onClick="iso_idx()" /> 
+        &nbsp;&nbsp;<input type="button" value="OK" id="iso_idx_goto" onClick="iso_idx()" />
         <div id='iso_response'></div>
 		<?php
 		echo "<h2><span style='color: red; font-size: bold; '>Or</span> Choose the 'pencil' to edit</h2>";
@@ -135,10 +135,10 @@ if (isset($_POST['btnSubmit'])) {
 			$rod = $row['ROD_Code'];							// ROD_Code
 			$var = $row['Variant_Code'];						// Variant_Code
 			$idx = $row['ISO_ROD_index'];						// ISO_ROD_index
-			
+
 			$ISO_ROD_index = (string)$idx;												// make sure that 00-DBLanguageCountryName.inc.php will work correctly
 			include './include/00-DBLanguageCountryName.inc.php';
-	
+
 			$stmt->bind_param("ssis", $iso, $rod, $idx, $LN);							// bind parameters for markers
 			$stmt->execute();															// execute query
 		}
@@ -250,7 +250,7 @@ if (isset($_POST['btnSubmit'])) {
 			echo "<tr valign='middle' style='color: black; background-color: #$color; margin: 0px; padding: 0px; '>";
 			echo "<td width='6%' style='cursor: pointer; ' onclick='parent.location=\"Scripture_Edit.php?idx=$idx\"'><img style='margin-bottom: 3px; margin-left: 13px; cursor: hand; ' src='images/pencil_edit.png' /></td>";
 			echo "<td width='28%' style='background-color: #$color; margin: 0px; padding: 3px 5px 3px 5px; border-width: thin; border-style: none; border-color: #$color; '>$LN</td>";
-			$stmt_alt->bind_param("i", $idx);													// bind parameters for markers								// 
+			$stmt_alt->bind_param("i", $idx);													// bind parameters for markers								//
 			$stmt_alt->execute();																// execute query
 			$result_alt = $stmt_alt->get_result();												// instead of bind_result (used for only 1 record):
 			$num_alt=$result_alt->num_rows;
@@ -271,10 +271,10 @@ if (isset($_POST['btnSubmit'])) {
 			}
 			else
 				echo "<td width='31%'style='margin: 0px; padding: 3px 5px 3px 5px; border-width: thin; border-style: none; border-color: #$color; '>&nbsp;</td>";
-	
+
 			$VD = '';
 			if (!is_null($var) && $var != '') {
-				$stmt_Var->bind_param("s", $var);												// bind parameters for markers								// 
+				$stmt_Var->bind_param("s", $var);												// bind parameters for markers								//
 				$stmt_Var->execute();															// execute query
 				$resultVar = $stmt_Var->get_result();											// instead of bind_result (used for only 1 record):
 				$numVar=$resultVar->num_rows;
@@ -282,13 +282,13 @@ if (isset($_POST['btnSubmit'])) {
 					$VD_Temp = $resultVar->fetch_assoc();
 					$VD = $VD_Temp['Variant_Eng'];
 				}
-			}		
+			}
 			echo "<td width='15%' style='margin: 0px; padding: 3px 5px 3px 5px; border-width: thin; border-style: none; border-color: #$color; '>" . $iso . " " . $rod;
 			if ($VD != '') {
 				echo "<br /><span style='font-style: italic; font-size: 8pt; '>($VD)</span>";
 			}
 			echo '</td>';
-	
+
 			$stmt_ISO_countries->bind_param("i", $idx);											// bind parameters for markers
 			$stmt_ISO_countries->execute();														// execute query
 			$result_ISO_countries = $stmt_ISO_countries->get_result();							// instead of bind_result (used for only 1 record):
@@ -335,7 +335,7 @@ if (isset($_POST['btnSubmit'])) {
 			echo '<script type="text/javascript" language="javascript">
 					location.replace("process.php");
 					document.write ("Hacker!");
-				</script>'; 
+				</script>';
 		}
 		if (count($messages) > 0) {
 			echo '<br />';
@@ -351,7 +351,7 @@ if (isset($_POST['btnSubmit'])) {
 			if ($ln_result->num_rows == 0) {
 				die ('<div style="background-color: white; color: red; font-size: 16pt; padding-top: 20px; padding-bottom: 20px; margin-top: 200px; ">' . translate('The translation_code is not found.', $st, 'sys') . '</div></body></html>');
 			}
-		
+
 			while ($ln_row = $ln_result->fetch_array()){
 				$ln_temp[0] = $ln_row['translation_code'];
 				$ln_temp[1] = $ln_row['name'];
@@ -386,7 +386,7 @@ if (isset($_POST['btnSubmit'])) {
 				}
 			}
 		}
-		
+
 		$query="SELECT DISTINCT * FROM scripture_main WHERE ISO_ROD_index = $idx";
 		$result=$db->query($query) or die ('Query failed: ' . $db->error . '</body></html>');
 		if ($db->error) {
@@ -415,13 +415,13 @@ if (isset($_POST['btnSubmit'])) {
 				$VD_Temp = $resultVar->fetch_assoc();
 				$VD = $VD_Temp['Variant_Eng'];
 			}
-		}		
+		}
 		if ($VD != '') {
 			echo ' Variant_Code: <span style="font-style: italic; ">' . $VD . '</span>';
 		}
 		?>
         </div>
-        
+
         <input type='hidden' name='idx' id='idx' value='<?php echo $idx; ?>' />
         <input type='hidden' name='iso' id='iso' value='<?php echo $iso; ?>' />
         <input type='hidden' name='rod' id='rod' value='<?php echo $rod; ?>' />
@@ -547,10 +547,10 @@ if (isset($_POST['btnSubmit'])) {
 *************************************************/
 		?>
 		<br />
-		<p>Select the default major langauge <span style="font-size: 10pt; ">(i.e. the major language from above)</span>: 
+		<p>Select the default major langauge <span style="font-size: 10pt; ">(i.e. the major language from above)</span>:
 		<select name="DefaultLang" id="DefaultLang">
 		<?php
-		if (isset($_POST['DefaultLang'])) { 
+		if (isset($_POST['DefaultLang'])) {
 			foreach ($_SESSION['nav_ln_array'] as $code => $array){
 				$html = "<option value=\"".$array[1]."Lang\" switch >".$array[1]."</option>";
 				if ($_POST['DefaultLang'] == $array[1].'Lang'){
@@ -584,7 +584,7 @@ if (isset($_POST['btnSubmit'])) {
 		$i=1;
 		$num = 0;
 		if (isset($_POST['txtAltNames-'.(string)$i])) {
-			
+
 		}
 		else {
 			$query="SELECT alt_lang_name FROM alt_lang_names WHERE ISO_ROD_index = $idx";
@@ -655,7 +655,7 @@ if (isset($_POST['btnSubmit'])) {
 				$result1->free();
 			}
 			else {
-			
+
 			}
 			?>
 		</table>
@@ -725,7 +725,7 @@ if (isset($_POST['btnSubmit'])) {
 		<br /><br />
         <hr align="center" width="90%" color="#0066CC" />
         <br />
-        
+
 		<?php
 /************************************************
 	whole Bible and complete Scripture
@@ -734,7 +734,7 @@ if (isset($_POST['btnSubmit'])) {
 		$complete_Scripture = '';
 		$ScriptureDescription = '';
         if (isset($_POST['whole_Bible']) || isset($_POST['Scripture_Bible_Filename'])) {
-			
+
 		}
 		else {
 			$whole_Bible = '';
@@ -798,7 +798,7 @@ if (isset($_POST['btnSubmit'])) {
 		}
 		?>
 		<br />
-		
+
 		<?php
 		$num = 0;
 		if (isset($_POST['OT_PDF_Book-1']) || isset($_POST["OT_PDF_appendix"]) || isset($_POST["OT_PDF_glossary"])) {		//else {
@@ -1035,7 +1035,7 @@ if (isset($_POST['btnSubmit'])) {
 		}
 		?>
 		<br />
-		
+
 		<?php
 		if (isset($_POST['NT_PDF_Book-1']) || isset($_POST["NT_PDF_appendix"]) || isset($_POST["NT_PDF_glossary"])) {		//else {
 			?>
@@ -1582,7 +1582,7 @@ if (isset($_POST['btnSubmit'])) {
 		}
 		?>
 		<br />
-		
+
 		<?php
 /*************************************************
 	NT audio books
@@ -1913,7 +1913,7 @@ if (isset($_POST['btnSubmit'])) {
 		<br />
         <hr align="center" width="90%" color="#0066CC" />
         <br />
-        
+
 		<?php
 /*************************************************
 	SAB - Scriture Apps Buidler (table SAB) HTML
@@ -1927,7 +1927,7 @@ if (isset($_POST['btnSubmit'])) {
 			8			001000		OT Synchronized audio where available
 			16			010000		NT View text only
 			32			100000		OT View text only
-			
+
 			Scriptoria needs help on audio
 	*/
 	?>
@@ -1953,7 +1953,7 @@ if (isset($_POST['btnSubmit'])) {
 		</thead>
         <?php
         $numSAB_scriptoria = 0;
-		
+
 		if (isset($_POST['txtSABsubfolder-1'])) {										// if data comes from "Edit_Lang_Validation.php"
             ${'txtSABsubfolder-1'} = $_POST['txtSABsubfolder-1'];
             ${'txtSABurl-1'} = $_POST['txtSABurl-1'];
@@ -1984,7 +1984,7 @@ if (isset($_POST['btnSubmit'])) {
             	${'txtSABurl-1'}='';
 				${'txtSABdescription-1'}='';
 				//${'txtSABpreScriptoria-1'}='';
-				${'txtSABsubFirstPath-1'}='sab';				 
+				${'txtSABsubFirstPath-1'}='sab';
 			 }
         }
         else {																			// if data is doesn't exist
@@ -2129,8 +2129,8 @@ if (isset($_POST['btnSubmit'])) {
 		</tbody>
 		</table>
         <br />
-		
-		<?php       
+
+		<?php
 /*************************************************
 	Bible.is
 **************************************************/
@@ -2303,8 +2303,8 @@ if (isset($_POST['btnSubmit'])) {
 				if ($num > 1) {
 					while ($tempLinks = $result1->fetch_assoc()) {
 						${'txtLinkBibleIsURL-$i'} = $tempLinks['URL'];
-						${'txtLinkBibleIsTitle-$i'} = $tempLinks['company_title'];						
-						${'txtLinkBibleIs-$i'} = $tempLinks['BibleIs'];						
+						${'txtLinkBibleIsTitle-$i'} = $tempLinks['company_title'];
+						${'txtLinkBibleIs-$i'} = $tempLinks['BibleIs'];
 						$temp1 = ${'txtLinkBibleIs-$i'};
 						if ($temp1 == 1) ${'BibleIsDefault-$i'}=1; else ${'BibleIsDefault-$i'}=0;
 						if ($temp1 == 2) ${'BibleIsText-$i'}=2; else ${'BibleIsText-$i'}=0;
@@ -2436,7 +2436,7 @@ if (isset($_POST['btnSubmit'])) {
 				if ($num > 1) {
 					while ($tempLinks = $result1->fetch_assoc()) {
 						${'txtLinkBibleIsGospelFilmURL-$i'} = $tempLinks['URL'];
-						${'txtLinkBibleIsGospel-$i'} = $tempLinks['company_title'];						
+						${'txtLinkBibleIsGospel-$i'} = $tempLinks['company_title'];
 						echo "<tr valign='bottom' style='line-height: 10pt; '>";
 							echo "<td width='11%'>";
 								echo "&nbsp;";
@@ -2467,7 +2467,7 @@ if (isset($_POST['btnSubmit'])) {
 /*************************************************
 	YouVersion (Bible.com) - Read
 **************************************************/
-		?>      
+		?>
 
 		<table width="100%" valign="bottom" cellpadding="0" cellspacing="0">
             <thead>
@@ -2492,7 +2492,7 @@ if (isset($_POST['btnSubmit'])) {
 			$num = 0;
             $YouVersion_URL = '';
             if (isset($_POST['txtLinkYouVersionName-1'])) {
-                
+
             }
             elseif ($SM_row['YouVersion']) {
                 $query="SELECT * FROM links WHERE ISO_ROD_index = $idx AND YouVersion = 1";
@@ -2615,7 +2615,7 @@ if (isset($_POST['btnSubmit'])) {
 			$num = 0;
             $Biblesorg_URL = "";
             if (isset($_POST['txtLinkBiblesorgName-1'])) {
-                
+
             }
             elseif ($SM_row['Bibles_org']) {
                 $query="SELECT * FROM links WHERE ISO_ROD_index = $idx AND `Bibles_org` = 1";
@@ -2738,7 +2738,7 @@ if (isset($_POST['btnSubmit'])) {
 			$num = 0;
             $GRN_URL = "";
             if (isset($_POST['txtLinkGRNName-1'])) {
-                
+
             }
             elseif ($SM_row['GRN']) {
                 $query="SELECT * FROM links WHERE ISO_ROD_index = $idx AND GRN = 1";
@@ -2869,7 +2869,7 @@ if (isset($_POST['btnSubmit'])) {
         indicate which files are to be used for this collection. For example, you enter a "W" in the text box you will then have to put a "W" in all of the filenames before the extension
         (i.e., 41-MATaoj.sfm to 41-MATaoj<span style="color: red; ">W</span>.sfm)</span>
         <br /><br />&nbsp;&nbsp;&nbsp;&nbsp;
-        
+
 		<?php
 /*************************************************
 	checkbox for right-to-left
@@ -2904,7 +2904,7 @@ if (isset($_POST['btnSubmit'])) {
 			$resultViewer->free();
 		}
 		echo ' (Only for "Study online viewer".)<br /><br />';
-		
+
 /*************************************************
 	cell phones
 **************************************************/
@@ -3091,7 +3091,7 @@ if (isset($_POST['btnSubmit'])) {
 					$result1->free();
 				}
 			}
-			
+
 /*************************************************
 	watch
 **************************************************/
@@ -3116,7 +3116,7 @@ if (isset($_POST['btnSubmit'])) {
             $i=1;
             $num = 0;
             if (isset($_POST['txtWatchWebSource-'.(string)$i])) {
-                
+
             }
             elseif ($SM_row['watch']) {
                 $query="SELECT * FROM watch WHERE ISO_ROD_index = $idx";
@@ -3520,7 +3520,7 @@ if (isset($_POST['btnSubmit'])) {
         	</tbody>
 		</table>
 		<br />
-		
+
 		<table valign="bottom" cellpadding="0" cellspacing="0" width="100%">
         	<thead valign="bottom">
                 <tr valign="bottom" style="color: navy; font-size: 8pt; line-height: 7pt; height: 20px; ">
@@ -3548,7 +3548,7 @@ if (isset($_POST['btnSubmit'])) {
 		$i=1;
 		$num = 0;
 		if (isset($_POST['txtOther-'.(string)$i])) {
-			
+
 		}
 		elseif ($SM_row['other_titles']) {
 			$query="SELECT * FROM other_titles WHERE ISO_ROD_index = $idx";
@@ -3698,7 +3698,7 @@ if (isset($_POST['btnSubmit'])) {
 		$i=1;
 		$num = 0;
 		if (isset($_POST['txtBuyWebSource-'.(string)$i])) {
-			
+
 		}
 		elseif ($SM_row['buy']) {
 			$query="SELECT * FROM buy WHERE ISO_ROD_index = $idx";
@@ -3794,13 +3794,13 @@ if (isset($_POST['btnSubmit'])) {
 				}
 			}
 /*************************************************
-	Links: buy, map, GooglePlay, and Kalamm
+	links: other, map, AppleStore, GooglePlay, and Kalamm
 **************************************************/
 			?>
         </tbody>
 		</table>
 		<br />
-		
+
 		<table valign="bottom" cellpadding="0" cellspacing="0" width="100%">
         <thead>
 			<tr valign="bottom" style="color: navy; font-size: 8pt; line-height: 7pt; height: 30px; ">
@@ -3827,11 +3827,13 @@ if (isset($_POST['btnSubmit'])) {
 			if ($_POST['linksIcon-1'] == 'linksOther-1') $_POST['linksOther-1']=1; else $_POST['linksOther-1']=0;
 			//if ($_POST['linksIcon-1'] == 'linksBuy-1') $_POST['linksBuy-1']=1; else $_POST['linksBuy-1']=0;
 			if ($_POST['linksIcon-1'] == 'linksMap-1') $_POST['linksMap-1']=1; else $_POST['linksMap-1']=0;
+			if ($_POST['linksIcon-1'] == 'linksAppleStore-1') $_POST['linksAppleStore-1']=1; else $_POST['linksAppleStore-1']=0;
 			if ($_POST['linksIcon-1'] == 'linksGooglePlay-1') $_POST['linksGooglePlay-1']=1; else $_POST['linksGooglePlay-1']=0;
 			if ($_POST['linksIcon-1'] == 'linksKalaam-1') $_POST['linksKalaam-1']=1; else $_POST['linksKalaam-1']=0;
 			$_POST['linksOther'] = $_POST['linksOther-1'];
 			//$_POST['linksBuy'] = $_POST['linksBuy-1'];									// to be tested
 			$_POST['linksMap'] = $_POST['linksMap-1'];									// to be tested
+			$_POST['linksAppleStore'] = $_POST['linksAppleStore-1'];					// to be tested
 			$_POST['linksGooglePlay'] = $_POST['linksGooglePlay-1'];					// to be tested
 			$_POST['linksKalaam'] = $_POST['linksKalaam-1'];							// to be tested
 		}
@@ -3839,16 +3841,18 @@ if (isset($_POST['btnSubmit'])) {
 			$query="SELECT * FROM links WHERE ISO_ROD_index = $idx AND BibleIs = 0 AND BibleIsGospelFilm = 0 AND YouVersion = 0 AND Bibles_org = 0 AND GRN = 0 AND email = 0";
 			$result1=$db->query($query);
 			$num=$result1->num_rows;
-			if ($r = $result1->fetch_assoc()) {
+			if ($num >= 1) {
+				$r = $result1->fetch_assoc();
 				${'txtLinkCompany-1'}=$r['company'];
 				${'txtLinkCompanyTitle-1'}=stripslashes($r['company_title']);
 				${'txtLinkURL-1'}=$r['URL'];
 				//${'linksBuy-1'}=$r['buy'];
 				${'linksMap-1'}=$r['map'];
+				${'linksAppleStore-1'}=$r['AppleStore'];
 				${'linksGooglePlay-1'}=$r['GooglePlay'];
 				${'linksKalaam-1'}=$r['Kalaam'];
 				//if (${'linksBuy-1'} == 1 || ${'linksMap-1'} == 1 || ${'linksGooglePlay-1'} == 1) {
-				if (${'linksMap-1'} == 1 || ${'linksGooglePlay-1'} == 1 || ${'linksKalaam-1'} == 1) {
+				if (${'linksMap-1'} == 1 || ${'linksAppleStore-1'} == 1 || ${'linksGooglePlay-1'} == 1 || ${'linksKalaam-1'} == 1) {
 					${'linksOther-1'}=0;
 					${'linksOther'}=0;													// to be tested
 				}
@@ -3864,11 +3868,13 @@ if (isset($_POST['btnSubmit'])) {
 				${'linksOther-1'}=0;
 				//${'linksBuy-1'}=0;
 				${'linksMap-1'}=0;
+				${'linksAppleStore-1'}=0;
 				${'linksGooglePlay-1'}=0;
 				${'linksKalaam-1'}=0;
 			}
 			//${'linksBuy'}=${'linksBuy-1'};												// to be tested
 			${'linksMap'}=${'linksMap-1'};												// to be tested
+			${'linksAppleStore'}=${'linksAppleStore-1'};								// to be tested
 			${'linksGooglePlay'}=${'linksGooglePlay-1'};								// to be tested
 			${'linksKalaam'}=${'linksKalaam-1'};										// to be tested
 		}
@@ -3879,11 +3885,13 @@ if (isset($_POST['btnSubmit'])) {
 			${'linksOther-1'}=0;
 			//${'linksBuy-1'}=0;
 			${'linksMap-1'}=0;
+			${'linksAppleStore-1'}=0;
 			${'linksGooglePlay-1'}=0;
 			${'linksKalaam-1'}=0;
 			${'linksOther'}=0;															// to be tested
 			//${'linksBuy'}=0;															// to be tested
 			${'linksMap'}=0;															// to be tested
+			${'linksAppleStore'}=0;														// to be tested
 			${'linksGooglePlay'}=0;														// to be tested
 			${'linksKalaam'}=0;															// to be tested
 		}
@@ -3911,6 +3919,7 @@ if (isset($_POST['btnSubmit'])) {
                         <option value="linksOther-1" <?php echo ( isset($_POST['linksOther-1']) ? ($_POST['linksOther-1'] == 1 ? " selected='selected'" : "") : (${'linksOther-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Other</option>
                         <!--option value="linksBuy-1" < ?php echo ( isset($_POST['linksBuy-1']) ? ($_POST['linksBuy-1'] == 1 ? " selected='selected'" : "") : (${'linksBuy-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Buy</option-->
                         <option value="linksMap-1" <?php echo ( isset($_POST['linksMap-1']) ? ($_POST['linksMap-1'] == 1 ? " selected='selected'" : "") : (${'linksMap-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Map</option>
+						<option value="linksAppleStore-1" <?php echo ( isset($_POST['linksAppleStore-1']) ? ($_POST['linksAppleStore-1'] == 1 ? " selected='selected'" : "") : (${'linksAppleStore-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Apple Store</option>
                         <option value="linksGooglePlay-1" <?php echo ( isset($_POST['linksGooglePlay-1']) ? ($_POST['linksGooglePlay-1'] == 1 ? " selected='selected'" : "") : (${'linksGooglePlay-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Google Play</option>
                         <option value="linksKalaam-1" <?php echo ( isset($_POST['linksKalaam-1']) ? ($_POST['linksKalaam-1'] == 1 ? " selected='selected'" : "") : (${'linksKalaam-1'} == 1 ? " selected='selected'" : '' ) ) ?>>Kalaam Media</option>
                     </select>
@@ -3926,23 +3935,27 @@ if (isset($_POST['btnSubmit'])) {
 			$i = 2;
 			if (isset($_POST['txtLinkCompany-'.(string)$i]) || isset($_POST['txtLinkCompanyTitle-'.(string)$i]) || isset($_POST['txtLinkURL-'.(string)$i])) {
 				while (isset($_POST['txtLinkCompany-'.(string)$i]) || isset($_POST['txtLinkCompanyTitle-'.(string)$i]) || isset($_POST['txtLinkURL-'.(string)$i])) {
+					if (isset($_POST['txtLinkCompany-'.(string)$i]) == false) $_POST['txtLinkCompany-'.(string)$i] = '';
+					if (isset($_POST['txtLinkCompanyTitle-'.(string)$i]) == false) $_POST['txtLinkCompanyTitle-'.(string)$i] = '';
+					if (isset($_POST['txtLinkURL-'.(string)$i]) == false) $_POST['txtLinkURL-'.(string)$i] = '';
 					echo "<tr valign='bottom' style='line-height: 10pt; '>";
 						echo "<td width='12%'>";
 							echo "&nbsp;";
 						echo "</td>";
 						echo "<td width='21%'>";
-							echo "<input type='text' name='txtLinkCompany-$i' id='txtLinkCompany-$i' style='color: navy; ' size='25' value='" . ( isset($_POST['txtLinkCompany-'.(string)$i]) ? $_POST['txtLinkCompany-'.(string)$i] : '' ) . "' />";
+							echo "<input type='text' name='txtLinkCompany-$i' id='txtLinkCompany-$i' style='color: navy; ' size='25' value='" . $_POST['txtLinkCompany-'.(string)$i] . "' />";
 						echo "</td>";
 						echo "<td width='21%'>";
-							echo "<input type='text' name='txtLinkCompanyTitle-$i' id='txtLinkCompanyTitle-$i' style='color: navy; ' size='25' value='" . ( isset($_POST['txtLinkCompanyTitle-'.(string)$i]) ? $_POST['txtLinkCompanyTitle-'.(string)$i] : '' ) . "' />";
+							echo "<input type='text' name='txtLinkCompanyTitle-$i' id='txtLinkCompanyTitle-$i' style='color: navy; ' size='25' value='" . $_POST['txtLinkCompanyTitle-'.(string)$i] . "' />";
 						echo "</td>";
 						echo "<td width='22%'>";
-							echo "<input type='text' name='txtLinkURL-$i' id='txtLinkURL-$i' style='color: navy; ' size='27' value='" . ( isset($_POST['txtLinkURL-'.(string)$i]) ? $_POST['txtLinkURL-'.(string)$i] : '' ) . "' />";
+							echo "<input type='text' name='txtLinkURL-$i' id='txtLinkURL-$i' style='color: navy; ' size='27' value='" . $_POST['txtLinkURL-'.(string)$i]. "' />";
 						echo "</td>";
 						echo "<td width='8%'>";
 							if ($_POST['linksIcon-'.(string)$i] == 'linksOther-'.$i) ${'linksOther-$i'}=1; else ${'linksOther-$i'}=0;
 							//if ($_POST['linksIcon-'.(string)$i] == 'linksBuy-'.$i) ${'linksBuy-$i'}=1; else ${'linksBuy-$i'}=0;
 							if ($_POST['linksIcon-'.(string)$i] == 'linksMap-'.$i) ${'linksMap-$i'}=1; else ${'linksMap-$i'}=0;
+							if ($_POST['linksIcon-'.(string)$i] == 'linksAppleStore-'.$i) ${'linksAppleStore-$i'}=1; else ${'linksAppleStore-$i'}=0;
 							if ($_POST['linksIcon-'.(string)$i] == 'linksGooglePlay-'.$i) ${'linksGooglePlay-$i'}=1; else ${'linksGooglePlay-$i'}=0;
 							if ($_POST['linksIcon-'.(string)$i] == 'linksKalaam-'.$i) ${'linksKalaam-$i'}=1; else ${'linksKalaam-$i'}=0;
 							?>
@@ -3950,6 +3963,7 @@ if (isset($_POST['btnSubmit'])) {
                                 <option value="linksOther-<?php echo $i ?>" <?php echo ( isset($_POST['linksOther-'.(string)$i]) ? ($_POST['linksOther-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksOther-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Other</option>
                                 <!--option value="linksBuy-< ?php echo $i ?>" < ?php echo ( isset($_POST['linksBuy-'.(string)$i]) ? ($_POST['linksBuy-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksBuy-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Buy</option-->
                                 <option value="linksMap-<?php echo $i ?>" <?php echo ( isset($_POST['linksMap-'.(string)$i]) ? ($_POST['linksMap-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksMap-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Map</option>
+                                <option value="linksAppleStore-<?php echo $i ?>" <?php echo ( isset($_POST['linksAppleStore-'.(string)$i]) ? ($_POST['linksAppleStore-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksAppleStore-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Apple Store</option>
                                 <option value="linksGooglePlay-<?php echo $i ?>" <?php echo ( isset($_POST['linksGooglePlay-'.(string)$i]) ? ($_POST['linksGooglePlay-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksGooglePlay-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Google Play</option>
                                 <option value="linksKalaam-<?php echo $i ?>" <?php echo ( isset($_POST['linksKalaam-'.(string)$i]) ? ($_POST['linksKalaam-'.(string)$i] == 1 ? " selected='selected'" : '') : (${'linksKalaam-$i'}==1 ? " selected='selected'" : '' ) ) ?>>Kalaam Media</option>
                             </select>
@@ -3970,10 +3984,11 @@ if (isset($_POST['btnSubmit'])) {
 						${'txtLinkURL-$i'}=$r['URL'];
 						//${'linksBuy-$i'}=$r['buy'];
 						${'linksMap-$i'}=$r['map'];
+						${'linksAppleStore-$i'}=$r['AppleStore'];
 						${'linksGooglePlay-$i'}=$r['GooglePlay'];
 						${'linksKalaam-$i'}=$r['Kalaam'];
 						//if (${'linksBuy-$i'} == "1" || ${'linksMap-$i'} == "1" || ${'linksGooglePlay-$i'} == "1" )
-						if (${'linksMap-$i'} == "1" || ${'linksGooglePlay-$i'} == "1" || ${'linksKalaam-$i'} == "1")
+						if (${'linksMap-$i'} == "1" || ${'linksAppleStore-$i'} == "1" || ${'linksGooglePlay-$i'} == "1" || ${'linksKalaam-$i'} == "1")
 							${'linksOther-$i'}="0";
 						else
 							${'linksOther-$i'}="1";
@@ -3996,6 +4011,7 @@ if (isset($_POST['btnSubmit'])) {
 									<option value="linksOther-<?php echo $i ?>" <?php echo ( ${'linksOther-$i'}==1 ? " selected='selected'" : '' ) ?>>Other</option>
 									<!--option value="linksBuy-< ?php echo $i ?>" < ?php echo ( ${'linksBuy-$i'}==1 ? " selected='selected'" : '' ) ?>>Buy</option-->
 									<option value="linksMap-<?php echo $i ?>" <?php echo ( ${'linksMap-$i'}==1 ? " selected='selected'" : '' ) ?>>Map</option>
+									<option value="linksAppleStore-<?php echo $i ?>" <?php echo ( ${'linksAppleStore-$i'}==1 ? " selected='selected'" : '' ) ?>>Apple Store</option>
 									<option value="linksGooglePlay-<?php echo $i ?>" <?php echo ( ${'linksGooglePlay-$i'}==1 ? " selected='selected'" : '' ) ?>>Google Play</option>
 									<option value="linksKalaam-<?php echo $i ?>" <?php echo ( ${'linksKalaam-$i'}==1 ? " selected='selected'" : '' ) ?>>Kalaam Media</option>
 								</select>
@@ -4039,7 +4055,7 @@ if (isset($_POST['btnSubmit'])) {
 		$i=1;
 		$num = 0;
 		if (isset($_POST['txtPlaylistAudioTitle-'.(string)$i])) {
-			
+
 		}
 		elseif ($SM_row['PlaylistAudio']) {
 			$query="SELECT * FROM PlaylistAudio WHERE ISO_ROD_index = $idx";
@@ -4280,7 +4296,7 @@ if (isset($_POST['btnSubmit'])) {
         </tbody>
 		</table>
 		<br />
-        
+
 		<?php
 /*************************************************
 	"Scripture Resources from eBible.org" checkbox
@@ -4450,7 +4466,7 @@ if (isset($GetName)) {
 // Country Table switches from language names and ISO and vica versa
 ?>
 
-<script type="text/javascript"> 
+<script type="text/javascript">
 // Switch between Language Name or Language Code.
 // This function NEEDS to be at the bottom or less $GetName will be undefined!
 function Switch(number, Beg) {

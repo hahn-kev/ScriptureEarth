@@ -2,7 +2,7 @@
 /*
 links table have ISO, ROD_Code, Variant_Code, and ISO_ROD_index
 
-links table - map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0
+links table - map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0
 	company (text)
     company_title (text)
 	URL (https)
@@ -28,32 +28,35 @@ include 'include/v.key.php';																	// get v and key
 include 'include/idx.iso.php';																	// get idx or iso
 
 if ($index == 0) {
-	die ('HACK!');
+	$marks = json_decode('{"error": "The index is not found."}');
+	header('Content-Type: application/json');
+	echo json_encode($marks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	exit;
 }
 
 if ($index== 1) {
-    $stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE ISO_ROD_index = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+    $stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE ISO_ROD_index = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
     $stmt_links->bind_param('i', $idx);															// bind parameters for markers
 }
 else {
 	if ($iso == 'ALL') {
-		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
 		//$stmt_links->bind_param();														// bind parameters for markers
 	}
 	elseif ($rod == 'ALL' && $var == 'ALL') {
-		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
 		$stmt_links->bind_param('s', $iso);														// bind parameters for markers
 	}
 	elseif ($rod == 'ALL') {
-		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `Variant_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `Variant_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
 		$stmt_links->bind_param('ss', $iso, $var);												// bind parameters for markers
 	}
 	elseif ($var == 'ALL') {
-			$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `ROD_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
-			$stmt_links->bind_param('ss', $iso, $rod);											// bind parameters for markers
+		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `ROD_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+		$stmt_links->bind_param('ss', $iso, $rod);											// bind parameters for markers
 	}
 	else {
-		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `ROD_Code` = ? AND `Variant_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
+		$stmt_links = $db->prepare("SELECT `ISO`, `ROD_Code`, `Variant_Code`, ISO_ROD_index, `company`, `company_title`, `URL` FROM `links` WHERE `ISO` = ? AND `ROD_Code` = ? AND `Variant_Code` = ? AND map = 0 AND buy = 0 AND BibleIs = 0 AND YouVersion = 0 AND `Bibles_org` = 0 AND `GooglePlay` = 0 AND `GRN` = 0 AND `email` = 0 AND `AppleStore` = 0 ORDER BY `ISO`, `ROD_Code`, `Variant_Code`");
 		$stmt_links->bind_param('sss', $iso, $rod, $var);										// bind parameters for markers
 	}
 }
@@ -63,7 +66,10 @@ $result_links = $stmt_links->get_result();
 
 $links_rows = $result_links->num_rows;
 if ($links_rows == 0) {
-	die ('The links table does not exist for website links. Try a different iso or idx.');
+	$marks = json_decode('{"error": "The links table does not exist for website links. Try a different iso or idx."}');
+	header('Content-Type: application/json');
+	echo json_encode($marks, JSON_PRETTY_PRINT | JSON_UNESCAPED_UNICODE);
+	exit;
 }
 
 $stmt_var = $db->prepare("SELECT Variant_Eng FROM Variants WHERE Variant_Code = ?");

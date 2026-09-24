@@ -39,7 +39,7 @@
 	
 	echo "<div style='background-color: white; padding: 20px; width: 1020px; margin-left: auto; margin-right: auto; border-radius: 15px; -moz-border-radius: 15px; -webkit-box-shadow: 15px; '>";
 	
-	$query="INSERT INTO scripture_main (ISO, ROD_Code, Variant_Code, OT_PDF, NT_PDF, FCBH, OT_Audio, NT_Audio, links, other_titles, watch, buy, study, viewer, CellPhone, AddNo, AddTheBibleIn, AddTheScriptureIn, BibleIs, BibleIsGospelFilm, YouVersion, Bibles_org, PlaylistAudio, PlaylistVideo, SAB, eBible, SILlink, GRN) VALUES ('$inputs[iso]', '$inputs[rod]', '$inputs[var]', '$inputs[OT_PDF]', '$inputs[NT_PDF]', 0, '$inputs[OT_Audio]','$inputs[NT_Audio]', '$inputs[links]', '$inputs[other_titles]', '$inputs[watch]', '$inputs[buy]', '$inputs[study]', '$inputs[viewer]', '$inputs[CellPhone]', '$inputs[AddNo]', '$inputs[AddTheBibleIn]', '$inputs[AddTheScriptureIn]', '$inputs[BibleIs]', '$inputs[BibleIsGospelFilm]', '$inputs[YouVersion]', '$inputs[Biblesorg]', '$inputs[AudioPlaylist]', '$inputs[VideoPlaylist]', '$inputs[SAB]', '$inputs[eBible]', '$inputs[SILlink]', '$inputs[GRN]')";
+	$query="INSERT INTO scripture_main (ISO, ROD_Code, Variant_Code, OT_PDF, NT_PDF, FCBH, OT_Audio, NT_Audio, links, other_titles, watch, buy, study, viewer, CellPhone, AddNo, AddTheBibleIn, AddTheScriptureIn, BibleIs, BibleIsGospelFilm, YouVersion, Bibles_org, PlaylistAudio, PlaylistVideo, SAB, eBible, SILlink, GRN) VALUES ('$inputs[iso]', '$inputs[rod]', '$inputs[var]', '$inputs[OT_PDF]', '$inputs[NT_PDF]', 0, '$inputs[OT_Audio]', '$inputs[NT_Audio]', '$inputs[links]', '$inputs[other_titles]', '$inputs[watch]', '$inputs[buy]', '$inputs[study]', '$inputs[viewer]', '$inputs[CellPhone]', '$inputs[AddNo]', '$inputs[AddTheBibleIn]', '$inputs[AddTheScriptureIn]', '$inputs[BibleIs]', '$inputs[BibleIsGospelFilm]', '$inputs[YouVersion]', '$inputs[Biblesorg]', '$inputs[AudioPlaylist]', '$inputs[VideoPlaylist]', '$inputs[SAB]', '$inputs[eBible]', '$inputs[SILlink]', '$inputs[GRN]')";
 	$result=$db->query($query);
 	if (!$result) {
 		die('Could not insert the data in "scripture_main": ' . $db->error);
@@ -580,10 +580,10 @@
 		$stmt_buy->close();
 	}
 
-// links: map, GooglePlay, and Kalaam
+// links: other, map, AppleStore, GooglePlay, and Kalaam
 	if ($inputs['links']) {
 		$i = 1;
-		$query="INSERT INTO links (ISO, ROD_Code, Variant_Code, ISO_ROD_index, company, company_title, `URL`, buy, map, GooglePlay, Kalaam) VALUES ('$inputs[iso]', '$inputs[rod]', '$inputs[var]', $idx, ?, ?, ?, 0, ?, ?, ?)";
+		$query="INSERT INTO links (ISO, ROD_Code, Variant_Code, ISO_ROD_index, company, company_title, `URL`, buy, map, GooglePlay, Kalaam, AppleStore) VALUES ('$inputs[iso]', '$inputs[rod]', '$inputs[var]', $idx, ?, ?, ?, 0, ?, ?, ?, ?)";
 		$stmt_links=$db->prepare($query);
 		while (isset($inputs["txtLinkCompany-".(string)$i])) {
 			$temp1 = "txtLinkCompany-".(string)$i;
@@ -593,7 +593,8 @@
 			$temp5 = "linksMap-$i";
 			$temp6 = "linksGooglePlay-$i";
 			$temp7 = "linksKalaam-$i";
-			$stmt_links->bind_param("sssiii", $inputs[$temp1], $inputs[$temp2], $inputs[$temp3], $inputs[$temp5], $inputs[$temp6], $inputs[$temp7]);		// bind parameters for markers
+			$temp8 = "linksAppleStore-$i";
+			$stmt_links->bind_param("sssiiii", $inputs[$temp1], $inputs[$temp2], $inputs[$temp3], $inputs[$temp5], $inputs[$temp6], $inputs[$temp7], $inputs[$temp8]);		// bind parameters for markers
 			$result=$stmt_links->execute();														// execute query
 			if (!$result) {
 				echo 'Could not insert the data "links": ' . $db->error;
