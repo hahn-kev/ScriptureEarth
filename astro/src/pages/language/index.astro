@@ -1,0 +1,89 @@
+---
+// /language/ — resolver landing for legacy query-string deep links (REDIRECTS.md §L6).
+//
+// functions/index.php.js can turn ?iso=&rod=&var= into a slug by string assembly, but
+// two legacy forms need a lookup it cannot do at the edge:
+//   ?idx=<n>   machine-generated integer key      → /language/?idx=<n>
+//   ?iso=<x>   bare ISO with no ROD/variant       → /language/?iso=<x>
+// This page bakes the idx→slug map (~55 KB, only ever loaded by these rare hits) and
+// resolves client-side: a unique target redirects immediately; an ISO shared by several
+// entries (96 of ~4,100) shows those entries as cards to pick from. Without JS the page
+// still offers search + browse.
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import LangCard from '../../components/LangCard.astro';
+
+const langs = (await getCollection('languages')).map((l) => l.data);
+
+const idxToSlug: Record<string, string> = {};
+const byIso: Record<string, any[]> = {};
+for (const d of langs) {
+  idxToSlug[String(d.idx)] = d.identity.slug;
+  const iso = String(d.identity.iso).toLowerCase();
+  (byIso[iso] ??= []).push(d);
+}
+// ISOs with one entry resolve to that entry's slug; ISOs with several are listed below.
+const isoToSlug: Record<string, string> = {};
+const multi: { iso: string; list: any[] }[] = [];
+for (const [iso, list] of Object.entries(byIso)) {
+  if (list.length === 1) isoToSlug[iso] = list[0].identity.slug;
+  else multi.push({ iso, list: list.sort((a, b) => a.identity.slug.localeCompare(b.identity.slug)) });
+}
+const map = { idx: idxToSlug, iso: isoToSlug, multi: multi.map((m) => m.iso) };
+---
+<Base title="Find a language — ScriptureEarth">
+  <section class="block shell">
+    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><span data-i18n="nav.languages">Languages</span></nav>
+
+    <div id="resolving" class="sec-head">
+      <div><p class="eyebrow">Redirecting</p><h2>Finding the language page…</h2></div>
+    </div>
+
+    <div id="choose" class="sec-head" hidden>
+      <div><p class="eyebrow">Several entries</p><h2>Which <code id="choose-iso"></code> did you mean?</h2></div>
+    </div>
+    {multi.map(({ iso, list }) => (
+      <div class="lang-grid opts" data-iso={iso} hidden>
+        {list.map((d) => <LangCard d={d} />)}
+      </div>
+    ))}
+
+    <div id="notfound" class="sec-head" hidden>
+      <div><p class="eyebrow">Not found</p><h2>We couldn’t find that language</h2></div>
+    </div>
+    <p id="fallback" hidden>
+      Try the <a href="/">search</a> on the home page, or <a href="/browse/">browse all languages</a>
+      and <a href="/countries/">countries</a>.
+    </p>
+    <noscript>
+      <p>Use the <a href="/">search</a> on the home page, or <a href="/browse/">browse all languages</a>.</p>
+    </noscript>
+  </section>
+
+  <script type="application/json" id="se-lang-map" set:html={JSON.stringify(map)} />
+  <script is:inline>
+    (() => {
+      const map = JSON.parse(document.getElementById('se-lang-map').textContent);
+      const q = new URLSearchParams(location.search);
+      const idx = (q.get('idx') || q.get('ISO_ROD_index') || '').trim();
+      const iso = (q.get('iso') || q.get('name') || '').trim().toLowerCase();
+      const show = (id) => { document.getElementById(id).hidden = false; };
+      document.getElementById('resolving').hidden = true;
+
+      let slug = null;
+      if (idx && map.idx[idx]) slug = map.idx[idx];
+      else if (iso && map.iso[iso]) slug = map.iso[iso];
+      if (slug) { location.replace(`/language/${slug}/`); return; }
+
+      if (iso && map.multi.includes(iso)) {
+        document.getElementById('choose-iso').textContent = iso;
+        show('choose');
+        document.querySelector(`.opts[data-iso="${iso}"]`).hidden = false;
+        if (window.__seApplyI18n) window.__seApplyI18n(document);
+        return;
+      }
+      show('notfound');
+      show('fallback');
+    })();
+  </script>
+</Base>

@@ -16,7 +16,7 @@ This is what collapses ~3,779 legacy rows to 3 rules and removes the iso→idx l
 | Group | Rows | Effect |
 |---|---|---|
 | L1 HTTP→HTTPS / www→apex | 0 | **Not in this file** — handled by CF "Always Use HTTPS" + one www→apex Redirect Rule (see below). |
-| Precedence guards | 11 | Reserved dirs (`/browse/ /country/ /language/ /i18n/ /pagefind/`) + the 5 known top-level dotted assets. `200` = serve-in-place, stops matching, so the `/:iso` catch-all can't shadow them. |
+| Precedence guards | 10 | Reserved dirs (`/assets/ /browse/ /country/ /language/ /i18n/`) + the 5 known top-level dotted assets. `200` = serve-in-place, stops matching, so the `/:iso` catch-all can't shadow them. |
 | L3/L4/L5 homepages + aliases | 17 | 10 `00<loc>.php` + 6 localized alias index files → `/?lang=<loc>` (301); `/index.php` → `/` (302, provisional). |
 | L2 vanity → detail | 3 | `/:iso-:rod-:var`, `/:iso-:rod`, `/:iso` → `/language/<same>/` (301). Most-specific first. Replaces all 3,779 legacy `Redirect 301` lines 1:1, no lookup. |
 
@@ -24,11 +24,11 @@ This is what collapses ~3,779 legacy rows to 3 rules and removes the iso→idx l
 Bails out (`next()`) on any non-`.php` request. On a `.php` path it maps:
 - `?sortby=country&name=<CC>` → `/country/<CC>/` (301); `name=all`/empty → `/browse/` (301).  *(L7)*
 - `?idx=` / `?ISO_ROD_index=<n>` → `/language/?idx=<n>` (302) for a **client resolver** to finish.  *(L6 idx-form)*
-- `?iso=`/`?name=` (+ `rod`/`ROD_Code`, `var`/`Variant_Code`) → `/language/<slug>/` (301); bare `?iso=` → `/browse/?iso=<iso>` (302).  *(L3/L6 iso-form)*
+- `?iso=`/`?name=` (+ `rod`/`ROD_Code`, `var`/`Variant_Code`) → `/language/<slug>/` (301); bare `?iso=` → `/language/?iso=<iso>` (302), resolved by the same landing page.  *(L3/L6 iso-form)*
 - `.php` with no recognized query → `next()`, so `_redirects` maps it to `/` + `?lang=`.
 
-**`?idx=` client resolver (built elsewhere, not here):** the `/language/` landing reads `?idx=`
-from the URL and looks it up in the already-shipped `public/search-index.json` (keyed by `idx`),
+**`?idx=` / bare `?iso=` client resolver:** `src/pages/language/index.astro` bakes an idx→slug map (~55 KB,
+loaded only by these rare hits), redirects to the unique target, or lists the entries sharing an ISO (96 multi-ROD ISOs),
 then `location.replace('/language/<slug>/')`. Chosen over an edge lookup because these URLs are
 rare/machine-generated (§3.4). The search index currently carries `idx` + `code` (iso) but **not**
 `rod`/`var`/`slug` — the resolver needs a `slug` (or `rod`+`var`) field added to each index row, or

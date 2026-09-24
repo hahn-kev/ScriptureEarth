@@ -25,8 +25,8 @@ export const onRequest = (context) => {
   }
 
   // L6 — idx-keyed deep links (rare, machine-generated). Target slug is the iso string,
-  // not the integer, so this one still needs a lookup: route to a /language/ landing whose
-  // JS resolves ?idx= against the shipped search-index.json. 302 while provisional.
+  // not the integer, so this one needs a lookup: route to the /language/ resolver page
+  // (src/pages/language/index.astro), which bakes the idx→slug map and redirects client-side.
   const idx = q.get('idx') || q.get('ISO_ROD_index');
   if (idx && /^\d+$/.test(idx)) return redir(`/language/?idx=${idx}`, 302);
 
@@ -39,7 +39,7 @@ export const onRequest = (context) => {
     let slug = iso;
     if (rod) slug += `-${rod}`;
     if (varc) slug += `-${varc}`;
-    if (!rod && !varc) return redir(`/browse/?iso=${iso}`, 302);   // bare iso is ambiguous (multi-ROD)
+    if (!rod && !varc) return redir(`/language/?iso=${iso}`, 302); // bare iso may be shared by several entries (multi-ROD) → resolver page
     return redir(`/language/${slug}/`, 301);
   }
 

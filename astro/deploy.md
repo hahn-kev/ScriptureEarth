@@ -13,6 +13,7 @@ is always run from this `astro/` dir so it picks up `functions/` alongside `dist
 | Trigger | Workflow | What happens |
 |---|---|---|
 | push to `main` | `.github/workflows/deploy.yml` | fetch dump → build → `pnpm run deploy` → **production** |
+| manual | `.github/workflows/deploy.yml` (Run workflow) | same |
 | PR to `main` touching `astro/**` | `.github/workflows/preview.yml` | same build, `wrangler pages deploy --branch <pr-branch>` → per-branch **preview URL** posted as a PR comment |
 | PR to `main` touching `astro/**` | `.github/workflows/size-benchmark.yml` | build, diff `dist/assets/sizes.json` against production, sticky comment, fail on budget breach |
 
@@ -58,6 +59,13 @@ First-time only, if recreating the project:
   path is served as a pure static file and is not counted as a Functions invocation.
 - **`public/_headers`** — immutable caching for `/_astro/*` and `/i18n/*`; `precompress_dist.mjs` appends
   the `Content-Encoding: br` rule for the search index.
+
+## Go-live checklist (Cloudflare dashboard, not this repo)
+- Add the custom domain to the Pages project (Pages → Custom domains).
+- SSL/TLS → **Always Use HTTPS** on.
+- One Redirect Rule: `www.scriptureearth.org/*` → apex (301). `_redirects` cannot express host redirects.
+- Keep the legacy PHP host reachable: media, the `/api/db_dump.php` build source, and the CMS still live there
+  (the static site links out to `scriptureearth.org/data/...` assets).
 
 ## Notes
 - **Routing:** absolute paths + trailing slashes work at the `pages.dev` root as-is; no base-path config.
