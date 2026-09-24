@@ -1,29 +1,34 @@
-name: Preview (astro-poc PRs)
+name: Preview
 
-# Cloudflare Pages *preview* deployment for pull requests targeting astro-poc.
-# Same from-scratch build as astro-poc.yml (fetch JSON dump -> project content/ ->
-# astro build), but deployed with --branch <pr-branch> so Cloudflare treats it
-# as a preview and mints a per-branch URL, which is posted back as a PR comment.
+# Cloudflare Pages *preview* deployment for pull requests targeting main that touch
+# the site. Same from-scratch build as deploy.yml, but deployed with
+# --branch <pr-branch> so Cloudflare mints a per-branch preview URL, which is
+# posted back as a sticky PR comment.
 #
-# The job self-gates: until every prerequisite is configured it skips (green)
-# with a notice, so PRs are not blocked by a red check before the credentials
-# exist. Required configuration:
+# The job self-gates: until every prerequisite is configured it skips (green) with
+# a notice, so PRs are not blocked by a red check. Required configuration:
 #   secrets.SE_KEY                 API key for the dump endpoint
-#   vars.SE_DUMP_PATH              (optional) dump endpoint path (default /api/db_dump.php)
-#   vars.SE_BASE                   (optional) API host (default https://www.scriptureearth.org)
 #   secrets.CLOUDFLARE_API_TOKEN   token with Account · Cloudflare Pages · Edit
 #   secrets.CLOUDFLARE_ACCOUNT_ID  Cloudflare account id
+#   vars.SE_BASE / vars.SE_DUMP_PATH  (optional) endpoint overrides
+#
+# Fork-PR caveat: on a pull_request from a fork, secrets are unavailable, so the
+# gate skips. Same-repo branches work as-is.
 
 on:
   pull_request:
-    branches: [astro-poc]
+    branches: [main]
+    paths:
+      - 'astro/**'
+      - '.github/workflows/preview.yml'
+      - '.github/actions/**'
 
 permissions:
   contents: read
   pull-requests: write
 
 concurrency:
-  group: astro-preview-${{ github.event.pull_request.number }}
+  group: preview-${{ github.event.pull_request.number }}
   cancel-in-progress: true
 
 jobs:
@@ -50,48 +55,34 @@ jobs:
     needs: gate
     if: needs.gate.outputs.ready == 'true'
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: astro
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
-        with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: astro/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Fetch JSON dump
-        run: npm run fetch:dump
-        env:
-          SE_KEY: ${{ secrets.SE_KEY }}
-          SE_BASE: ${{ vars.SE_BASE }}
-          SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
-
       - name: Build site
-        run: npm run build:dump # project scripture.json → content/ then astro build (extract.mjs fetches video playlist .txt listings from the server)
+        uses: ./.github/actions/build-site
+        with:
+          se-key: ${{ secrets.SE_KEY }}
+          se-base: ${{ vars.SE_BASE }}
+          se-dump-path: ${{ vars.SE_DUMP_PATH }}
 
       - name: Precompress dist
-        run: npm run predeploy
+        working-directory: astro
+        run: pnpm run predeploy
 
       - name: Deploy preview to Cloudflare Pages
         id: deploy
-        uses: cloudflare/wrangler-action@v3
+        uses: cloudflare/wrangler-action@v4
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           workingDirectory: astro
+          packageManager: pnpm
           command: pages deploy dist --project-name=se-proto-en --branch=${{ github.head_ref }}
 
       - name: Comment preview URL
         if: steps.deploy.outputs.deployment-url != ''
-        uses: actions/github-script@v7
+        uses: actions/github-script@v9
         env:
           PREVIEW_URL: ${{ steps.deploy.outputs.deployment-url }}
           ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
