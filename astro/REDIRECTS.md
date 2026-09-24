@@ -16,23 +16,23 @@ This is what collapses ~3,779 legacy rows to 3 rules and removes the iso→idx l
 | Group | Rows | Effect |
 |---|---|---|
 | L1 HTTP→HTTPS / www→apex | 0 | **Not in this file** — handled by CF "Always Use HTTPS" + one www→apex Redirect Rule (see below). |
-| Precedence guards | 11 | Reserved dirs (`/browse/ /country/ /language/ /i18n/ /pagefind/`) + the 5 known top-level dotted assets. `200` = serve-in-place, stops matching, so the `/:iso` catch-all can't shadow them. |
+| Precedence guards | 10 | Reserved dirs (`/assets/ /browse/ /country/ /language/ /i18n/`) + the 5 known top-level dotted assets. `200` = serve-in-place, stops matching, so the `/:iso` catch-all can't shadow them. |
 | L3/L4/L5 homepages + aliases | 17 | 10 `00<loc>.php` + 6 localized alias index files → `/?lang=<loc>` (301); `/index.php` → `/` (302, provisional). |
 | L2 vanity → detail | 3 | `/:iso-:rod-:var`, `/:iso-:rod`, `/:iso` → `/language/<same>/` (301). Most-specific first. Replaces all 3,779 legacy `Redirect 301` lines 1:1, no lookup. |
 
 ### `functions/index.php.js` (query-string deep links)
 Bails out (`next()`) on any non-`.php` request. On a `.php` path it maps:
 - `?sortby=country&name=<CC>` → `/country/<CC>/` (301); `name=all`/empty → `/browse/` (301).  *(L7)*
-- `?idx=` / `?ISO_ROD_index=<n>` → `/language/?idx=<n>` (302) for a **client resolver** to finish.  *(L6 idx-form)*
-- `?iso=`/`?name=` (+ `rod`/`ROD_Code`, `var`/`Variant_Code`) → `/language/<slug>/` (301); bare `?iso=` → `/browse/?iso=<iso>` (302).  *(L3/L6 iso-form)*
+- `?idx=` / `?ISO_ROD_index=<n>` → `/language/<slug>/` (301) via the bundled idx→slug map; unknown idx → `/language/?idx=<n>` (302, not-found page).  *(L6 idx-form)*
+- `?iso=`/`?name=` (+ `rod`/`ROD_Code`, `var`/`Variant_Code`) → `/language/<slug>/` (301) when that slug exists; bare `?iso=` with one entry → its slug (301); an ISO shared by several entries → `/language/?iso=<iso>` (302, chooser page); unknown → same page, not-found.  *(L3/L6 iso-form)*
 - `.php` with no recognized query → `next()`, so `_redirects` maps it to `/` + `?lang=`.
 
-**`?idx=` client resolver (built elsewhere, not here):** the `/language/` landing reads `?idx=`
-from the URL and looks it up in the already-shipped `public/search-index.json` (keyed by `idx`),
-then `location.replace('/language/<slug>/')`. Chosen over an edge lookup because these URLs are
-rare/machine-generated (§3.4). The search index currently carries `idx` + `code` (iso) but **not**
-`rod`/`var`/`slug` — the resolver needs a `slug` (or `rod`+`var`) field added to each index row, or
-it can only resolve single-entry isos. Flag for whoever builds the resolver / extends the extractor.
+**Lookup map:** `scripts/extract.mjs` writes `content/lang-map.json` (`idx` → slug for every entry, `iso` → slug
+for the ~4,000 ISOs with exactly one entry, `multi` = the 96 ISOs shared by several entries). The Function
+imports it, so wrangler bundles it into the Worker at deploy time (~100 KB, one property read per request;
+a deploy therefore always needs a prior extract, as `dist/` does). The only case that cannot be resolved
+at the edge — a shared ISO with no ROD — goes to `src/pages/language/index.astro`, which bakes just those
+96 card groups and shows the matching one as a chooser (not-found fallback otherwise).
 
 ## Cap headroom
 Cloudflare Pages cap: **2,000 static + 100 dynamic = 2,100**.
@@ -57,8 +57,7 @@ Pages); with no deep-link query it calls `next()` and the static `.php` rules fi
 ## Caveats for the build team
 1. **Adopt slug=(B).** Everything here assumes the public route is the iso-vanity slug with `idx` kept
    internal. If the team keeps raw `[idx]` in the URL, the `?iso=`→slug map still works but the vanity
-   `_redirects` rules and the `?idx=` client-resolve both need a real idx↔slug map (edge Function
-   mandatory) — see research/08 §3.4.
+   `_redirects` rules need a real idx↔slug map — see research/08 §3.4 (the Function already bundles one).
 2. **HTTP→HTTPS / www→apex** live in CF settings, not this repo: enable *SSL/TLS → Always Use HTTPS*
    and add a Bulk/Single Redirect `www.scriptureearth.org/* → https://scriptureearth.org/:splat` (301).
 3. **New top-level dotted assets** must get a guard line in `_redirects`, or the `/:iso` catch-all will

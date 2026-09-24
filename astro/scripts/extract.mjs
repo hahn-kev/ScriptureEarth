@@ -448,8 +448,14 @@ function auditData(ents, langs) {
   console.error(`  watch titles: ${wTitled}/${wRows}   buy titles: ${bTitled}/${bRows}`);
   if (wRows > 0 && wTitled === 0) failures.push('watch: 0 rows have a real title (dump omits watch_what/organization)');
   if (bRows > 0 && bTitled === 0) failures.push('buy: 0 rows have a real title (dump omits buy_what/organization)');
-  if (langs.length < Number(process.env.SE_MIN_LANGS || 4000)) failures.push(`only ${langs.length} languages (< ${process.env.SE_MIN_LANGS || 4000})`);
   return failures;
+}
+
+// Hard floor, independent of SE_STRICT: a truncated or partial dump must never reach a deploy.
+const MIN_LANGS = Number(process.env.SE_MIN_LANGS || 4000);
+if (languages.length < MIN_LANGS) {
+  console.error(`FATAL: only ${languages.length} languages projected (< SE_MIN_LANGS=${MIN_LANGS}) — refusing to write content/.`);
+  process.exit(1);
 }
 
 const auditFailures = auditData(entries, languages);
@@ -466,5 +472,19 @@ console.error('writing content/...');
 dump('languages.json', languages);
 dump('countries.json', countriesOut);
 dump('search-index.json', search);
+// Legacy-URL resolver map for functions/index.php.js (bundled into the Pages Function at
+// deploy time). idx -> slug for ?idx= deep links; iso -> slug for ISOs with exactly one
+// entry; multi = ISOs shared by several entries (the /language/ chooser page handles those).
+{
+  const idx = {}, byIso = {};
+  for (const d of languages) {
+    idx[String(d.idx)] = d.identity.slug;
+    const iso = String(d.identity.iso).toLowerCase();
+    (byIso[iso] ??= []).push(d.identity.slug);
+  }
+  const iso = {}, multi = [];
+  for (const [k, slugs] of Object.entries(byIso)) (slugs.length === 1 ? (iso[k] = slugs[0]) : multi.push(k));
+  dump('lang-map.json', { idx, iso, multi: multi.sort() });
+}
 
 console.error(`done in ${((Date.now() - t0) / 1000).toFixed(1)}s  (${languages.length} languages, ${countriesOut.length} countries)`);
