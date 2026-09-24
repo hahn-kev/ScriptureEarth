@@ -472,5 +472,19 @@ console.error('writing content/...');
 dump('languages.json', languages);
 dump('countries.json', countriesOut);
 dump('search-index.json', search);
+// Legacy-URL resolver map for functions/index.php.js (bundled into the Pages Function at
+// deploy time). idx -> slug for ?idx= deep links; iso -> slug for ISOs with exactly one
+// entry; multi = ISOs shared by several entries (the /language/ chooser page handles those).
+{
+  const idx = {}, byIso = {};
+  for (const d of languages) {
+    idx[String(d.idx)] = d.identity.slug;
+    const iso = String(d.identity.iso).toLowerCase();
+    (byIso[iso] ??= []).push(d.identity.slug);
+  }
+  const iso = {}, multi = [];
+  for (const [k, slugs] of Object.entries(byIso)) (slugs.length === 1 ? (iso[k] = slugs[0]) : multi.push(k));
+  dump('lang-map.json', { idx, iso, multi: multi.sort() });
+}
 
 console.error(`done in ${((Date.now() - t0) / 1000).toFixed(1)}s  (${languages.length} languages, ${countriesOut.length} countries)`);

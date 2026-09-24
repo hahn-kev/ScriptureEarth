@@ -100,5 +100,5 @@ there is no `countries.<loc>.json`, so country names on cards, detail pages and 
 English in every locale (ticket 14 wrinkle). The dump carries `countries_names` per locale, so the
 catalog could be seeded from it and applied via a `data-i18n-country=<CC>` hook.
 
-### 10. The `/language/` resolver and `/404` pages are English-only
+### 10. The `/language/` chooser and `/404` pages are English-only
 Their few strings have no `data-i18n` keys (adding keys means touching all 14 chrome catalogs).
