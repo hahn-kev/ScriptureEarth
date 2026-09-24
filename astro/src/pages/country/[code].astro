@@ -19,7 +19,7 @@ const { d, list } = Astro.props;
 ---
 <Base title={`${d.name.eng} — ScriptureEarth`}>
   <section class="block shell">
-    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><a href="/countries/" data-i18n="nav.countries">Countries</a><span>›</span><span>{d.name.eng}</span></nav>
+    <nav class="crumbs"><a href="/"><span class="ic ic-home" aria-hidden="true"></span><span data-i18n="crumb.home">Home</span></a><span>›</span><a href="/countries/" data-i18n="nav.countries">Countries</a><span>›</span><span>{d.name.eng}</span></nav>
     <div class="sec-head"><div><p class="eyebrow" data-i18n="country.eyebrow">Country</p><h2>{d.name.eng}</h2></div><span class="facet-count"><span class="tnum">{d.languages.length}</span> <span data-i18n="unit.languages">language(s)</span></span></div>
     <div class="lang-grid">
       {list.map((lang: any) => <LangCard d={lang} />)}

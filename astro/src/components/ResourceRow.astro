@@ -1,5 +1,5 @@
 ---
-import { actionLabel, actionSlug } from '../lib/ui';
+import { actionIcon, actionLabel, actionSlug, badge } from '../lib/ui';
 
 interface Props { group: string; r: any; }
 const { group, r } = Astro.props;
@@ -10,26 +10,29 @@ const mediaKind = isAudio ? 'audio' : 'video';
 const clipWord = isAudio ? 'tracks' : 'clips';
 const clipFmt = isAudio ? 'Track' : 'Clip';
 const clipAction = isAudio ? 'Play' : 'Watch';
+const clipIcon = isAudio ? 'play' : 'watch';
+const icon = actionIcon(group, r.kind);
+const fmt = badge(group, r);
 // A direct media file can play inline (<video>/<audio>) and offer a download; an
 // external watch page (jesusfilm.org, youtube, …) can't, so it keeps its link.
 const isMedia = (u: string) => /\.(mp4|m4v|webm|ogv|ogg|mp3|m4a|wav|aac|flac)(\?|$)/i.test(String(u || ''));
 const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist header, etc.
 ---
 <div class="res-row">
-  <span class="fmt">{r.format}</span>
+  <span class="fmt" role="img" aria-label={fmt.label} title={fmt.label}><span class={`ic ic-${fmt.icon}`}></span></span>
   <div>
     <div class="rr-name">{r.name}</div>
     {r.source && <div class="rr-src">{r.source}</div>}
   </div>
   {rowPlayer
     ? <span class="clip-actions">
-        <button type="button" class="act" data-play data-src={r.url} data-kind={mediaKind}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</button>
+        <button type="button" class="act" data-play data-src={r.url} data-kind={mediaKind}><span class={`ic ic-${icon}`} aria-hidden="true"></span><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</button>
         {r.meta?.zipUrl
-          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer">Download all</a>
-          : <a class="act dl" href={r.url} download>Download</a>}
+          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer"><span class="ic ic-download" aria-hidden="true"></span>Download all</a>
+          : <a class="act dl" href={r.url} download><span class="ic ic-download" aria-hidden="true"></span>Download</a>}
       </span>
     : r.url
-      ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
+      ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span class={`ic ic-${icon}`} aria-hidden="true"></span><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
       : <span class="act muted">—</span>}
 </div>
 {clips && (
@@ -39,14 +42,14 @@ const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist he
       <div class="res-row">
         {c.image
           ? <img class="clip-thumb" src={c.image} alt="" loading="lazy" width="64" height="36" />
-          : <span class="fmt">{clipFmt}</span>}
+          : <span class="fmt" role="img" aria-label={clipFmt} title={clipFmt}><span class={`ic ic-${badge(group, c).icon}`}></span></span>}
         <div><div class="rr-name">{c.title}</div></div>
         {isMedia(c.url)
           ? <span class="clip-actions">
-              <button type="button" class="act" data-play data-src={c.url} data-kind={mediaKind}>{clipAction} →</button>
-              <a class="act dl" href={c.url} download>Download</a>
+              <button type="button" class="act" data-play data-src={c.url} data-kind={mediaKind}><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span>{clipAction} →</button>
+              <a class="act dl" href={c.url} download><span class="ic ic-download" aria-hidden="true"></span>Download</a>
             </span>
-          : <a class="act" href={c.url} target="_blank" rel="noopener noreferrer">{clipAction} →</a>}
+          : <a class="act" href={c.url} target="_blank" rel="noopener noreferrer"><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span>{clipAction} →</a>}
       </div>
     ))}
   </details>

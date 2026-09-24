@@ -172,6 +172,9 @@ nav.main {
   flex-wrap: wrap;
 }
 nav.main a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   color: var(--text);
   font-weight: 600;
   font-size: 0.95rem;
@@ -200,17 +203,31 @@ nav.main a[aria-current="page"] {
   width: 100%;
   outline: none;
 }
-.locale-pick {
+.locale-wrap {
   margin-inline-start: var(--s3);
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
   background: var(--surface-2);
   border: 1px solid var(--border);
   border-radius: var(--pill);
+  padding: 0 0.7rem;
+  color: var(--muted);
+  cursor: pointer;
+}
+.locale-pick {
+  background: transparent;
+  border: 0;
   color: var(--text);
   font: inherit;
   font-size: 0.86rem;
   font-weight: 600;
-  padding: 0.35rem 0.7rem;
+  padding: 0.35rem 0;
   cursor: pointer;
+}
+.mag {
+  color: var(--muted);
+  font-size: 1.15em;
 }
 section.block {
   padding-block: var(--s7);
@@ -280,6 +297,9 @@ section.block {
 .stats .stat span {
   color: var(--muted);
   font-size: 0.9rem;
+}
+.stats .stat .ic {
+  vertical-align: -0.2em;
 }
 .facets {
   display: flex;
@@ -456,41 +476,24 @@ section.block {
   border: 1px solid var(--border);
   color: var(--muted);
 }
-.pill .dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
-}
-.pill[data-r="read"] .dot {
-  background: var(--r-read);
+.pill .ic {
+  font-size: 1rem;
 }
 .pill[data-r="read"] {
   color: var(--r-read);
   border-color: color-mix(in srgb, var(--r-read) 35%, transparent);
 }
-.pill[data-r="listen"] .dot {
-  background: var(--r-listen);
-}
 .pill[data-r="listen"] {
   color: var(--r-listen);
   border-color: color-mix(in srgb, var(--r-listen) 35%, transparent);
-}
-.pill[data-r="watch"] .dot {
-  background: var(--r-watch);
 }
 .pill[data-r="watch"] {
   color: var(--r-watch);
   border-color: color-mix(in srgb, var(--r-watch) 35%, transparent);
 }
-.pill[data-r="app"] .dot {
-  background: var(--r-app);
-}
 .pill[data-r="app"] {
   color: var(--r-app);
   border-color: color-mix(in srgb, var(--r-app) 35%, transparent);
-}
-.pill[data-r="buy"] .dot {
-  background: var(--r-buy);
 }
 .pill[data-r="buy"] {
   color: var(--r-buy);
@@ -505,6 +508,9 @@ section.block {
   margin-bottom: var(--s4);
 }
 .crumbs a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
   color: var(--muted);
 }
 .crumbs a:hover {
@@ -557,15 +563,13 @@ section.block {
   padding: var(--s4) var(--s5);
   border-bottom: 1px solid var(--border);
 }
-.rg-head .lead-dot {
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
+.rg-head .ic {
+  font-size: 1.35rem;
 }
-.rg-head .lead-dot[data-r="read"] { background: var(--r-read); }
-.rg-head .lead-dot[data-r="listen"] { background: var(--r-listen); }
-.rg-head .lead-dot[data-r="watch"] { background: var(--r-watch); }
-.rg-head .lead-dot[data-r="use"] { background: var(--r-app); }
+.ic[data-r="read"] { color: var(--r-read); }
+.ic[data-r="listen"] { color: var(--r-listen); }
+.ic[data-r="watch"] { color: var(--r-watch); }
+.ic[data-r="use"] { color: var(--r-app); }
 .rg-head h3 {
   font-size: 1.05rem;
 }
@@ -593,14 +597,15 @@ section.block {
   background: var(--border);
 }
 .res-row .fmt {
-  font-family: var(--mono);
-  font-size: 0.74rem;
-  text-transform: uppercase;
-  letter-spacing: 0.03em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.25rem;
+  height: 1.75rem;
+  font-size: 1.2rem;
   color: var(--muted);
   border: 1px solid var(--border);
   border-radius: 5px;
-  padding: 0.1rem 0.4rem;
   flex: 0 0 auto;
 }
 .res-row .rr-name {
@@ -644,6 +649,9 @@ button.act:hover {
 .act.dl {
   font-weight: 500;
   color: var(--muted);
+}
+.act .ic {
+  font-size: 1.15em;
 }
 .act.dl:hover {
   color: var(--accent);
@@ -703,7 +711,8 @@ aside.side .toc {
 }
 aside.side .toc a {
   display: flex;
-  justify-content: space-between;
+  align-items: center;
+  gap: 0.4rem;
   padding: 0.35rem 0.5rem;
   border-radius: 6px;
   color: var(--text);
@@ -713,6 +722,7 @@ aside.side .toc a:hover {
   background: var(--tint);
 }
 aside.side .toc a .c {
+  margin-inline-start: auto;
   color: var(--muted);
   font-variant-numeric: tabular-nums;
 }

@@ -4,8 +4,27 @@
     {
       "name": "astro-dev",
       "runtimeExecutable": "pnpm",
-      "runtimeArgs": ["-C", "astro", "run", "dev"],
+      "runtimeArgs": [
+        "-C",
+        "astro",
+        "run",
+        "dev"
+      ],
       "port": 4321
+    },
+    {
+      "name": "astro-preview",
+      "runtimeExecutable": "pnpm",
+      "runtimeArgs": [
+        "-C",
+        "astro",
+        "exec",
+        "astro",
+        "preview",
+        "--port",
+        "4330"
+      ],
+      "port": 4330
     }
   ]
 }
