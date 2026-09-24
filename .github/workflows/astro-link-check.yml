@@ -1,0 +1,111 @@
+name: External link check (astro)
+
+# One-off, manually-triggered audit of every EXTERNAL resource URL in the baked
+# catalog. Fetches the JSON dump, projects it to content/, then runs
+# scripts/check_links.mjs. Deduplicates URLs across languages, collapses
+# playlists to their first item, and hits each host one request at a time with a
+# delay so no site is overwhelmed. The report is uploaded as an artifact and
+# summarised in the run's job summary.
+#
+#   secrets.SE_KEY     (required)  API key for the dump endpoint
+#   vars.SE_BASE       (optional)  API host      (default https://www.scriptureearth.org)
+#   vars.SE_DUMP_PATH  (optional)  endpoint path (default /api/db_dump.php)
+#
+# The job FAILS only on confirmed-BROKEN links (404/410/DNS/refused, and the
+# bible.is / bible.com soft-404 heuristics). SUSPECT (403/429/5xx/timeout) and
+# SKIPPED (globalrecordings.net, behind a CDN bot-challenge) never fail the run.
+
+on:
+  workflow_dispatch:
+    inputs:
+      delay:
+        description: 'Per-host delay between requests (ms)'
+        required: false
+        default: '1000'
+      host_concurrency:
+        description: 'Concurrent requests to the SAME host'
+        required: false
+        default: '1'
+      limit:
+        description: 'Check only the first N unique URLs (blank = all)'
+        required: false
+        default: ''
+      only_domain:
+        description: 'Check only URLs whose host contains this substring (blank = all)'
+        required: false
+        default: ''
+
+permissions:
+  contents: read
+
+concurrency:
+  group: astro-link-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  link-check:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: astro
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Setup Node
+        uses: actions/setup-node@v7
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: astro/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check dump credentials
+        id: gate
+        env:
+          SE_KEY: ${{ secrets.SE_KEY }}
+        run: |
+          if [ -n "$SE_KEY" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::error::secrets.SE_KEY is not set — cannot fetch the dump to build content/languages.json."
+          fi
+
+      - name: Fetch JSON dump
+        if: steps.gate.outputs.ready == 'true'
+        run: npm run fetch:dump
+        env:
+          SE_KEY: ${{ secrets.SE_KEY }}
+          SE_BASE: ${{ vars.SE_BASE }}
+          SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
+
+      - name: Project dump to content/
+        if: steps.gate.outputs.ready == 'true'
+        run: npm run extract # extract.mjs → content/languages.json (+ search index)
+
+      - name: Check external links
+        if: steps.gate.outputs.ready == 'true'
+        env:
+          # Route inputs through env (not inline ${{ }}) to avoid shell injection.
+          IN_DELAY: ${{ inputs.delay }}
+          IN_HOST_CONCURRENCY: ${{ inputs.host_concurrency }}
+          IN_LIMIT: ${{ inputs.limit }}
+          IN_ONLY_DOMAIN: ${{ inputs.only_domain }}
+        run: |
+          args=(--delay "$IN_DELAY" --host-concurrency "$IN_HOST_CONCURRENCY")
+          if [ -n "$IN_LIMIT" ]; then args+=(--limit "$IN_LIMIT"); fi
+          if [ -n "$IN_ONLY_DOMAIN" ]; then args+=(--only-domain "$IN_ONLY_DOMAIN"); fi
+          npm run check:links -- "${args[@]}"
+
+      - name: Upload report
+        if: always() && steps.gate.outputs.ready == 'true'
+        uses: actions/upload-artifact@v4
+        with:
+          name: dead-links
+          path: |
+            astro/reports/dead-links.csv
+            astro/reports/dead-links.json
+          if-no-files-found: warn

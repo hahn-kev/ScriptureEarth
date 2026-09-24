@@ -24,6 +24,9 @@ bench/attempts/*/data.*
 
 # NOTE: public/i18n/*.json ARE committed (code-owned translation catalogs, seeded once — ticket 09)
 
+# link-checker output (scripts/check_links.mjs → uploaded as CI artifact)
+reports/
+
 # misc
 *.log
 npm-debug.log*
