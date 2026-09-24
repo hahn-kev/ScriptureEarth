@@ -19,7 +19,6 @@ include/databaseConnection.php
 process.php
 
 # ignore pages
-.gitignore
 Dockerfile
 compose.yaml
 .dockerignore

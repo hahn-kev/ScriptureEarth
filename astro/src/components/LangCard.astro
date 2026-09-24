@@ -1,0 +1,15 @@
+---
+import { PILLS } from '../lib/ui';
+
+interface Props { d: any; }
+const { d } = Astro.props;
+const where = d.countries.map((c: any) => c.name_eng).join(', ');
+const rights = Object.keys(d.availability).filter((k) => d.availability[k]).join(' ');
+---
+<a class="lang" href={`/language/${d.identity.slug}/`} data-r={rights}>
+  <div class="top"><span class="code">{d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
+  {where && <div class="where">{where}</div>}
+  <div class="pills">{PILLS.filter((p) => d.availability[p.key]).map((p) => (
+    <span class="pill" data-r={p.key}><span class="dot"></span><span data-i18n={`pill.${p.key}`}>{p.label}</span></span>
+  ))}</div>
+</a>

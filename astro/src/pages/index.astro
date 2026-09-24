@@ -1,0 +1,34 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../layouts/Base.astro';
+
+const langs = (await getCollection('languages')).map((l) => l.data);
+const withRead = langs.filter((l) => l.availability.read).length;
+const withListen = langs.filter((l) => l.availability.listen).length;
+---
+<Base title="ScriptureEarth — Find God’s Word in your language">
+  <section class="hero shell"><div class="inner">
+    <p class="eyebrow" data-i18n="home.eyebrow">Scripture in every language</p>
+    <h1 data-i18n="home.h1">Find God’s Word in your language.</h1>
+    <p class="lead" data-i18n="home.lead">Find Scripture to read, listen, watch, or use on your phone.</p>
+    <form class="searchbig" role="search" id="hero-form">
+      <span class="mag" aria-hidden="true">⌕</span>
+      <input id="q" type="search" enterkeyhint="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search.ph" />
+    </form>
+    <div class="stats" id="hero-stats">
+      <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span data-i18n="stats.languages">languages</span></div>
+      <div class="stat"><b class="tnum">{withRead.toLocaleString()}</b><br /><span data-i18n="stats.read">to read</span></div>
+      <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span data-i18n="stats.listen">to listen</span></div>
+    </div>
+    <p class="hero-more" id="browse-link"><a href="/browse/"><span data-i18n="home.browseAll">Browse all languages</span> →</a></p>
+    <div id="geo-suggest" class="geo-suggest geo-suggest-hero" hidden></div>
+  </div></section>
+
+  <section class="block shell">
+    <div class="sec-head" id="rhead" hidden><div><p class="eyebrow" data-i18n="results.heading">Results</p><h2><span id="rcount">0</span></h2></div></div>
+    <div class="lang-grid" id="results" hidden></div>
+  </section>
+
+  <script>import '../scripts/geo-suggest.js';</script>
+  <script>import '../scripts/search.js';</script>
+</Base>

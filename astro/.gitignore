@@ -1,0 +1,29 @@
+# deps & build output
+node_modules/
+dist/
+.astro/
+.wrangler/
+
+# generated content (regenerated from data/scripture.json by scripts/extract.mjs — see README)
+content/
+public/search-index.txt
+
+# local data snapshot (scripture.json + playlist cache + config.env) — never commit.
+# Anchored to astro/data so code-owned src/data and scripts/data stay tracked.
+/data/
+
+# Re-include code-owned data dirs the repo-root .gitignore's bare `data` rule catches.
+!src/data/
+!scripts/data/
+
+# bench/harness.mjs regenerates each attempt's data file(s) from
+# content/search-index.json on every run — never commit the output
+bench/attempts/*/data.*
+
+# NOTE: public/i18n/*.json ARE committed (code-owned translation catalogs, seeded once)
+
+# misc
+*.log
+npm-debug.log*
+tmp/
+.DS_Store

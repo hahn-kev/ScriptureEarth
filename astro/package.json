@@ -1,0 +1,38 @@
+{
+  "name": "scriptureearth-astro",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "description": "ScriptureEarth public discovery site — static Astro build deployed to Cloudflare Pages",
+  "packageManager": "pnpm@11.22.0",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "setup:data": "node scripts/setup-data.mjs",
+    "fetch:dump": "node scripts/fetch_dump.mjs",
+    "extract": "node scripts/extract.mjs && node scripts/build_search_index.mjs",
+    "extract:i18n": "node scripts/extract_i18n.mjs",
+    "gen:geo": "node scripts/gen_geo.mjs",
+    "dev": "astro dev",
+    "build": "astro build",
+    "build:dump": "pnpm run extract && astro build",
+    "build:fresh": "pnpm run fetch:dump && pnpm run build:dump",
+    "preview": "astro preview",
+    "predeploy": "node scripts/build_sizes.mjs && node scripts/precompress_dist.mjs",
+    "deploy": "wrangler pages deploy dist --project-name se-proto-en --branch main",
+    "deploy:dump": "pnpm run build:dump && pnpm run deploy",
+    "deploy:fresh": "pnpm run build:fresh && pnpm run deploy",
+    "bench:size": "node scripts/build_sizes.mjs && node scripts/check_sizes.mjs",
+    "bench:search-index": "node bench/harness.mjs"
+  },
+  "dependencies": {
+    "astro": "^5.13.0",
+    "minisearch": "^7.2.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.27.7",
+    "msgpackr": "^2.0.5",
+    "wrangler": "^4.136.0"
+  }
+}

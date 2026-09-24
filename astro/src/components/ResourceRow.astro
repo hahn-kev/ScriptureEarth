@@ -1,0 +1,85 @@
+---
+import { actionLabel, actionSlug } from '../lib/ui';
+
+interface Props { group: string; r: any; }
+const { group, r } = Astro.props;
+const clips = ['watch', 'listen'].includes(group) && Array.isArray(r.meta?.clips) && r.meta.clips.length > 1 ? r.meta.clips : null;
+const blank = group === 'watch' || r.external;
+const isAudio = group === 'listen';
+const mediaKind = isAudio ? 'audio' : 'video';
+const clipWord = isAudio ? 'tracks' : 'clips';
+const clipFmt = isAudio ? 'Track' : 'Clip';
+const clipAction = isAudio ? 'Play' : 'Watch';
+// A direct media file can play inline (<video>/<audio>) and offer a download; an
+// external watch page (jesusfilm.org, youtube, …) can't, so it keeps its link.
+const isMedia = (u: string) => /\.(mp4|m4v|webm|ogv|ogg|mp3|m4a|wav|aac|flac)(\?|$)/i.test(String(u || ''));
+const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist header, etc.
+---
+<div class="res-row">
+  <span class="fmt">{r.format}</span>
+  <div>
+    <div class="rr-name">{r.name}</div>
+    {r.source && <div class="rr-src">{r.source}</div>}
+  </div>
+  {rowPlayer
+    ? <span class="clip-actions">
+        <button type="button" class="act" data-play data-src={r.url} data-kind={mediaKind}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</button>
+        {r.meta?.zipUrl
+          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer">Download all</a>
+          : <a class="act dl" href={r.url} download>Download</a>}
+      </span>
+    : r.url
+      ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
+      : <span class="act muted">—</span>}
+</div>
+{clips && (
+  <details class="res-clips">
+    <summary>{clips.length} {clipWord}</summary>
+    {clips.map((c: any) => (
+      <div class="res-row">
+        {c.image
+          ? <img class="clip-thumb" src={c.image} alt="" loading="lazy" width="64" height="36" />
+          : <span class="fmt">{clipFmt}</span>}
+        <div><div class="rr-name">{c.title}</div></div>
+        {isMedia(c.url)
+          ? <span class="clip-actions">
+              <button type="button" class="act" data-play data-src={c.url} data-kind={mediaKind}>{clipAction} →</button>
+              <a class="act dl" href={c.url} download>Download</a>
+            </span>
+          : <a class="act" href={c.url} target="_blank" rel="noopener noreferrer">{clipAction} →</a>}
+      </div>
+    ))}
+  </details>
+)}
+
+<script>
+  // Inline media player for playlist rows/clips. Delegated so the one bundled copy
+  // handles every [data-play] button on the page. Only one player open at a time.
+  document.addEventListener('click', (e) => {
+    const btn = (e.target as HTMLElement).closest('[data-play]') as HTMLElement | null;
+    if (!btn) return;
+    e.preventDefault();
+    const row = btn.closest('.res-row');
+    if (!row) return;
+    const next = row.nextElementSibling as HTMLElement | null;
+    if (next && next.classList.contains('clip-player')) { // toggle off
+      next.querySelector('video,audio')?.pause();
+      next.remove();
+      return;
+    }
+    document.querySelectorAll('.clip-player').forEach((p) => { // close others
+      (p.querySelector('video,audio') as HTMLMediaElement | null)?.pause();
+      p.remove();
+    });
+    const kind = btn.getAttribute('data-kind') === 'audio' ? 'audio' : 'video';
+    const wrap = document.createElement('div');
+    wrap.className = 'clip-player';
+    const media = document.createElement(kind) as HTMLMediaElement;
+    media.controls = true;
+    media.autoplay = true;
+    media.preload = 'metadata';
+    media.src = btn.getAttribute('data-src') || '';
+    wrap.appendChild(media);
+    row.insertAdjacentElement('afterend', wrap);
+  });
+</script>

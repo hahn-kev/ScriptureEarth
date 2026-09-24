@@ -1,0 +1,83 @@
+---
+import locales from '../../public/i18n/locales.json';
+import { I18N_VERSION } from '../lib/i18nVersion';
+import '../styles/site.css';
+
+interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
+const { title, lang = 'en', dir = 'ltr' } = Astro.props;
+// Build timestamp — baked into every page, shown in the footer. The visible text is
+// date-only ISO (YYYY-MM-DD, locale-neutral); the full UTC instant goes in a title
+// attribute so a dev can hover to see exactly when the deployed build ran.
+const buildTimestamp = new Date().toISOString();
+const buildDate = buildTimestamp.slice(0, 10);
+---
+<!doctype html>
+<html lang={lang} dir={dir}>
+<head>
+  <meta charset="utf-8" />
+  <!-- Pick locale before paint so a cached non-English visitor never flashes English. -->
+  <script is:inline define:vars={{ i18nVer: I18N_VERSION, locales }}>
+    (function () {
+      window.__seI18nVer = i18nVer;
+      var bcp = { tl: 'fil' };
+      for (var code in locales) bcp[locales[code].bcp] = code;
+      var q = new URLSearchParams(location.search).get('lang');
+      var loc = (q && locales[q]) ? q
+        : localStorage.getItem('se-loc')
+        || bcp[(navigator.language || 'en').slice(0, 2).toLowerCase()]
+        || 'eng';
+      if (!locales[loc]) loc = 'eng';
+      if (q && locales[q]) { try { localStorage.setItem('se-loc', loc); } catch (e) {} }
+      window.__seLoc = loc;
+      var el = document.documentElement;
+      el.lang = locales[loc].bcp;
+      el.dir = locales[loc].dir;
+      if (loc !== 'eng') {
+        el.setAttribute('data-i18n-pending', '1');
+        setTimeout(function () { el.removeAttribute('data-i18n-pending'); }, 1500);
+      }
+    })();
+  </script>
+  <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}</style>
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>{title}</title>
+  <link rel="icon" href="/favicon.ico" sizes="any" />
+  <script>import '../scripts/i18n.js';</script>
+</head>
+<body>
+  <div class="hairline"></div>
+  <header class="site"><div class="shell site-inner">
+    <a class="brand" href="/">
+        <picture>
+            <source type="image/webp" src="/se-logo.webp" />
+            <img class="silmark" src="/se-logo.png" alt="ScriptureEarth" width="50" height="34" />
+        </picture>
+      <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
+    </a>
+    <nav class="main"><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></nav>
+    <form class="site-search" role="search" action="/">
+      <span class="mag" aria-hidden="true">⌕</span>
+      <input type="search" name="q" placeholder="Search by language, code, or country…" data-i18n-ph="search.ph" />
+    </form>
+    <select class="locale-pick" id="locale-picker" aria-label="Language">
+      {Object.entries(locales).map(([code, meta]) => (
+        <option value={code}>{meta.label}</option>
+      ))}
+    </select>
+  </div></header>
+
+  <slot />
+
+  <footer class="site"><div class="shell">
+    <div class="fin">
+      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/" data-i18n="nav.languages">Languages</a><a href="/countries/" data-i18n="nav.countries">Countries</a></div>
+      <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span></div>
+    </div>
+    <div class="cc">
+      <img class="silmark-foot" src="/sil-logo.webp" alt="SIL" width="63" height="34" />
+      <span data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</span>
+      <span class="updated" title={buildTimestamp}><span data-i18n="footer.updated">Last updated</span> <time datetime={buildDate}>{buildDate}</time></span>
+    </div>
+  </div></footer>
+</body>
+</html>

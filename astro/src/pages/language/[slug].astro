@@ -1,0 +1,58 @@
+---
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import ResourceRow from '../../components/ResourceRow.astro';
+import { GROUPS, PILLS } from '../../lib/ui';
+
+export async function getStaticPaths() {
+  const langs = await getCollection('languages');
+  return langs.map((l) => ({ params: { slug: l.data.identity.slug }, props: { d: l.data } }));
+}
+
+const { d } = Astro.props;
+const name = d.names.localized.eng;
+const where = d.countries.map((c: any) => c.name_eng).join(' · ');
+const activeGroups = GROUPS.filter((g) => (d.resources[g.key] || []).length > 0);
+const avail = PILLS.filter((p) => d.availability[p.key]);
+---
+<Base title={`${name} — ScriptureEarth`}>
+  <section class="block shell">
+    <nav class="crumbs"><a href="/" data-i18n="crumb.home">Home</a><span>›</span><a href="/browse/" data-i18n="nav.languages">Languages</a><span>›</span><span>{name}</span></nav>
+    <div class="with-side">
+      <div>
+        <div class="rec-head"><h1 data-i18n-name={String(d.idx)}>{name}</h1>{d.identity.variant_name && <span class="muted">{d.identity.variant_name}</span>}</div>
+        <div class="rec-meta">
+          <span class="chip"><span data-i18n="meta.iso">ISO</span> <code>{d.identity.iso}</code></span>
+          {where && <span class="chip">{where}</span>}
+          {d.names.alt_names.length > 0 && <span class="chip"><span data-i18n="meta.also">Also:</span> {d.names.alt_names.slice(0, 4).join(', ')}</span>}
+          {avail.length
+            ? <span class="chip">{avail.map((p, i) => (<Fragment>{i > 0 ? ' · ' : ''}<span data-i18n={`pill.${p.key}`}>{p.label}</span></Fragment>))}</span>
+            : <span class="chip" data-i18n="meta.catalogentry">Catalog entry</span>}
+        </div>
+
+        {activeGroups.length === 0 && <p class="muted" data-i18n="detail.noresources">No resources catalogued yet for this language.</p>}
+        {activeGroups.map((g) => (
+          <div class="res-group" id={g.key}>
+            <div class="rg-head"><span class="lead-dot" data-r={g.key}></span><h3 data-i18n={`group.${g.key}`}>{g.label}</h3><span class="n">{d.resources[g.key].length}</span></div>
+            {d.resources[g.key].map((r: any) => <ResourceRow group={g.key} r={r} />)}
+          </div>
+        ))}
+      </div>
+
+      <aside class="side">
+        <h4 data-i18n="detail.onthispage">On this page</h4>
+        <div class="toc">
+          {activeGroups.map((g) => (<a href={`#${g.key}`}><span data-i18n={`group.${g.key}`}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
+        </div>
+        {d.countries.length > 0 && (
+          <>
+            <h4 data-i18n="nav.countries">Countries</h4>
+            <div class="toc">
+              {d.countries.map((c: any) => (<a href={`/country/${c.code}/`}>{c.name_eng}<span class="c">{c.code}</span></a>))}
+            </div>
+          </>
+        )}
+      </aside>
+    </div>
+  </section>
+</Base>

@@ -1,0 +1,53 @@
+name: Build site
+description: >-
+  Install the astro/ toolchain, download the ScriptureEarth JSON dump and run the
+  full static build (extract.mjs → content/ → astro build → astro/dist).
+
+inputs:
+  se-key:
+    description: API key for the dump endpoint (secrets.SE_KEY)
+    required: true
+  se-base:
+    description: API host override (vars.SE_BASE); default https://www.scriptureearth.org
+    required: false
+    default: ''
+  se-dump-path:
+    description: Dump endpoint path override (vars.SE_DUMP_PATH); default /api/db_dump.php
+    required: false
+    default: ''
+
+runs:
+  using: composite
+  steps:
+    - name: Setup pnpm
+      uses: pnpm/action-setup@v6
+      with:
+        package_json_file: astro/package.json
+
+    - name: Setup Node
+      uses: actions/setup-node@v7
+      with:
+        node-version: '22'
+        cache: pnpm
+        cache-dependency-path: astro/pnpm-lock.yaml
+
+    - name: Install dependencies
+      shell: bash
+      working-directory: astro
+      run: pnpm install --frozen-lockfile
+
+    - name: Fetch JSON dump
+      shell: bash
+      working-directory: astro
+      env:
+        SE_KEY: ${{ inputs.se-key }}
+        SE_BASE: ${{ inputs.se-base }}
+        SE_DUMP_PATH: ${{ inputs.se-dump-path }}
+      run: pnpm run fetch:dump
+
+    # extract.mjs projects scripture.json → content/ (fetching video playlist .txt
+    # listings from the server), then astro build → dist/.
+    - name: Build site
+      shell: bash
+      working-directory: astro
+      run: pnpm run build:dump

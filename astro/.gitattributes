@@ -1,0 +1,2 @@
+# Keep the build scripts LF regardless of core.autocrlf.
+scripts/*.mjs text eol=lf

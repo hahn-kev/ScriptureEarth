@@ -1,0 +1,10 @@
+# Astro's bundled/hashed client assets (incl. the i18n localizer) — filename changes
+# on any content change, so cache immutably.
+/_astro/*
+  Cache-Control: public, max-age=31536000, immutable
+
+# i18n catalogs are content-hash busted via ?v=<hash> (see src/lib/i18nVersion.ts),
+# so a given URL's bytes never change — cache them immutably. A new deploy that changes
+# their content changes the ?v, so returning visitors fetch the new version.
+/i18n/*
+  Cache-Control: public, max-age=31536000, immutable
