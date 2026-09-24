@@ -49,8 +49,9 @@ jobs:
         working-directory: astro
         run: node scripts/build_sizes.mjs
 
-      # Diff vs the prod baseline; render the markdown report + verdict. Never
-      # fails here — a missing/404 baseline is report-only (spec §4).
+      # Diff vs the prod baseline; render the markdown report + verdict. With --verdict
+      # the script exits 0 on a breach so the comment below still posts; the gate step
+      # after it enforces. A missing/404 baseline is report-only (spec §4).
       - name: Compare against baseline
         working-directory: astro
         run: node scripts/check_sizes.mjs --report size-report.md --verdict size-verdict.txt
