@@ -13,7 +13,8 @@ const read = (p) => readFileSync(path.join(root, p), 'utf8');
 
 // zone1970.tab: "CC1,CC2<TAB>coords<TAB>Zone/Name<TAB>comment"; first CC is primary.
 const tz = {};
-for (const line of read('scripts/data/zone1970.tab').split('\n')) {
+// Split on \r?\n: these data files may be checked out with CRLF on Windows.
+for (const line of read('scripts/data/zone1970.tab').split(/\r?\n/)) {
   if (!line || line[0] === '#') continue;
   const [codes, , zone] = line.split('\t');
   if (!zone) continue;
@@ -24,7 +25,7 @@ for (const line of read('scripts/data/zone1970.tab').split('\n')) {
 // Asia/Calcutta, America/Buenos_Aires…) that some OSes/browsers still report.
 // Point each alias at its target's country list so those visitors resolve too.
 const links = [];
-for (const line of read('scripts/data/backward').split('\n')) {
+for (const line of read('scripts/data/backward').split(/\r?\n/)) {
   if (!line.startsWith('Link')) continue;
   const [, target, name] = line.split(/\s+/);
   if (target && name) links.push([target, name]);
@@ -48,8 +49,9 @@ delete regions._note;
 // the "is this a country we can link to?" set, so the hint is self-contained and
 // needs neither a rendered list nor the (lazy) search index.
 const countries = JSON.parse(read('content/countries.json')).filter((c) => c.languages.length > 0);
+// Sorted by code so the output is deterministic across dump row orders.
 const names = {};
-for (const c of countries) names[c.code] = c.name.eng;
+for (const c of [...countries].sort((a, b) => a.code.localeCompare(b.code))) names[c.code] = c.name.eng;
 
 // Sanity: every browseable country should have a region.
 const missing = countries.map((c) => c.code).filter((c) => !regions[c]);

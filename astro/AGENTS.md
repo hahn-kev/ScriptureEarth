@@ -89,7 +89,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 
 - Trailing slashes always (`trailingSlash: 'always'`, `build.format: 'directory'`). Links: `/language/${slug}/`.
 - `GROUPS`: `read|listen|watch|use` (detail resource sections). `PILLS`: `read|listen|watch|app|buy` (cards/facets). `availability.watch` can be true with empty `resources.watch`.
-- Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, names `data-i18n-name={idx}`.
+- Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, aria-labels `data-i18n-label`, names `data-i18n-name={idx}`.
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
 - CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.

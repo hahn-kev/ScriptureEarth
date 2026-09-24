@@ -59,5 +59,15 @@
   "footer.about": "حول",
   "footer.ministry": "خدمة تابعة لـ SIL Global",
   "footer.note": "إعادة بناء ثابتة لموقع ScriptureEarth الاستكشافي.",
-  "footer.updated": "آخر تحديث"
+  "footer.updated": "آخر تحديث",
+
+  "geo.here": "تتصفح من",
+  "geo.orNearby": "أو بالقرب",
+  "geo.dismiss": "إغلاق",
+  "region.Africa": "أفريقيا",
+  "region.Americas": "الأمريكتان",
+  "region.Asia": "آسيا",
+  "region.Europe": "أوروبا",
+  "region.Oceania": "أوقيانوسيا",
+  "region.Other": "أخرى"
 }

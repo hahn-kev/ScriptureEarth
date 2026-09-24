@@ -59,5 +59,15 @@
   "footer.about": "Kuhusu",
   "footer.ministry": "Huduma ya SIL Global",
   "footer.note": "Ujenzi upya tuli wa tovuti ya ugunduzi ya ScriptureEarth.",
-  "footer.updated": "Imesasishwa mwisho"
+  "footer.updated": "Imesasishwa mwisho",
+
+  "geo.here": "Unavinjari kutoka",
+  "geo.orNearby": "au karibu",
+  "geo.dismiss": "Funga",
+  "region.Africa": "Afrika",
+  "region.Americas": "Amerika",
+  "region.Asia": "Asia",
+  "region.Europe": "Ulaya",
+  "region.Oceania": "Oshenia",
+  "region.Other": "Nyingine"
 }

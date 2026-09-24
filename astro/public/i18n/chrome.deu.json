@@ -59,5 +59,15 @@
   "footer.about": "Über uns",
   "footer.ministry": "Ein Dienst von SIL Global",
   "footer.note": "Ein statischer Neuaufbau der ScriptureEarth-Entdeckungsseite.",
-  "footer.updated": "Zuletzt aktualisiert"
+  "footer.updated": "Zuletzt aktualisiert",
+
+  "geo.here": "Sie besuchen uns aus",
+  "geo.orNearby": "oder in der Nähe",
+  "geo.dismiss": "Schließen",
+  "region.Africa": "Afrika",
+  "region.Americas": "Amerika",
+  "region.Asia": "Asien",
+  "region.Europe": "Europa",
+  "region.Oceania": "Ozeanien",
+  "region.Other": "Sonstige"
 }

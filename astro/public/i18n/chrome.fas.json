@@ -59,5 +59,15 @@
   "footer.about": "درباره",
   "footer.ministry": "خدمتی از SIL Global",
   "footer.note": "بازسازی ایستا از سایت کاوش ScriptureEarth.",
-  "footer.updated": "آخرین به‌روزرسانی"
+  "footer.updated": "آخرین به‌روزرسانی",
+
+  "geo.here": "شما از",
+  "geo.orNearby": "یا نزدیک",
+  "geo.dismiss": "بستن",
+  "region.Africa": "آفریقا",
+  "region.Americas": "قاره آمریکا",
+  "region.Asia": "آسیا",
+  "region.Europe": "اروپا",
+  "region.Oceania": "اقیانوسیه",
+  "region.Other": "دیگر"
 }

@@ -59,5 +59,15 @@
   "footer.about": "Acerca de",
   "footer.ministry": "Un ministerio de SIL Global",
   "footer.note": "Una reconstrucción estática del sitio de descubrimiento de ScriptureEarth.",
-  "footer.updated": "Última actualización"
+  "footer.updated": "Última actualización",
+
+  "geo.here": "Navegando desde",
+  "geo.orNearby": "o cerca",
+  "geo.dismiss": "Cerrar",
+  "region.Africa": "África",
+  "region.Americas": "América",
+  "region.Asia": "Asia",
+  "region.Europe": "Europa",
+  "region.Oceania": "Oceanía",
+  "region.Other": "Otros"
 }
