@@ -6,13 +6,11 @@ dist/
 
 # generated content (regenerated from data/scripture.json by scripts/extract.mjs — see README)
 content/
-content-api/
 public/search-index.txt
 
-# local data snapshot (scripture.json + deprecated dev DB) + API harvest cache — never commit.
+# local data snapshot (scripture.json + playlist cache + config.env) — never commit.
 # Anchored to astro/data so code-owned src/data and scripts/data stay tracked.
 /data/
-scripts/harvest/data/
 
 # Re-include code-owned data dirs the repo-root .gitignore's bare `data` rule catches.
 !src/data/
@@ -22,7 +20,7 @@ scripts/harvest/data/
 # content/search-index.json on every run — never commit the output
 bench/attempts/*/data.*
 
-# NOTE: public/i18n/*.json ARE committed (code-owned translation catalogs, seeded once — ticket 09)
+# NOTE: public/i18n/*.json ARE committed (code-owned translation catalogs, seeded once)
 
 # misc
 *.log
