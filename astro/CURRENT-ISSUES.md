@@ -6,10 +6,10 @@ where to look. Remove an entry when it's fixed.
 ## Data projection (JSON dump → `content/`)
 
 The projector is `scripts/extract.mjs` (reads `data/scripture.json`). The consolidated
-JSON dump is now the source of truth; the old SQLite/`mysqldump` and JSON-harvest paths
-are deprecated (`build:sqlite` / `build:api`). See `scripts/README-dump.md`. The items
-below are places the JSON projection differs from what the deprecated SQLite extractor
-produced, or where the dump doesn't carry enough to build a link.
+JSON dump is the source of truth (see `scripts/README-dump.md`); the earlier SQLite/`mysqldump`
+and JSON-harvest ingest paths have been removed. The items below are places the JSON projection
+differs from what the old SQLite extractor produced, or where the dump doesn't carry enough to
+build a link.
 
 ### 1. ePub / SAB-html / GoBible·MySword·theWord are not emitted as links
 The dump lists these as **basenames only** (`se_media.ePub`, `other_titles.*`,
@@ -36,7 +36,7 @@ column). **Still open:**
 - **`se_ePub`** — bare filename `url` (no resolvable path) + junk title; not emitted yet.
 - **`other_websites`** — sometimes only `organization`, no title (minor).
 
-`SE_STRICT=1 npm run extract` audits a dump and fails when a field has data but nothing is
+`SE_STRICT=1 pnpm run extract` audits a dump and fails when a field has data but nothing is
 projected (its raw-detectors are shape-agnostic, so a nested/flat change is caught), and reports
 `watch`/`buy` title coverage. It is **not** in CI (CI must still deploy).
 
@@ -57,7 +57,7 @@ Video playlists (e.g. JESUS Film) are stored as a `.txt` filename; `extract.mjs`
 each to expand its per-clip rows. A playlist with no fetched clips has no URL, so the
 **whole row is dropped**. A build made with `SE_SKIP_PLAYLISTS=1` (a dev-speed flag) drops
 them all — the flag is documented dev-only. CI does **not** use `setup:data`; it lets
-`extract.mjs` fetch the `.txt` listings from the server (`npm run setup:data` is local-dev
+`extract.mjs` fetch the `.txt` listings from the server (`pnpm run setup:data` is local-dev
 convenience only).
 
 ### 5b. RESOLVED: the dump's playlist format changed
@@ -71,11 +71,15 @@ re-verify against a fresh dump if resources go missing again.
 
 ## CI
 
-### 6. size-benchmark duplicates the preview build on astro-poc PRs
-`astro-poc.yml`, `astro-preview.yml`, and `size-benchmark.yml` each independently
-`fetch:dump` + `build:dump`. On an astro-poc PR, preview and size-benchmark run the same
-fetch+build in parallel. They could be consolidated (preview uploads
-`dist/assets/sizes.json` as an artifact; a `workflow_run`-triggered size job consumes it),
-but size-benchmark also runs on `main` PRs (where preview doesn't) and preview self-gates
-without secrets, so it can't fully piggyback. Deferred until real run times are visible
-(secrets set).
+### 6. preview and size-benchmark each rebuild the site on a PR
+`preview.yml` and `size-benchmark.yml` both run the shared `.github/actions/build-site`
+(fetch + extract + build, ~1.5 min) in parallel on every PR that touches `astro/**`. They
+could be consolidated (preview uploads `dist/assets/sizes.json` as an artifact; a
+`workflow_run`-triggered size job consumes it), but preview self-gates without secrets and
+size-benchmark should still run when it does, so it can't fully piggyback. Deferred; the
+duplicated run is cheap.
+
+### 7. Cloudflare Pages project is still named `se-proto-en`
+Pages projects can't be renamed. Moving to a better name means creating a new project,
+deploying once, and moving the custom domain. The name is referenced in `package.json`
+(`deploy`), `.github/workflows/preview.yml`, and `scripts/check_sizes.mjs` (baseline URL).

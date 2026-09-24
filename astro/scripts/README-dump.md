@@ -35,7 +35,7 @@ Media values (`se_media.text`/`audio`) are full URLs; playlists come as
 tolerates both.) The dump format has changed more than once, so if resources vanish, re-probe a
 fresh dump before assuming a build bug.
 
-## Worktrees: share one data folder (`npm run setup:data`)
+## Worktrees: share one data folder (`pnpm run setup:data`)
 
 > **`setup:data` is for local dev only.** CI never runs it — a CI build fetches the dump fresh
 > (`fetch:dump`) and lets `extract.mjs` fetch video playlist listings from the server directly.
@@ -55,7 +55,7 @@ git config se.datadir "C:/dev/ScriptureEarth/astro/data"
 #     # endpoint defaults are correct; override only for testing:
 #     # SE_DUMP_URL=https://www.scriptureearth.org/api/db_dump.php?v=1
 
-npm run setup:data     # ensures the dump + playlist cache exist in the shared folder, else no-op
+pnpm run setup:data     # ensures the dump + playlist cache exist in the shared folder, else no-op
 ```
 
 `setup:data` populates two things in the shared folder, downloading each only if missing:
@@ -69,7 +69,7 @@ npm run setup:data     # ensures the dump + playlist cache exist in the shared f
 **No API key needed to get started.** By default it downloads *prebuilt* artifacts from public
 links (baked into `setup-data.mjs`, overridable via `SE_JSON_URL` / `SE_PLAYLIST_CACHE_URL`).
 **Maintainers** who want a fresh dump from the live API instead set `SE_KEY` (+ optional
-`SE_DUMP_URL`) and run `npm run fetch:dump` (or `build:fresh`).
+`SE_DUMP_URL`) and run `pnpm run fetch:dump` (or `build:fresh`).
 
 After setup, every worktree's `fetch:dump` / `extract` reads and writes that one folder.
 Resolution order for the data dir: `SE_DATA_DIR` env → `git config se.datadir` → `<package>/data`
@@ -80,25 +80,25 @@ already have a `scripture.json`, drop it in the folder and re-run.
 
 ```bash
 # One shot: fetch + project + astro build
-SE_KEY=yourkey npm run build:fresh
+SE_KEY=yourkey pnpm run build:fresh
 
 # Or step by step
-SE_KEY=yourkey npm run fetch:dump     # → data/scripture.json
-npm run build:dump                    # extract.mjs (project) + astro build → dist/
+SE_KEY=yourkey pnpm run fetch:dump     # → data/scripture.json
+pnpm run build:dump                    # extract.mjs (project) + astro build → dist/
 
 # Rebuild content from an existing data/scripture.json (no download)
-npm run extract                       # → content/*.json + public/search-index.txt
+pnpm run extract                       # → content/*.json + public/search-index.txt
 ```
 
-`SE_SKIP_PLAYLISTS=1 npm run extract` skips the per-playlist `.txt` fetch for a fast dev build.
+`SE_SKIP_PLAYLISTS=1 pnpm run extract` skips the per-playlist `.txt` fetch for a fast dev build.
 **Dev only — never deploy a build made with it:** a video playlist with no fetched clips has no
 URL, so the whole playlist row is dropped (e.g. a language loses its JESUS Film entry). Production
-and CI builds must fetch playlists; run `npm run setup:data` first so the cache makes that fast.
+and CI builds must fetch playlists; run `pnpm run setup:data` first so the cache makes that fast.
 
 ### Test your key first
 
 `fetch:dump` prints a redacted URL and validates the response (rejects HTML/error pages and
-non-dump JSON), so the quickest check is just `SE_KEY=yourkey npm run fetch:dump`. To poke the
+non-dump JSON), so the quickest check is just `SE_KEY=yourkey pnpm run fetch:dump`. To poke the
 endpoint directly:
 
 ```bash
@@ -133,20 +133,8 @@ curl -s -o /dev/null -w '%{http_code}\n' \
 | file | role |
 |---|---|
 | `data-dir.mjs` | Resolves the shared data dir (`SE_DATA_DIR` → `git config se.datadir` → `<package>/data`) and loads `<dir>/config.env` secrets without clobbering real env. |
-| `setup-data.mjs` | `npm run setup:data` — worktree bootstrap: download (or fetch) the dump and download+unzip the playlist cache into the shared folder, else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
+| `setup-data.mjs` | `pnpm run setup:data` — worktree bootstrap: download (or fetch) the dump and download+unzip the playlist cache into the shared folder, else no-op; guides you to set `se.datadir` / `config.env` when unconfigured. |
 | `download.mjs` | Helpers for `setup-data.mjs`: streaming `download()`, `driveUrl()`, and a dependency-free ZIP extractor (`unzipInto()`, stored + deflate, zip-slip guarded). |
 | `fetch_dump.mjs` | Download the JSON dump (same `?v=&key=` auth as the rest of `/api/`). Detects gzip; validates it's the language dump; saves an inspectable `scripture.unexpected.*` on a surprise. |
 | `extract.mjs` | **Projector** — reads `data/scripture.json` → `content/{languages,countries,search-index}.json`. Fetches playlist `.txt` listings for video clip URLs. |
 | `playlistTxt.mjs` | Resolves PlaylistVideo `.txt` listings to clip URLs (cached under `playlist-txt-cache/`). |
-
-## Deprecated paths
-
-Two older ingest paths remain in the tree as fallbacks only — neither is in any default build:
-
-- **SQLite / `mysqldump`** — `convert_dump.mjs` (`awk mysql2sqlite` → `node:sqlite`) +
-  `extract_sqlite.mjs`, driven by `npm run build:sqlite`. Superseded because the JSON dump needs
-  no `awk`/SQLite toolchain and carries the same data. `mysql2sqlite.awk` is the vendored
-  converter (MIT, github.com/dumblob/mysql2sqlite).
-- **JSON API harvest** — `scripts/harvest/` (`harvest.mjs` + `project.mjs`, `npm run build:api`)
-  scraped the per-language JSON endpoints. Superseded by the dump (which includes `buy` rows the
-  harvest never had).

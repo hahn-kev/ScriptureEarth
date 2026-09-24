@@ -2,6 +2,13 @@
 
 [ScriptureEarth.org](https://scriptureearth.org) (SE.org) is a website that provides a source for accessing Scripture resources in thousands of languages (4050 Scripture resources as of 9/2025) through text, audio, and video for speakers of minority languages. SE.org does not publish extra Biblical materials (like Bible studies) in the minority languages (but there are limited exceptions).
 
+## Static site (`astro/`)
+
+The public discovery site is now a **static Astro build** in [`astro/`](./astro/README.md): it is
+generated from the database's JSON dump (`/api/db_dump.php`) and deployed to Cloudflare Pages by
+GitHub Actions on every push to `main` (see [`astro/deploy.md`](./astro/deploy.md)). The PHP
+application in this directory remains the CMS, API, and data source behind it.
+
 ## Description
 
 ### Primary and Secondary Audiences
