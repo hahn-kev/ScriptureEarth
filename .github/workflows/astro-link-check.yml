@@ -1,11 +1,12 @@
-name: External link check (astro)
+name: External link check
 
 # One-off, manually-triggered audit of every EXTERNAL resource URL in the baked
-# catalog. Fetches the JSON dump, projects it to content/, then runs
-# scripts/check_links.mjs. Deduplicates URLs across languages, collapses
-# playlists to their first item, and hits each host one request at a time with a
-# delay so no site is overwhelmed. The report is uploaded as an artifact and
-# summarised in the run's job summary.
+# catalog. Reuses the shared build-site action (pnpm install → fetch dump →
+# project to content/ → astro build), then runs scripts/check_links.mjs.
+# URLs are deduplicated across languages, playlists collapse to their first item,
+# and each host is hit one request at a time with a delay so no site is
+# overwhelmed. The report is uploaded as an artifact and summarised in the run's
+# job summary.
 #
 #   secrets.SE_KEY     (required)  API key for the dump endpoint
 #   vars.SE_BASE       (optional)  API host      (default https://www.scriptureearth.org)
@@ -45,49 +46,21 @@ concurrency:
 jobs:
   link-check:
     runs-on: ubuntu-latest
-    defaults:
-      run:
-        working-directory: astro
     steps:
       - name: Checkout
         uses: actions/checkout@v7
 
-      - name: Setup Node
-        uses: actions/setup-node@v7
+      # Installs the toolchain and produces astro/content/languages.json
+      # (extract.mjs runs as part of build:dump).
+      - name: Build site
+        uses: ./.github/actions/build-site
         with:
-          node-version: '22'
-          cache: npm
-          cache-dependency-path: astro/package-lock.json
-
-      - name: Install dependencies
-        run: npm ci
-
-      - name: Check dump credentials
-        id: gate
-        env:
-          SE_KEY: ${{ secrets.SE_KEY }}
-        run: |
-          if [ -n "$SE_KEY" ]; then
-            echo "ready=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "ready=false" >> "$GITHUB_OUTPUT"
-            echo "::error::secrets.SE_KEY is not set — cannot fetch the dump to build content/languages.json."
-          fi
-
-      - name: Fetch JSON dump
-        if: steps.gate.outputs.ready == 'true'
-        run: npm run fetch:dump
-        env:
-          SE_KEY: ${{ secrets.SE_KEY }}
-          SE_BASE: ${{ vars.SE_BASE }}
-          SE_DUMP_PATH: ${{ vars.SE_DUMP_PATH }}
-
-      - name: Project dump to content/
-        if: steps.gate.outputs.ready == 'true'
-        run: npm run extract # extract.mjs → content/languages.json (+ search index)
+          se-key: ${{ secrets.SE_KEY }}
+          se-base: ${{ vars.SE_BASE }}
+          se-dump-path: ${{ vars.SE_DUMP_PATH }}
 
       - name: Check external links
-        if: steps.gate.outputs.ready == 'true'
+        working-directory: astro
         env:
           # Route inputs through env (not inline ${{ }}) to avoid shell injection.
           IN_DELAY: ${{ inputs.delay }}
@@ -98,10 +71,10 @@ jobs:
           args=(--delay "$IN_DELAY" --host-concurrency "$IN_HOST_CONCURRENCY")
           if [ -n "$IN_LIMIT" ]; then args+=(--limit "$IN_LIMIT"); fi
           if [ -n "$IN_ONLY_DOMAIN" ]; then args+=(--only-domain "$IN_ONLY_DOMAIN"); fi
-          npm run check:links -- "${args[@]}"
+          pnpm run check:links -- "${args[@]}"
 
       - name: Upload report
-        if: always() && steps.gate.outputs.ready == 'true'
+        if: always()
         uses: actions/upload-artifact@v4
         with:
           name: dead-links

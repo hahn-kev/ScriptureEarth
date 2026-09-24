@@ -8,7 +8,7 @@
 // Client-side decoding lives inline in src/pages/index.astro (the counterpart
 // to that attempt's load.mjs) since it needs to run in the browser, not Node.
 //
-// Run as part of `npm run extract` (see package.json) — always after
+// Run as part of `pnpm run extract` (see package.json) — always after
 // extract.mjs, since it reads that script's output.
 import { readFile, writeFile } from 'node:fs/promises';
 import path from 'node:path';

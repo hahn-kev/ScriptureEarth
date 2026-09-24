@@ -1,0 +1,110 @@
+name: Preview
+
+# Cloudflare Pages *preview* deployment for pull requests targeting main that touch
+# the site. Same from-scratch build as deploy.yml, but deployed with
+# --branch <pr-branch> so Cloudflare mints a per-branch preview URL, which is
+# posted back as a sticky PR comment.
+#
+# The job self-gates: until every prerequisite is configured it skips (green) with
+# a notice, so PRs are not blocked by a red check. Required configuration:
+#   secrets.SE_KEY                 API key for the dump endpoint
+#   secrets.CLOUDFLARE_API_TOKEN   token with Account · Cloudflare Pages · Edit
+#   secrets.CLOUDFLARE_ACCOUNT_ID  Cloudflare account id
+#   vars.SE_BASE / vars.SE_DUMP_PATH  (optional) endpoint overrides
+#
+# Fork-PR caveat: on a pull_request from a fork, secrets are unavailable, so the
+# gate skips. Same-repo branches work as-is.
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - 'astro/**'
+      - '.github/workflows/preview.yml'
+      - '.github/actions/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: preview-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  gate:
+    runs-on: ubuntu-latest
+    outputs:
+      ready: ${{ steps.check.outputs.ready }}
+    steps:
+      - name: Check preview prerequisites
+        id: check
+        env:
+          SE_KEY: ${{ secrets.SE_KEY }}
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$SE_KEY" ] && [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "ready=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ready=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Preview skipped — set secrets.SE_KEY, secrets.CLOUDFLARE_API_TOKEN and secrets.CLOUDFLARE_ACCOUNT_ID to enable Cloudflare PR previews."
+          fi
+
+  preview:
+    needs: gate
+    if: needs.gate.outputs.ready == 'true'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build site
+        uses: ./.github/actions/build-site
+        with:
+          se-key: ${{ secrets.SE_KEY }}
+          se-base: ${{ vars.SE_BASE }}
+          se-dump-path: ${{ vars.SE_DUMP_PATH }}
+
+      - name: Precompress dist
+        working-directory: astro
+        run: pnpm run predeploy
+
+      - name: Deploy preview to Cloudflare Pages
+        id: deploy
+        uses: cloudflare/wrangler-action@v4
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          workingDirectory: astro
+          packageManager: pnpm
+          command: pages deploy dist --project-name=se-proto-en --branch=${{ github.head_ref }}
+
+      - name: Comment preview URL
+        if: steps.deploy.outputs.deployment-url != ''
+        uses: actions/github-script@v9
+        env:
+          PREVIEW_URL: ${{ steps.deploy.outputs.deployment-url }}
+          ALIAS_URL: ${{ steps.deploy.outputs.pages-deployment-alias-url }}
+        with:
+          script: |
+            const marker = '<!-- cf-preview -->';
+            const lines = [marker, '### ⚡ Cloudflare preview', '', `**Latest:** ${process.env.PREVIEW_URL}`];
+            if (process.env.ALIAS_URL) lines.push(`**Branch alias:** ${process.env.ALIAS_URL}`);
+            lines.push('', `_Updated for ${context.sha.slice(0, 7)} · redeploys on each push._`);
+            const body = lines.join('\n');
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find((c) => c.body && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body,
+              });
+            }

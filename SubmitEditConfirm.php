@@ -205,7 +205,7 @@ function console_log($data) {
 		$db->query("DELETE FROM SAB_scriptoria WHERE ISO_ROD_index = $inputs[idx]");
 	}
 	else {
-		if (substr($_SERVER['REMOTE_ADDR'], 0, 8) != '168.148.') {	//127.0.0.') {														// Is the script local?
+		if (substr($_SERVER['REMOTE_ADDR'], 0, 8) != '168.148.') {	//127.0.0.') {										// Is the script local?
 			$db->query("DELETE FROM SAB_scriptoria WHERE ISO_ROD_index = $inputs[idx]");
 			//$query="UPDATE SAB_scriptoria SET `url` = ?, `subfolder` = ?, `description` = ? WHERE ISO_ROD_index = $inputs[idx] AND SAB_number = ?";
 			//$stmt_SAB_scriptoria=$db->prepare($query);
@@ -231,8 +231,8 @@ function console_log($data) {
 						$i++;
 						continue;
 					}
-					$SAB_array = glob($SAB_Path."*.html", GLOB_MARK | GLOB_NOCHECK | GLOB_NOESCAPE | GLOB_NOSORT);			// all HTML files
-					if (count($SAB_array) === 0) {																			// there are html files here
+					$SAB_array = glob($SAB_Path."*.html", GLOB_MARK | GLOB_NOCHECK | GLOB_NOESCAPE | GLOB_NOSORT);		// all HTML files
+					if (count($SAB_array) === 0) {																		// there are html files here
 						echo '<h3>No HTML files found in '.$SAB_Path.'. Be sure you uploaded the HTML files from you\'re comptuer to the SE server AND then re-run the Edit of CMS again.</h3>';
 					}
 					else {
@@ -277,6 +277,7 @@ function console_log($data) {
 						foreach ($SAB_array as $SAB_record) {															// all HTML files
 							if ($SAB_record == './data/'.$ISO.'/'.$inputs[$SABsubfolder].'index.html') continue;
 							if ($SAB_record == './data/'.$ISO.'/'.$inputs[$SABsubfolder].'about.partial.html') continue;
+							if ($SAB_record == './data/'.$ISO.'/'.$inputs[$SABsubfolder].'200.html') continue;
 							$fDate =  date("Y-m-d H:i", filemtime($SAB_record));										// was last changed; leading 0s; data convert the file date to a string
 							$fDate .= ':00';
 							clearstatcache();																			// Clear cache and check filesize again
@@ -284,13 +285,13 @@ function console_log($data) {
 
 							$SAB_record = substr($SAB_record, strrpos($SAB_record, '/')+1);								// IMPORTANT! Gets rids of directories just before the html name. strrpos - returns the poistion of the last occurrence of the substring
 							if (!preg_match('/(-|^)([0-9]+)-/', $SAB_record, $match)) {									// match the book from the html file
-								echo $SAB_record . ' does not match the book for the html file. DELETEd from SAB table.<br />';
+								echo '"' . $SAB_record . '" in .../' . $ISOPlus . '/ does not match the book for the html file. DELETEd from SAB table.<br />';
 								continue;																				// continue with a new html file
 							}
 							$book_number = (int)$match[2];																// book_number = match
 							
 							if (!preg_match('/-([0-9]+)\.html/', $SAB_record, $match)) {								// match the chapter from the html file
-								echo $SAB_record . ' does not match the chapter for the html file. DELETEd from SAB table.<br />';
+								echo '"' . $SAB_record . '" in .../' . $ISOPlus . '/ does not match the chapter for the html file. DELETEd from SAB table.<br />';
 								continue;																				// continue with a new html file
 							}
 							$chapter = (int)$match[1];																	// chapter = match
@@ -776,6 +777,28 @@ function console_log($data) {
 				echo 'Could not insert the data "links map": ' . $db->error;
 			}
 			//$i++;
+		}
+		$stmt_links->close();
+	}
+
+// links: AppleStore
+	$query="DELETE FROM links WHERE ISO_ROD_index = $inputs[idx] AND AppleStore = 1";
+	$result=$db->query($query);
+	if ($inputs['linksAppleStore']) {
+		$i = 1;
+		$query="INSERT INTO links (ISO, ROD_Code, Variant_Code, ISO_ROD_index, company, company_title, `URL`, AppleStore) VALUES ('$inputs[iso]', '$inputs[rod]', '$inputs[var]', $inputs[idx], ?, ?, ?, 1)";
+		$stmt_links=$db->prepare($query);
+		//while (isset($inputs["txtLinkCompany-$i"]) && $inputs["linksAppleStore-$i"]) {
+		for (; isset($inputs["txtLinkCompany-$i"]); $i++) {
+			if (!isset($inputs["linksAppleStore-$i"])) continue;	// || $inputs["linksAppleStore-$i"] == 0 Bill ????
+			$temp1 = "txtLinkCompany-$i";
+			$temp2 = "txtLinkCompanyTitle-$i";
+			$temp3 = "txtLinkURL-$i";
+			$stmt_links->bind_param("sss", $inputs[$temp1], $inputs[$temp2], $inputs[$temp3]);		// bind parameters for markers
+			$result=$stmt_links->execute();															// execute query
+			if (!$result) {
+				echo 'Could not insert the data "links Apple Store": ' . $db->error;
+			}
 		}
 		$stmt_links->close();
 	}

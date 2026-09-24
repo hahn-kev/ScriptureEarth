@@ -20,7 +20,7 @@ row-major vs. columnar, msgpack, a hand-rolled binary layout, front-coding
 resurrect one.
 
 ```
-npm run bench:search-index               # all attempts
+pnpm run bench:search-index               # all attempts
 node bench/harness.mjs baseline my-idea   # just these
 ```
 
@@ -30,7 +30,7 @@ Copy `attempts/baseline/` to `attempts/<name>/` and change:
 
 - **`build.mjs`** (optional) — `export async function build({ sourcePath, dir })`.
   Regenerates this attempt's data file(s) in `dir` from the canonical source
-  (`content/search-index.json`, produced by `scripts/extract.py`). Runs
+  (`content/search-index.json`, produced by `scripts/extract.mjs`). Runs
   before every measurement, so an attempt never ships stale hand-edited data.
 - **`load.mjs`** (required) — `export async function load({ dir })`. Reads
   the attempt's data file(s), does whatever decoding a browser would have to

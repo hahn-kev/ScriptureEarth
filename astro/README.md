@@ -1,19 +1,18 @@
-# ScriptureEarth — static Astro site (PoC)
+# ScriptureEarth — static site
 
-Static rebuild of the ScriptureEarth **public discovery site**: Astro-generated, Cloudflare-hosted,
-client-side search, built from the ScriptureEarth database. Proof-of-concept produced by the
-`/wayfinder` planning effort (decision records live in `.scratch/scriptureearth-rewrite/`).
+The ScriptureEarth **public discovery site**: Astro-generated static HTML, hosted on Cloudflare Pages,
+with client-side search and UI localisation. It is built from a single JSON dump of the ScriptureEarth
+database and deployed by GitHub Actions on every push to `main`.
 
 ## Prerequisites
-- **Node 18+** — all extractors/generators are Node `.mjs`. The default JSON path needs no extra tools. No Python.
+- **Node 22+** and **pnpm** (`corepack enable` or `npm i -g pnpm`). All build scripts are Node `.mjs`.
 - A **data source** — `data/scripture.json`, the consolidated JSON dump of the ScriptureEarth DB (git-ignored).
-  Get one via **`npm run setup:data`** (downloads a prebuilt dump — no key needed) or fetch it fresh
+  Get one via **`pnpm run setup:data`** (downloads a prebuilt dump — no key needed) or fetch it fresh
   from the live **dump API** (needs `SE_KEY`; see [`scripts/README-dump.md`](scripts/README-dump.md)).
   Override the data dir with `SE_DATA_DIR`, or the dump path with `SE_JSON=/path/to.json`.
 
-## Data source: the JSON dump (source of truth)
-The site is built from a single pre-joined JSON dump of the production `scripture` DB, downloaded
-from the API — **not** per-record scraping. Confirmed endpoint:
+## Data source: the JSON dump
+The site is built from one pre-joined JSON dump of the production `scripture` DB, downloaded from the API:
 ```
 https://www.scriptureearth.org/api/db_dump.php?v=1&key=<your key>
 ```
@@ -23,45 +22,43 @@ The dump keys entries by a row ordinal (the real key is `relationships.idx`); th
 URLs as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`. Details + how to test your key:
 [`scripts/README-dump.md`](scripts/README-dump.md).
 
-Two older ingest paths are **deprecated**, fallback only (not in any default build): the SQLite/`mysqldump`
-path (`npm run build:sqlite`) and the JSON API harvest (`scripts/harvest/`, `npm run build:api`).
-
 ## Build & run
 ```bash
-npm install
-npm run setup:data           # one-time: get data/scripture.json (prebuilt; no key needed)
+pnpm install
+pnpm run setup:data          # one-time: get data/scripture.json (prebuilt; no key needed)
 
-# (A) Build from an existing data/scripture.json — source of truth.
-npm run build:dump           # extract.mjs (project -> content/) then astro build -> dist/
+# (A) Build from an existing data/scripture.json
+pnpm run build:dump          # extract.mjs (project -> content/) then astro build -> dist/
 
-# (B) FRESH build — re-download the live dump first (maintainers; needs SE_KEY).
-SE_KEY=… npm run build:fresh  # fetch:dump -> extract -> astro build
+# (B) FRESH build — re-download the live dump first (maintainers; needs SE_KEY)
+SE_KEY=… pnpm run build:fresh  # fetch:dump -> extract -> astro build
 
-# Deprecated fallbacks:
-npm run build:sqlite         # SQLite/mysqldump path (needs awk + node:sqlite)
-npm run build:api            # JSON-harvest path (no buy rows)
-
-npm run dev                  # dev server (build content once first: npm run extract)
-npm run preview              # serve dist/
+pnpm run dev                 # dev server (build content once first: pnpm run extract)
+pnpm run preview             # serve dist/
 ```
-- `npm run extract` regenerates `content/` (and `public/search-index.txt`) from `data/scripture.json` without building.
-  Add `SE_SKIP_PLAYLISTS=1` for a fast dev build (skips the per-playlist `.txt` fetch).
-- `npm run extract:i18n` regenerates the per-locale UI catalogs — rarely needed (see note below).
+- `pnpm run extract` regenerates `content/` (and `public/search-index.txt`) from `data/scripture.json` without building.
+  Add `SE_SKIP_PLAYLISTS=1` for a fast dev build (skips the per-playlist `.txt` fetch — never deploy such a build).
+- `pnpm run extract:i18n` regenerates the per-locale UI catalogs — rarely needed (see note below).
+- `pnpm run bench:search-index` / `pnpm run bench:size` — the two size gates (see `bench/`).
 
 ## Layout
-- `src/pages/` — routes: `/` (lean search-first home), `/browse/` (full grid), `/language/<slug>/`
-  (per-entry, slug = `<iso>[-<rod>][-<var>]`), `/country/<CC>/`.
-- `src/components/`, `src/layouts/`, `src/lib/` — card, switcher, base layout, UI helpers.
-- `public/` — static assets: `site.css`, `i18n.js` (client localizer), `favicon.ico`, `sil-logo.webp`,
-  and **`i18n/*.json`** (see below). `search-index.json` is generated (git-ignored).
+- `src/pages/` — routes: `/` (search-first home), `/browse/` (full grid), `/language/<slug>/`
+  (per-entry, slug = `<iso>[-<rod>][-<var>]`), `/countries/`, `/country/<CC>/`.
+- `src/components/`, `src/layouts/`, `src/lib/`, `src/scripts/`, `src/styles/` — cards, base layout, UI helpers,
+  client bundles (search, i18n localizer, browse facets, geo hint), stylesheet.
+- `public/` — static assets: `_headers`, `_redirects`, logos, favicon, and **`i18n/*.json`** (see below).
+  `search-index.txt` is generated (git-ignored).
 - `functions/index.php.js` + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
-- `scripts/` — `fetch_dump.mjs` (dump API → `data/scripture.json`), `extract.mjs` (projector → content JSON), `extract_i18n.mjs`; `extract_sqlite.mjs`/`convert_dump.mjs` + `harvest/` are deprecated fallbacks.
-- `content/`, `content-api/`, `data/`, `public/search-index.json` — **generated / local; git-ignored.**
+- `scripts/` — `fetch_dump.mjs` (dump API → `data/scripture.json`), `extract.mjs` (projector → content JSON),
+  `build_search_index.mjs`, `precompress_dist.mjs`, `build_sizes.mjs`/`check_sizes.mjs`, i18n/geo generators.
+- `content/`, `data/`, `public/search-index.txt`, `dist/` — **generated / local; git-ignored.**
 
-## i18n (important)
-UI shows in English by default; the other locales are a **client-side** enhancement (`i18n.js` swaps text
-from `public/i18n/*.json`). Those catalogs are **code-owned** — committed to the repo and edited here; the
-DB `translations_*` tables were a one-time seed (`extract_i18n.py`), **not** re-run on every build.
+## i18n
+UI shows in English by default; the other locales are a **client-side** enhancement (`src/scripts/i18n.js`
+swaps text from `public/i18n/*.json`). Those catalogs are **code-owned** — committed to the repo and edited
+here; the DB `translations_*` tables were a one-time seed, **not** re-run on every build.
 
 ## Deploy
-See `deploy.md` (Cloudflare Pages via Wrangler direct upload). Design/rationale: `RESULTS-capstone.md`.
+Automatic: `.github/workflows/deploy.yml` builds and publishes to Cloudflare Pages on every push to `main`.
+Manual and PR-preview details: [`deploy.md`](deploy.md). Known gaps: [`CURRENT-ISSUES.md`](CURRENT-ISSUES.md).
+Agent/contributor guide: [`AGENTS.md`](AGENTS.md).

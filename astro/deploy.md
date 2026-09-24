@@ -1,54 +1,66 @@
 # Deploy to Cloudflare Pages
 
-Live preview: **https://se-proto-en.pages.dev/** (project `se-proto-en`, already created).
+Live site: **https://se-proto-en.pages.dev/** (Cloudflare Pages project `se-proto-en`, production branch `main`).
 
-Direct upload via Wrangler — **no Git integration, no build-on-Cloudflare.** The build runs locally
-(it needs the DB or the API harvest), and only the finished `dist/` is uploaded. **Run everything from
-this `astro/` dir** so Wrangler picks up `functions/` alongside `dist/`.
+Direct upload via Wrangler — **no Git integration, no build-on-Cloudflare.** The build runs in GitHub
+Actions (or locally), and only the finished `dist/` is uploaded. Wrangler is a pinned devDependency and
+is always run from this `astro/` dir so it picks up `functions/` alongside `dist/`.
 
-`dist/` is ~4,460 files (4,233 language pages + countries + home/browse/countries), well under the
-**20,000-file Free** limit — no paid plan needed.
+`dist/` is ~4,500 files, well under the **20,000-file Free** limit.
 
-## Steps
+## Automatic (the normal path)
 
-**1. Authenticate** — one-time, only if not already logged in (opens a browser for Cloudflare OAuth):
+| Trigger | Workflow | What happens |
+|---|---|---|
+| push to `main` | `.github/workflows/deploy.yml` | fetch dump → build → `pnpm run deploy` → **production** |
+| PR to `main` touching `astro/**` | `.github/workflows/preview.yml` | same build, `wrangler pages deploy --branch <pr-branch>` → per-branch **preview URL** posted as a PR comment |
+| PR to `main` touching `astro/**` | `.github/workflows/size-benchmark.yml` | build, diff `dist/assets/sizes.json` against production, sticky comment, fail on budget breach |
+
+All three share `.github/actions/build-site` (pnpm install → `fetch:dump` → `build:dump`).
+
+Repository configuration (Settings → Secrets and variables → Actions):
+
+| name | kind | required | purpose |
+|---|---|---|---|
+| `SE_KEY` | secret | yes | API key for `/api/db_dump.php` |
+| `CLOUDFLARE_API_TOKEN` | secret | for publish | token with *Account · Cloudflare Pages · Edit* |
+| `CLOUDFLARE_ACCOUNT_ID` | secret | for publish | Cloudflare account id |
+| `SE_BASE`, `SE_DUMP_PATH` | variable | no | endpoint overrides (defaults are correct for production) |
+| `SIZE_BENCH_BASELINE_URL` | variable | no | override the size-benchmark baseline URL |
+
+Without the two Cloudflare secrets, `deploy.yml` still builds (and fails on data problems) but skips
+the publish step; `preview.yml` skips entirely with a notice.
+
+## Manual
+
+**1. Authenticate** — one-time (opens a browser for Cloudflare OAuth):
 ```bash
-npx wrangler login
+pnpm exec wrangler login
 ```
 
-**2. Build + deploy** — one command; pick the data source (same output schema either way):
+**2. Build + deploy:**
 ```bash
-npm run deploy:api      # API harvest cache -> build -> deploy   (fresher, no buy links)
+SE_KEY=… pnpm run deploy:fresh   # fetch dump -> extract -> build -> precompress -> deploy
+pnpm run deploy:dump             # same, from the existing data/scripture.json
+pnpm run deploy                  # upload the current dist/ as-is (still runs predeploy)
 ```
-```bash
-npm run deploy:dump     # data/scripture.db -> build -> deploy   (full parity, incl. buy links)
-```
-Or deploy the current `dist/` as-is (no rebuild): `npm run deploy`.
+`predeploy` (npm `pre*` lifecycle) writes `dist/assets/sizes.json` and brotli-precompresses the search
+index before every deploy. Each deploy publishes a new production deployment (~30 s).
 
-Each publishes a new production deployment to **https://se-proto-en.pages.dev/** (~30 s), uploading
-`dist/` and compiling `functions/index.php.js`. (First-time only, if recreating the project:
-`npx wrangler pages project create se-proto-en --production-branch main`.)
-
-### npm scripts
-| script | does |
-|---|---|
-| `npm run deploy` | deploy current `dist/` (assumes you've built) |
-| `npm run deploy:api` | `build:api` then deploy |
-| `npm run deploy:dump` | `build:dump` then deploy |
+First-time only, if recreating the project:
+`pnpm exec wrangler pages project create se-proto-en --production-branch main`.
 
 ## What ships alongside the pages
 - **`public/_redirects`** (in `dist/`) — legacy path redirects: `00<loc>.php` → `/?lang=<loc>`, and the
   vanity `/‹iso›[-rod[-var]]` → `/language/‹slug›/` collapse (see `REDIRECTS.md`).
 - **`functions/index.php.js`** — handles the legacy **query-string** deep links (`?iso=`, `?idx=`,
-  `?sortby=country`) that `_redirects` can't read. It is **scoped to `/index.php` only** (named-file
-  routing), so Pages invokes Functions solely on that path — home, pages, and assets are served as pure
-  static files and are **not** counted as Functions invocations.
+  `?sortby=country`) that `_redirects` can't read. It is **scoped to `/index.php` only**, so every other
+  path is served as a pure static file and is not counted as a Functions invocation.
+- **`public/_headers`** — immutable caching for `/_astro/*` and `/i18n/*`; `precompress_dist.mjs` appends
+  the `Content-Encoding: br` rule for the search index.
 
 ## Notes
-- The URL is **public to anyone who has it** (ScriptureEarth catalog data — already public upstream).
-- **Routing:** absolute paths + trailing slashes work at the `pages.dev` root as-is (`/language/hau/` →
-  `index.html`); no base-path config.
-- **Home is the lean search-first page**; the heavy full-catalog grid lives behind `/browse/`.
-- **Cache caveat:** `i18n.js` and `search-index.json` are unhashed `/public` assets, so returning
-  visitors may get cached copies until the production TODO (content-hash + immutable) lands.
-- **Re-deploy** later = re-run steps 1 + 3.
+- **Routing:** absolute paths + trailing slashes work at the `pages.dev` root as-is; no base-path config.
+- **Custom domain / HTTP→HTTPS / www:** Cloudflare dashboard, not this repo.
+- Renaming the Pages project means creating a new one and updating `se-proto-en` in `package.json`,
+  `preview.yml` and `scripts/check_sizes.mjs`.

@@ -90,7 +90,7 @@ const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
 // occurrence: { iso, slug, group, source, name }
 function gather() {
   if (!existsSync(SRC)) {
-    console.error(`ERROR: ${SRC} not found. Run \`npm run extract\` first.`);
+    console.error(`ERROR: ${SRC} not found. Run \`pnpm run extract\` first.`);
     process.exit(1);
   }
   const langs = JSON.parse(readFileSync(SRC, 'utf8'));

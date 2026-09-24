@@ -4,11 +4,7 @@
 // object (keyed by a row ordinal; the real language key is relationships.idx), the
 // same data the live site's per-language nav renders. See scripts/README-dump.md.
 //
-// The old SQLite/mysqldump path (extract_sqlite.mjs) and JSON harvest (harvest/)
-// are DEPRECATED. This projector emits the identical content/ schema they did, so
-// src/ (pages, search, i18n) is unchanged.
-//
-// Run: node scripts/extract.mjs   (then build_search_index.mjs — `npm run extract`)
+// Run: node scripts/extract.mjs   (then build_search_index.mjs — `pnpm run extract`)
 import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -22,7 +18,7 @@ const OUT = path.join(HERE, '..', 'content');
 const ASSET_BASE = 'https://scriptureearth.org';
 const PLAYLIST_CACHE = DATA.playlistCache;
 
-// language_name locale keys → our locale codes (matches extract_sqlite.mjs LN_*).
+// language_name locale keys → our locale codes.
 const LN = {
   English: 'eng', Spanish: 'spa', Portuguese: 'por', French: 'fra', Dutch: 'nld',
   German: 'deu', Chinese: 'cmn', Korean: 'kor', Russian: 'rus', Arabic: 'arb',
@@ -169,7 +165,7 @@ function countriesOf(r) {
   });
 }
 
-// --- slug (same collision rule as extract_sqlite.mjs) ---
+// --- slug ---
 const seenSlugs = new Map();
 function makeSlug(iso, rod, variant, idx) {
   let s;
@@ -310,7 +306,7 @@ for (const e of entries) {
   for (const b of linkRows(r.buy)) R.use.push(res('use', 'buy', 'Buy', s(b.title) || s(b.testament) || s(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
 
   // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
-  // toward read availability (as extract_sqlite.mjs did for the SAB flag) w/o a link.
+  // toward read availability (SAB flag) w/o a link.
   const sab = r.se_sab || {};
   const hasSab = vals(sab.text).length > 0 || vals(sab.audio).length > 0;
 
@@ -406,8 +402,7 @@ function dump(name, obj) {
 // languages that HAVE raw data in it vs. languages we actually emitted a row from.
 // raw>0 but emitted==0 ⇒ the field shape changed. SE_STRICT=1 turns findings into a
 // non-zero exit (use it to audit a dump; NOT wired into CI, which must still deploy
-// the best-available build). Also reports title coverage for watch/buy — data the
-// old SQLite dump carried (watch_what/buy_what) that the JSON dump currently omits.
+// the best-available build). Also reports title coverage for watch/buy.
 function auditData(ents, langs) {
   const byIdx = new Map(langs.map((d) => [d.idx, d]));
   const some = (a, p) => Array.isArray(a) && a.some(p);

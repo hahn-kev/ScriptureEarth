@@ -4,8 +4,7 @@
 // The endpoint returns ONE pre-joined JSON object: keyed by a row ordinal, each
 // value is `{ type, id, attributes, relationships }` for a language (the real key
 // is relationships.idx). This is the SAME data the live site's per-language nav
-// renders — strictly more complete than the deprecated JSON harvest (it includes
-// buy links) and simpler than the deprecated mysqldump path (no awk/SQLite step).
+// renders.
 // Auth is the same key the rest of /api/ uses (a row in the `api_users` table).
 //
 // Requires Node 18+ (global fetch). Run:  SE_KEY=... node scripts/fetch_dump.mjs

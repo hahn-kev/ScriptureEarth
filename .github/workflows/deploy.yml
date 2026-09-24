@@ -1,0 +1,62 @@
+name: Build & Deploy
+
+# Production deploy of the static Astro site (astro/) on every push to main:
+#   fetch JSON dump → project to content/ → astro build → Cloudflare Pages.
+# The publish step is skipped (build only) when the Cloudflare secrets are absent,
+# so the build still runs and fails loudly on data problems without deploy access.
+#
+# Configuration:
+#   secrets.SE_KEY                 (required)  API key for the dump endpoint
+#   secrets.CLOUDFLARE_API_TOKEN   (optional)  present → publish; absent → build only
+#   secrets.CLOUDFLARE_ACCOUNT_ID  (optional)  present → publish; absent → build only
+#   vars.SE_BASE                   (optional)  API host (default https://www.scriptureearth.org)
+#   vars.SE_DUMP_PATH              (optional)  dump endpoint path (default /api/db_dump.php)
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: deploy-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Build site
+        uses: ./.github/actions/build-site
+        with:
+          se-key: ${{ secrets.SE_KEY }}
+          se-base: ${{ vars.SE_BASE }}
+          se-dump-path: ${{ vars.SE_DUMP_PATH }}
+
+      - name: Check Cloudflare credentials
+        id: cf
+        env:
+          CF_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+        run: |
+          if [ -n "$CF_TOKEN" ] && [ -n "$CF_ACCOUNT" ]; then
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+            echo "::notice::Cloudflare secrets not set — skipping Pages publish (build only)."
+          fi
+
+      # `deploy` runs `predeploy` first (sizes.json + brotli precompress), then
+      # `wrangler pages deploy dist --branch main` = the Pages production branch.
+      - name: Deploy to Cloudflare Pages
+        if: steps.cf.outputs.publish == 'true'
+        working-directory: astro
+        run: pnpm run deploy
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

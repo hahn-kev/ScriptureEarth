@@ -1,4 +1,4 @@
-// One-shot data bootstrap for a fresh git worktree.  `npm run setup:data`
+// One-shot data bootstrap for a fresh git worktree.  `pnpm run setup:data`
 //
 // LOCAL DEV ONLY. CI does not use this — a CI build fetches the dump fresh
 // (`fetch:dump`) and lets `extract.mjs` fetch video playlist listings from the
@@ -76,7 +76,7 @@ the live API instead, put your key in that folder's config.env:
     # endpoint defaults are correct; override only for testing:
     # SE_DUMP_URL=https://www.scriptureearth.org/api/db_dump.php?v=1  # or a file:// path
 
-...then re-run:  npm run setup:data
+...then re-run:  pnpm run setup:data
 `);
   process.exit(1);
 }
@@ -130,7 +130,7 @@ function findLargestJson(root) {
 
 // ---- JSON dump (data/scripture.json) ----
 // Prefer the prebuilt download (fast, no key). To rebuild from the live API use
-// `npm run fetch:dump` (or `build:fresh`), or run this with SE_KEY/SE_DUMP_URL set
+// `pnpm run fetch:dump` (or `build:fresh`), or run this with SE_KEY/SE_DUMP_URL set
 // and no JSON_URL. SE_JSON_URL may point at a zip OR a raw .json.
 if (existsSync(P.json)) {
   console.error(`✓ dump already present: ${P.json}`);
@@ -196,4 +196,4 @@ if (dirHasFiles(P.playlistCache)) {
   console.error('  (no SE_PLAYLIST_CACHE_URL — extract.mjs will fetch playlists on demand)');
 }
 
-console.error(`\n✓ Data ready in ${dir}\nNext:  npm run extract  &&  npm run dev`);
+console.error(`\n✓ Data ready in ${dir}\nNext:  pnpm run extract  &&  pnpm run dev`);

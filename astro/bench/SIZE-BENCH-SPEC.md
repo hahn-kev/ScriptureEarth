@@ -254,7 +254,7 @@ is observed (§7).
 ### 6.1 Local
 
 ```bash
-npm run bench:size
+pnpm run bench:size
 ```
 
 Builds (or reuses) `dist/assets/sizes.json`, fetches the prod baseline, prints a
@@ -282,10 +282,10 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: 20, cache: npm, cache-dependency-path: astro/package-lock.json }
-      - run: npm ci
+      - run: pnpm install --frozen-lockfile
         working-directory: astro
       # build the site + produce dist/assets/sizes.json
-      - run: npm run build:dump && node scripts/build_sizes.mjs
+      - run: pnpm run build:dump && node scripts/build_sizes.mjs
         working-directory: astro
       # diff vs prod baseline, render markdown table + a verdict file, never fails here
       - run: node scripts/check_sizes.mjs --report size-report.md --verdict size-verdict.txt
@@ -308,10 +308,8 @@ comment step 403s. If external-fork PRs must be supported, switch to the
 `pull_request_target` or artifact + `workflow_run` two-workflow pattern. For same-repo
 PRs, the above is sufficient. (This is a GitHub platform limit, not action-specific.)
 
-The building step above uses `build:dump` (dump→SQLite→extract→build); it depends on the
-`SE_DUMP_PATH` wiring that the dump→SQLite pipeline still has pending. Until that lands,
-the job can run on a smaller `build:api` harvest or be gated the same way the astro-poc
-CI is.
+The build step above is what shipped as `.github/actions/build-site` (fetch JSON dump →
+`extract.mjs` → `astro build`), shared by `deploy.yml`, `preview.yml` and `size-benchmark.yml`.
 
 ---
 

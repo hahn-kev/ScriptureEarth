@@ -5,8 +5,9 @@
 	// ISO (iso), RODCode (Frod), ChangeCode (Trod), CountryCode, Language, Dialect, Location
 	
 	/*
-		FromRODCode to ToRODCode UPDATED (9/2017):
+		FromRODCode to ToRODCode UPDATED (1/2026):
 			scripture_main
+			nav_ln
 			ROD_Dialect
 			isop
 			all navigational languages
@@ -132,6 +133,12 @@
 			}
 		}
 
+		/****************************************************************************************************
+		 * 
+		 * 		Update all of the ROD_Code from FromRODCode to ToRODCode
+		 * 
+		 ****************************************************************************************************/
+
 		$query="UPDATE scripture_main SET ROD_Code = '$Trod' WHERE ISO = '$iso' AND ROD_Code = '$Frod'";
 		$result=$db->query($query);
 		if (!$result) {
@@ -139,6 +146,9 @@
 		}
 	
 		$query="UPDATE isop SET ROD_Code = '$Trod' WHERE ISO = '$iso' AND ROD_Code = '$Frod'";
+		$result=$db->query($query);
+
+		$query="UPDATE nav_ln SET ROD_Code = '$Trod' WHERE ISO = '$iso' AND ROD_Code = '$Frod'";
 		$result=$db->query($query);
 		
 		$nav_LN_names = [];											// save all of the LN_... natianal language names

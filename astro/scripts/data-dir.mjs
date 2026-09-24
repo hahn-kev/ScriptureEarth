@@ -5,8 +5,8 @@
 // Rather than committing a machine-specific path, we stash that path in ONE shared
 // git config key (`se.datadir`) that all worktrees see (it lives in the common
 // .git/config, not the per-worktree config). The folder it points at holds both the
-// data (scripture.sql / scripture.db) and a gitignored `config.env` with the secrets
-// (SE_KEY, SE_DUMP_PATH, ...). See scripts/README-dump.md and `npm run setup:data`.
+// data (scripture.json + playlist cache) and a gitignored `config.env` with the secrets
+// (SE_KEY, SE_DUMP_PATH, ...). See scripts/README-dump.md and `pnpm run setup:data`.
 //
 // Resolution order (first hit wins):
 //   1. SE_DATA_DIR env var            — explicit, one-off override
@@ -75,13 +75,11 @@ export function loadDataEnv(dataDir = resolveDataDir()) {
   return applied;
 }
 
-/** Convenience: resolved paths for the two data artifacts. */
+/** Convenience: resolved paths for the data artifacts. */
 export function dataPaths(dataDir = resolveDataDir()) {
   return {
     dir: dataDir,
     json: path.join(dataDir, 'scripture.json'),   // consolidated dump (current source of truth)
-    sql: path.join(dataDir, 'scripture.sql'),      // DEPRECATED mysqldump path
-    db: path.join(dataDir, 'scripture.db'),        // DEPRECATED SQLite path
     playlistCache: path.join(dataDir, 'playlist-txt-cache'),
     configEnv: path.join(dataDir, 'config.env'),
   };

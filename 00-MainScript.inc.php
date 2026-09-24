@@ -66,7 +66,7 @@ if (session_status() === PHP_SESSION_NONE) @session_start();
 <script type="text/javascript" language="javascript" src="_js/jquery.jplayer-2.9.2.min.js"></script>
 <script type="text/javascript" language="javascript" src="_js/jplayer.playlist.min.js"></script>
 <script type="text/javascript" language="javascript" src="_js/user_events.js?v=1.0.3"></script>
-<script type="text/javascript" language="javascript" src="_js/SpecificLanguage.js?v=1.0.7"></script>
+<script type="text/javascript" language="javascript" src="_js/SpecificLanguage.js?v=1.1.3"></script>
 <script type='text/javascript' language='javascript1.2' src="_js/00-SpecificLanguage.js?v=1.0.9"></script>
 <!--script type='text/javascript' language='javascript'	src="_js/LangSearch.js?v=1.0.3"></script-->
 <!--link rel='stylesheet' type='text/css' 	href='_css/boilerplate.css' /-->
@@ -647,6 +647,7 @@ if (session_status() === PHP_SESSION_NONE) @session_start();
 			margin-left: 84px;
 			margin-bottom: 8px;
 		}
+		div.autonymLanguageNames,
 		div.alternativeLanguageNames,
 		div.Country,
 		div.languageCode {
@@ -696,6 +697,7 @@ if (session_status() === PHP_SESSION_NONE) @session_start();
 			margin-right: 34px;
 			margin-bottom: 8px;
 		}
+		div.autonymLanguageNames,
 		div.alternativeLanguageNames,
 		div.Country,
 		div.languageCode {
@@ -763,7 +765,7 @@ if (!isset($_SESSION['nav_ln_array'])) {
 	$ln_query = 'SELECT `translation_code`, `name`, `nav_fileName`, `ln_number`, `language_code`, `ln_abbreviation` FROM `translations` ORDER BY `name`';
 	$ln_result_temp = $db->query($ln_query) or die('Query failed:  ' . $db->error . '</body></html>');
 	if ($ln_result_temp->num_rows == 0) {
-		die('<div style="background-color: white; color: red; font-size: 16pt; padding-top: 20px; padding-bottom: 20px; margin-top: 200px; ">' . translate('The translation_code is not found.', $st, 'sys') . '</div></body></html>');
+		die('<div style="background-color: white; color: red; font-size: 16pt; padding-top: 20px; padding-bottom: 20px; margin-top: 200px; ">' . translate('The translation_code is not found.', $st, 'sys') . '</div>');
 	}
 	while ($ln_row = $ln_result_temp->fetch_array()) {
 		$ln_temp[0] = $ln_row['translation_code'];				// e.g., 'eng' [3 lower case letters]
@@ -787,7 +789,12 @@ $Internet = 0;		// localhost is 127.0.0.1 but '192.168.x.x' should be not-on-the
 $Internet = (substr($_SERVER['REMOTE_ADDR'], 0, 7) != '192.168' ? 1 : 0);
 
 $asset = 0;
-if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
+if (isset($_GET['asset'])) {
+	$asset = (int)$_GET['asset'];
+	if ($asset != 0 && $asset != 1) {
+		die('asset is not valid.</body></html>');
+	}
+}
 ?>
 
 <style>
@@ -1080,10 +1087,12 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 							// ********************************************************************************************************
 
 							// display counter
+							$ISOorROD = $ISO != 'qqq' ? $ISO : $ROD_Code;
+							echo "<script>console.log('ISO: $ISO, counterName: $counterName, GetName: $GetName, ISOorROD: $ISOorROD');</script>";
 							Counter('AllCounter', false);									// Total website counter, don't display
 							Counter('AllMLCounter', false);									// All of the major languages counter, don't display
-							Counter('All_' . $ISO . '_Counter', false);						// All of the ISO counter, don't display
-							Counter('All_' . $GetName . '_' . $ISO . '_Counter', false);	// All of the Country and the varient language counter, don't display
+							Counter('All_' . $ISOorROD . '_Counter', false);						// All of the ISO counter, don't display
+							Counter('All_' . $GetName . '_' . $ISOorROD . '_Counter', false);	// All of the Country and the varient language counter, don't display
 							Counter($counterName . 'MLCounter', false);						// All of the major language counter, don't display
 							Counter($counterName . 'ML_' . $GetName . '_Counter', false);	// All of the major language and the Country counter, don't display
 						?>
@@ -1091,7 +1100,7 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 						<div style="position: relative; top: 90px; ">
 							<div class="langCounter">
 								<?php
-								Counter($counterName . "ML_" . $GetName . "_" . $ISO . "_Counter", true);		// All of the major language and the Country and the varient language counter, display
+								Counter($counterName . "ML_" . $GetName . "_" . $ISOorROD . "_Counter", true);		// All of the major language and the Country and the varient language counter, display
 								?>
 							</div>
 
@@ -1115,7 +1124,7 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 
 						<?php // display copyright ?>
 							<div id='copyright' style='top: 140px; '>
-								<div id='aboutLang' title="<?php echo translate('Tap to find out more about the purpose and content of the site.', $st, 'sys'); ?>" onclick="aboutSection('CR'); ">© <?php echo date('Y') . ' ' .  translate('About this site', $st, 'sys'); ?></div>
+								<div id='aboutLang' onclick="aboutSection('CR'); ">© <?php echo date('Y') . ' ' .  translate('About this site', $st, 'sys'); ?></div>
 							</div>
 						<?php
 					}
@@ -1169,12 +1178,19 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 					$countryTemp = $SpecificCountry;
 					if (strpos("$SpecificCountry", '.')) $countryTemp = substr("$SpecificCountry", strpos("$SpecificCountry", '.') + 1);			// In case there's a "." in the "country"
 					$country = trim($r["$countryTemp"]);								// name of the full country if there is one
-					?>
 
+					if ($asset === 0) {
+					?>
+						<div id="background_header" style="background-image: url('../images/00<?php echo $st; ?>-ScriptureEarth_header.jpg'); "><div style="cursor: pointer; " onclick="window.open('<?php echo $Scriptname; ?>', '_self')"><img id="empty" style="min-width: 450px; max-width: 550px; " src="./images/empty.png" /></div></div> <!-- ScriptureEarth and the Earth image -->
+						<div id="background" style="background-image: url('../images/background_earth.jpg'); "></div> <!-- ScriptureEarth and the Earth image -->
+					<?php
+					}
+					else {
+						echo '<div id="background" style="background-image: url(\'../images/background_earth.jpg\'); opacity: 0; "></div>';	// ScriptureEarth and the Earth image
+					}
+					?>
 					<!-- The id="background_header" in the next line is the error! -->
 					<!-- div id="background_header" style="background-image: url('../images/00< ?php echo $st; ?>-ScriptureEarth_header.jpg'); cursor: pointer; " onclick="window.open('< ?php echo $Scriptname; ?>', '_self')"><img id="empty" src="./images/empty.png" /></div> < !-- ScriptureEarth and the Earth image -->
-					<div id="background_header" style="background-image: url('../images/00<?php echo $st; ?>-ScriptureEarth_header.jpg'); "><div style="cursor: pointer; " onclick="window.open('<?php echo $Scriptname; ?>', '_self')"><img id="empty" style="min-width: 450px; max-width: 550px; " src="./images/empty.png" /></div></div> <!-- ScriptureEarth and the Earth image -->
-					<div id="background" style="background-image: url('../images/background_earth.jpg'); "></div> <!-- ScriptureEarth and the Earth image -->
 
 					<div class="threeMenus">
 						<?php
@@ -1231,7 +1247,7 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 											</div>
 											<li><a href='#' onclick="menuSet = 0; window.open('./Feedback/Feedback.php?st=<?php echo $st; ?>')"><?php echo translate('Contact Us', $st, 'sys'); ?></a></li>
 											<?php if ($st == 'eng') { ?>
-												<li><a href='#' onclick="menuSet = 0; window.open('https://give.sil.org/give/531194/#!/donation/checkout')"><?php echo translate('Donate', $st, 'sys'); ?></a></li>
+												<li><a href='#' onclick="menuSet = 0; window.open('https://give.sil.org/campaign/814239/donate')"><?php echo translate('Donate', $st, 'sys'); ?></a></li>
 											<?php }
 											if ($st == 'eng' || $st == 'spa') { ?>
 												<li><a href='#' onclick="menuSet = 0; window.open('./promotionMaterials/promotion.php?st=<?php echo $st; ?>')"><?php echo translate('Promotion Materials', $st, 'sys'); ?></a></li>
@@ -1279,10 +1295,16 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 			/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/\/
 			******************************************************************************************************** */
 			else {
+				if ($asset === 0) {
 				?>
-				<div id="background_header" style="background-image: url('../images/00<?php echo $st; ?>-ScriptureEarth_header.jpg'); "><div style="cursor: pointer; " onclick="window.open('<?php echo $Scriptname; ?>', '_self')"><img id="empty" src="./images/empty.png" /></div></div> <!-- ScriptureEarth and the Earth image -->
-				<div id="background" style="background-image: url('../images/background_earth.jpg'); "></div> <!-- ScriptureEarth and the Earth image -->
-
+					<div id="background_header" style="background-image: url('../images/00<?php echo $st; ?>-ScriptureEarth_header.jpg'); "><div style="cursor: pointer; " onclick="window.open('<?php echo $Scriptname; ?>', '_self')"><img id="empty" src="./images/empty.png" /></div></div> <!-- ScriptureEarth and the Earth image -->
+					<div id="background" style="background-image: url('../images/background_earth.jpg'); "></div> <!-- ScriptureEarth and the Earth image -->
+				<?php
+				}
+				else {
+					echo '<div id="background" style="background-image: url(\'../images/background_earth.jpg\'); opacity: 0; "></div>';	// ScriptureEarth and the Earth image
+				}
+				?>
 				<!-- div style="position: absolute; top: 0; left: 20%; width: 35%; "> < !-- "empty" "window" over "Scripture Earth" if you click on it the script links to "00i-Scripture_Index.org" -- >
 					<div style="position: relative; top: 0; left: 0; z-index: 10; cursor: pointer; " onclick="window.open('< ?php echo $Scriptname; ?>', '_self')"><img id="empty" src="./images/empty.png" /></div>
 				</div -->
@@ -1301,7 +1323,7 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 						//	Changed to work with the master array -- Lærke
 						//	Modified to (condition) ? value1 : value2 -- Scott
 						?>
-						<select id='navLang' onchange="menuChange()" title="<?php echo translate('Click here to choose the interface language.', $st, 'sys'); ?>">
+						<select id='navLang' onchange="menuChange()">
 							<?php
 							foreach ($_SESSION['nav_ln_array'] as $tempArray) {
 								echo "<option value='$tempArray[2]" . ($asset == 1 ? '?asset=1' : '') . '\'' . ($st == $tempArray[0] ? ' selected=\'selected\'' : '') . ">" . translate($tempArray[1], $tempArray[0], 'sys') . '</option>';
@@ -1365,21 +1387,21 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 
 						<?php /* -----------------------------------------------------------------------------------
 								AJAX is down 2 lines here (showLanguage()).
-								showLanguage(this.value) in autoLanguage.js and myFuncttranslate('Home', $st, 'sys')ion(this.value, '$st') in autoLanguage.js -->
+								showLanguage(this.value) in LangSearch.js
 								after 3 letter display the languages/alternate languages/ISO button
                     	-------------------------------------------------------------------------------------------- */ ?>
 						<div id="showLanguageID" name="showLanguageID">
-							<input type="text" id="ID" title="<?php echo translate('Find a language page: type at least 3 letters of the language name or code (ISO 639-3).', $st, 'sys'); ?>" placeholder="<?php echo translate('Language (or code)', $st, 'sys'); ?>" onfocus="submenuBlur()" onKeyUp="showLanguage(this.value, '<?php echo $st; ?>', <?php echo $Internet; ?>, '<?php echo $MajorLanguage; ?>', '<?php echo $Variant_major; ?>', '<?php echo $SpecificCountry; ?>', <?php echo $asset; ?>)" value="" />
+							<input type="text" id="ID" placeholder="<?php echo translate('Language (or code)', $st, 'sys'); ?>" onfocus="submenuBlur()" onKeyUp="showLanguage(this.value, '<?php echo $st; ?>', <?php echo $Internet; ?>, '<?php echo $MajorLanguage; ?>', '<?php echo $Variant_major; ?>', '<?php echo $SpecificCountry; ?>', <?php echo $asset; ?>)" value="" />
 						</div>
 
 						<?php // display the first letter(s) of the countries button ?>
 						<div id="showCountryID" name="showCountryID">
-							<input type="text" id="CID" autocomplete="off" title="<?php echo translate('Find a country list: type the country name.', $st, 'sys'); ?>" placeholder="<?php echo translate('Country', $st, 'sys'); ?>" onKeyUp="showCountry(this.value, '<?php echo $st; ?>', <?php echo $Internet; ?>, '<?php echo $SpecificCountry; ?>', <?php echo $asset; ?>)" value="" />
+							<input type="text" id="CID" autocomplete="off" placeholder="<?php echo translate('Country', $st, 'sys'); ?>" onKeyUp="showCountry(this.value, '<?php echo $st; ?>', <?php echo $Internet; ?>, '<?php echo $SpecificCountry; ?>', <?php echo $asset; ?>)" value="" />
 						</div>
 
 						<div id="listCountriesID" name="listCountriesID">
 							<?php // display all of the countries button ?>
-							<button id="AID" title="<?php echo translate('Tap to get a list of countries available.', $st, 'sys'); ?>" onclick="AllCountries('<?php echo $Scriptname; ?>', '<?php echo $st ?>', '<?php echo $SpecificCountry; ?>', <?php echo $Internet; ?>, <?php echo $asset; ?>)"><?php echo translate('List by Country', $st, 'sys'); ?></button>
+							<button id="AID" onclick="AllCountries('<?php echo $Scriptname; ?>', '<?php echo $st ?>', '<?php echo $SpecificCountry; ?>', <?php echo $Internet; ?>, <?php echo $asset; ?>)"><?php echo translate('List by Country', $st, 'sys'); ?></button>
 							
 							<?php // display all the countries list. 'hide' at first ?>
 							<div id="countryList" style="margin-top: 0; "></div>
@@ -1410,12 +1432,10 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 					<div id="CountrySearch"></div>
 				</div>
 
-				<?php // display copyright ?>
-				<div id='copyright'>
-					<div>ScriptureEarth.org</div>
-				</div>
-
-			<?php
+				<?php // display copyright
+				if ($asset === 0) {
+					echo '<div id="copyright"><div>ScriptureEarth.org</div></div>';
+				}
 			}
 			?>
 		</div>
@@ -1482,4 +1502,4 @@ if (isset($_GET['asset']) && (int)$_GET['asset'] == 1) $asset = 1;
 	</script>
 
 	<?php // This script HAS to be down here for the major language dropdown box to work! ?>
-	<script type="text/javascript" language="javascript" src="_js/LangSearch.js?v=1.3.6"></script>
+	<script type="text/javascript" language="javascript" src="_js/LangSearch.js?v=1.3.9"></script>
