@@ -23,7 +23,7 @@ Catalog of languages and countries with scripture resources (read / listen / wat
 
 **Client search (home only):** lazy MiniSearch on first query, 120ms debounce, fetch `/search-index.txt` (columnar `\x1f` / tab / newline). Decode looks wrong (`length < 100`) → `/search-index.fallback.txt`. Prefix + fuzzy 0.2 + AND, cap 300. Then `window.__seApplyI18n(results)`. Header form `GET /?q=` is **not** read; only `#q` on the hero form searches.
 
-**i18n:** sync boot in `src/layouts/Base.astro` (`?lang=` → `localStorage se-loc` → `navigator.language` → `eng`). Bundled `src/scripts/i18n.js` fetches `/i18n/chrome.<loc>.json`, `names.<loc>.json`, `autonyms.json` with `?v=` from `src/lib/i18nVersion.ts`. Name chain: locale names → autonyms → baked English. 15 locales hardcoded in **both** `Base.astro` and `i18n.js`. RTL: `arb`, `fas`. `public/i18n/locales.json` unused by `src`.
+**i18n:** sync boot in `src/layouts/Base.astro` (`?lang=` → `localStorage se-loc` → first supported entry of `navigator.languages`, matched on the primary subtag like the legacy PHP's Accept-Language walk → `eng`). Bundled `src/scripts/i18n.js` fetches `/i18n/chrome.<loc>.json`, `names.<loc>.json`, `autonyms.json` with `?v=` from `src/lib/i18nVersion.ts`. Name chain: locale names → autonyms → baked English. The 15 locales come from `public/i18n/locales.json`, imported by both `Base.astro` and `i18n.js`. RTL: `arb`, `fas`.
 
 **Redirects:** `public/_redirects` (path-only, first-match-wins) + `functions/index.php.js` (query-string `/index.php` only; imports the generated `content/lang-map.json` for `?idx=`/`?iso=` lookups — extract before deploy). Functions run **before** `_redirects`. Shared-ISO `?iso=` → `/language/` chooser page. Vanity `/:iso` → `/language/<same>/` 301. Guard `200` rewrites for real routes/assets **above** the ISO catch-all. HTTP/www: Cloudflare dashboard, not this repo. Details: `REDIRECTS.md`.
 
@@ -93,7 +93,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
 - CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.
-- Changing chrome keys: update `scripts/i18n/en.json` (English master, not copied to public) **and** every `public/i18n/chrome.<loc>.json`. Adding a UI locale: both hardcoded locale lists + catalogs.
+- Changing chrome keys: update `scripts/i18n/en.json` (English master, not copied to public) **and** every `public/i18n/chrome.<loc>.json`. Adding a UI locale: an entry in `public/i18n/locales.json` (`bcp` is what browser languages match against) + catalogs.
 - `I18N_VERSION` hashes `src/scripts/i18n.js` + `public/i18n/*` via `process.cwd()` — build from repo root of this package.
 
 ## Important Files

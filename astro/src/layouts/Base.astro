@@ -22,11 +22,19 @@ const buildDate = buildTimestamp.slice(0, 10);
       window.__seI18nVer = i18nVer;
       var bcp = { tl: 'fil' };
       for (var code in locales) bcp[locales[code].bcp] = code;
+      // Browser languages in preference order (= Accept-Language q order); first one we
+      // support wins, matched on the primary subtag (en-US → en), as the legacy index.php did.
+      function fromBrowser() {
+        var prefs = navigator.languages && navigator.languages.length ? navigator.languages : [navigator.language || ''];
+        for (var i = 0; i < prefs.length; i++) {
+          var hit = bcp[String(prefs[i]).split('-')[0].toLowerCase()];
+          if (hit) return hit;
+        }
+      }
       var q = new URLSearchParams(location.search).get('lang');
-      var loc = (q && locales[q]) ? q
-        : localStorage.getItem('se-loc')
-        || bcp[(navigator.language || 'en').slice(0, 2).toLowerCase()]
-        || 'eng';
+      var saved = null;
+      try { saved = localStorage.getItem('se-loc'); } catch (e) {}
+      var loc = (q && locales[q]) ? q : saved || fromBrowser() || 'eng';
       if (!locales[loc]) loc = 'eng';
       if (q && locales[q]) { try { localStorage.setItem('se-loc', loc); } catch (e) {} }
       window.__seLoc = loc;
