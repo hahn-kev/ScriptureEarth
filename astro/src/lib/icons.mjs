@@ -79,7 +79,7 @@ export const ICON_SETS = {
   'fluent-color': {
     label: 'Fluent Color',
     icons: {
-      search: 'search-visual-24',
+      search: 'search-sparkle-24',
       home: 'home-24',
       languages: 'fluent:translate-24-regular',
       countries: 'globe-24',
