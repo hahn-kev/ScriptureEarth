@@ -33,7 +33,9 @@
   "group.read": "Baca",
   "group.listen": "Dengar",
   "group.watch": "Tonton",
-  "group.use": "Aplikasi & Cetak",
+  "group.app": "Aplikasi",
+  "group.buy": "Beli",
+  "group.other": "Lainnya",
 
   "country.eyebrow": "Negara",
   "unit.languages": "bahasa",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Entri katalog",
   "detail.onthispage": "Di halaman ini",
   "detail.noresources": "Belum ada sumber daya yang terdaftar untuk bahasa ini.",
+  "detail.original": "Situs asli",
+  "detail.viewlegacy": "Lihat di ScriptureEarth.org",
 
   "action.readonline": "Baca online",
   "action.download": "Unduh",
@@ -55,6 +59,7 @@
   "action.order": "Pesan",
   "action.openviewer": "Buka penampil",
   "action.open": "Buka",
+  "action.visit": "Kunjungi situs web",
 
   "footer.about": "Tentang",
   "footer.ministry": "Pelayanan dari SIL Global",

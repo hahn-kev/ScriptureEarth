@@ -27,13 +27,15 @@
   "pill.read": "Lezen",
   "pill.listen": "Luisteren",
   "pill.watch": "Bekijken",
-  "pill.app": "App",
+  "pill.app": "Apps",
   "pill.buy": "Kopen",
 
   "group.read": "Lezen",
   "group.listen": "Luisteren",
   "group.watch": "Bekijken",
-  "group.use": "Apps & print",
+  "group.app": "Apps",
+  "group.buy": "Kopen",
+  "group.other": "Overig",
 
   "country.eyebrow": "Land",
   "unit.languages": "taal/talen",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Catalogusvermelding",
   "detail.onthispage": "Op deze pagina",
   "detail.noresources": "Nog geen bronnen gecatalogiseerd voor deze taal.",
+  "detail.original": "Oorspronkelijke site",
+  "detail.viewlegacy": "Bekijken op ScriptureEarth.org",
 
   "action.readonline": "Online lezen",
   "action.download": "Downloaden",
@@ -55,6 +59,7 @@
   "action.order": "Bestellen",
   "action.openviewer": "Viewer openen",
   "action.open": "Openen",
+  "action.visit": "Website bezoeken",
 
   "footer.about": "Over ons",
   "footer.ministry": "Een bediening van SIL Global",

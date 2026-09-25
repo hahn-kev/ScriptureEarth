@@ -27,13 +27,15 @@
   "pill.read": "Читать",
   "pill.listen": "Слушать",
   "pill.watch": "Смотреть",
-  "pill.app": "Приложение",
+  "pill.app": "Приложения",
   "pill.buy": "Купить",
 
   "group.read": "Читать",
   "group.listen": "Слушать",
   "group.watch": "Смотреть",
-  "group.use": "Приложения и печать",
+  "group.app": "Приложения",
+  "group.buy": "Купить",
+  "group.other": "Другое",
 
   "country.eyebrow": "Страна",
   "unit.languages": "язык(и/ов)",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Запись в каталоге",
   "detail.onthispage": "На этой странице",
   "detail.noresources": "Для этого языка пока нет каталогизированных ресурсов.",
+  "detail.original": "Исходный сайт",
+  "detail.viewlegacy": "Открыть на ScriptureEarth.org",
 
   "action.readonline": "Читать онлайн",
   "action.download": "Скачать",
@@ -55,6 +59,7 @@
   "action.order": "Заказать",
   "action.openviewer": "Открыть просмотрщик",
   "action.open": "Открыть",
+  "action.visit": "Перейти на сайт",
 
   "footer.about": "О проекте",
   "footer.ministry": "Служение SIL Global",

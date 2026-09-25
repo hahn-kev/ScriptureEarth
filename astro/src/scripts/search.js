@@ -6,7 +6,7 @@ const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
 const LINE_SEP = '\n';
 const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
-const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'App', buy: 'Buy' };
+const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy' };
 
 function decodeSearchIndex(raw) {
   const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] = raw.split(LINE_SEP);

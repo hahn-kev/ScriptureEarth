@@ -29,6 +29,22 @@ Still open / to confirm:
   resolvable path, and `title` is often junk (`"format"`); not emitted yet. Please give full
   URLs (like `se_media.text`) and a real title, or confirm the `/data/<iso>/…` path.
 - **`other_websites`** — sometimes only has `organization`, no `title` (minor).
+- **`SAB_scriptoria` (SAB HTML readers)** — SE wants each language's SAB reader listed
+  **first** in Read, above Bible.is, but the dump can't link any of them. Please add every
+  `SAB_scriptoria` row per language (`ISO_ROD_index`) with `url`, `subfolder` and `description`.
+  - **Local readers** (`subfolder` set, e.g. `sab/adj/`): the legacy page opens
+    `/data/<iso>/sab/<subfolder minus "sab/">/`. The dump's `se_sab.text`/`audio` gives only the
+    reader's HTML file basenames (`adj-01-MAT-000.html`), not the folder. Guessing it is
+    unreliable: `<iso>` resolves for 94/114 languages and the file prefix for 89/114. `<iso>` can
+    also open the wrong translation where one ISO has several (`bpe` rows 522/523/525: files
+    `wraP-…`/`wraB-…`/`wraS-…`; neither `/data/bpe/sab/bpe/` nor `/sab/wraP/` exists).
+  - **External readers** (`url` set, `subfolder` empty, e.g. `skn` idx 2770 →
+    `https://media.ipsapps.org/skn/osa/bible/index.html`; `lao` idx 877 →
+    `https://laobible.sea-sda.org/#/read`, description `: Read online`): absent from the dump
+    entirely. `se_sab` is `{"text":{},"audio":{}}` and no entry contains an `/osa/` URL. Some
+    languages have several (`lif`: "Limbu Bible" and "Limbu Hymns").
+  - **Coverage:** in the legacy SQLite snapshot, 936 languages have an SAB reader (785 local,
+    158 external), but the dump's `se_sab` lists files for only 114.
 
 ## Columns at a glance
 
@@ -46,6 +62,7 @@ One row per DB column the dump should carry but currently doesn't:
 | `eBible_list` | `title` | The eBible edition's title, instead of a generic "eBible edition". |
 | `study` | `ScriptureDescription` | The study/reference tool's title (the whole `study` table is absent; ~610 languages). |
 | `study` | `ScriptureURL` | The study tool's link (fall back to `othersiteURL` when empty). |
+| `SAB_scriptoria` | `subfolder`, `url`, `description` | Link each SAB HTML reader (local `/data/<iso>/sab/<subfolder>/` or external `url`) as the first Read row; the dump has file basenames for only 114 of ~936 languages and no external readers. |
 
 The first 8 are columns the dump can already reach (the granular API emits them); the two
 `study` rows plus `links.BibleIs` are the additions that need real work. Detail below.

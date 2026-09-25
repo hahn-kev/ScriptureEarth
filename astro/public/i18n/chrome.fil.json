@@ -27,13 +27,15 @@
   "pill.read": "Basahin",
   "pill.listen": "Pakinggan",
   "pill.watch": "Panoorin",
-  "pill.app": "App",
+  "pill.app": "Mga App",
   "pill.buy": "Bilhin",
 
   "group.read": "Basahin",
   "group.listen": "Pakinggan",
   "group.watch": "Panoorin",
-  "group.use": "Mga App at Print",
+  "group.app": "Mga App",
+  "group.buy": "Bilhin",
+  "group.other": "Iba pa",
 
   "country.eyebrow": "Bansa",
   "unit.languages": "wika",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Entry sa katalogo",
   "detail.onthispage": "Sa pahinang ito",
   "detail.noresources": "Wala pang mga mapagkukunang nakalista para sa wikang ito.",
+  "detail.original": "Orihinal na site",
+  "detail.viewlegacy": "Tingnan sa ScriptureEarth.org",
 
   "action.readonline": "Basahin online",
   "action.download": "I-download",
@@ -55,6 +59,7 @@
   "action.order": "Mag-order",
   "action.openviewer": "Buksan ang viewer",
   "action.open": "Buksan",
+  "action.visit": "Bisitahin ang website",
 
   "footer.about": "Tungkol",
   "footer.ministry": "Isang ministeryo ng SIL Global",

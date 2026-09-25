@@ -2,14 +2,16 @@ export const GROUPS = [
   { key: 'read', label: 'Read' },
   { key: 'listen', label: 'Listen' },
   { key: 'watch', label: 'Watch' },
-  { key: 'use', label: 'Apps & Print' },
+  { key: 'app', label: 'Apps' },
+  { key: 'buy', label: 'Buy' },
+  { key: 'other', label: 'Other' },
 ] as const;
 
 export const PILLS = [
   { key: 'read', label: 'Read' },
   { key: 'listen', label: 'Listen' },
   { key: 'watch', label: 'Watch' },
-  { key: 'app', label: 'App' },
+  { key: 'app', label: 'Apps' },
   { key: 'buy', label: 'Buy' },
 ] as const;
 
@@ -29,10 +31,14 @@ const ACTIONS: Record<string, Record<string, Action>> = {
   watch: {
     _: { label: 'Watch', slug: 'action.watch', icon: 'watch' },
   },
-  use: {
-    buy: { label: 'Order', slug: 'action.order', icon: 'buy' },
-    app: { label: 'Get app', slug: 'action.getapp', icon: 'app' },
-    _: OPEN,
+  app: {
+    _: { label: 'Get app', slug: 'action.getapp', icon: 'app' },
+  },
+  buy: {
+    _: { label: 'Order', slug: 'action.order', icon: 'buy' },
+  },
+  other: {
+    _: { label: 'Visit website', slug: 'action.visit', icon: 'open' },
   },
 };
 
@@ -78,6 +84,6 @@ export function badge(group: string, r: { format?: string; kind?: string; url?: 
     case 'app': return { icon: 'phone', label: fmt || 'App' };
     case 'buy': return { icon: 'print', label: fmt || 'Print' };
   }
-  const byGroup: Record<string, string> = { read: 'read', listen: 'audio', watch: 'video', use: 'use' };
+  const byGroup: Record<string, string> = { read: 'read', listen: 'audio', watch: 'video', app: 'phone', buy: 'print', other: 'web' };
   return { icon: byGroup[group] || 'open', label: fmt || group };
 }

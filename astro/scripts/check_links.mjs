@@ -44,12 +44,14 @@ const UA = 'ScriptureEarth-LinkCheck/1.0 (dead-link audit; SIL; +https://scriptu
 // Hosts we do not check at all. globalrecordings.net returns 403 (BunnyCDN
 // "Bunny Shield" JS challenge) for valid pages once its bot-shield engages —
 // status codes there are meaningless, so checking would be all false positives.
-const SKIP_DOMAINS = new Set(['globalrecordings.net']);
+// sil.org links are a templated search URL (/resources/search/code/<iso>) that always
+// renders, so ~4k of them would cost an hour of per-host spacing and prove nothing.
+const SKIP_DOMAINS = new Set(['globalrecordings.net', 'sil.org']);
 
 // Hosts whose 200 cannot be trusted (SPA soft-404). Handled by softCheck().
 const SOFT_404 = new Set(['live.bible.is', 'bible.com']);
 
-const GROUPS = ['read', 'listen', 'watch', 'use'];
+const GROUPS = ['read', 'listen', 'watch', 'app', 'buy', 'other'];
 
 function parseArgs(argv) {
   const a = {

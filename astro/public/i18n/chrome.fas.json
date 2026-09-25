@@ -27,13 +27,15 @@
   "pill.read": "خواندن",
   "pill.listen": "شنیدن",
   "pill.watch": "تماشا",
-  "pill.app": "اپ",
+  "pill.app": "اپ‌ها",
   "pill.buy": "خرید",
 
   "group.read": "خواندن",
   "group.listen": "شنیدن",
   "group.watch": "تماشا",
-  "group.use": "اپ‌ها و چاپ",
+  "group.app": "اپ‌ها",
+  "group.buy": "خرید",
+  "group.other": "سایر",
 
   "country.eyebrow": "کشور",
   "unit.languages": "زبان",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "مورد فهرست",
   "detail.onthispage": "در این صفحه",
   "detail.noresources": "هنوز هیچ منبعی برای این زبان فهرست نشده است.",
+  "detail.original": "سایت اصلی",
+  "detail.viewlegacy": "مشاهده در ScriptureEarth.org",
 
   "action.readonline": "خواندن آنلاین",
   "action.download": "دانلود",
@@ -55,6 +59,7 @@
   "action.order": "سفارش",
   "action.openviewer": "باز کردن نمایشگر",
   "action.open": "باز کردن",
+  "action.visit": "بازدید از وب‌سایت",
 
   "footer.about": "درباره",
   "footer.ministry": "خدمتی از SIL Global",

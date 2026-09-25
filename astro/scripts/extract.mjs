@@ -48,6 +48,7 @@ function vals(m) {
 }
 const ext = (u) => /^https?:/i.test(String(u || ''));
 const s = (v) => (typeof v === 'string' ? v.trim() : '');
+const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return '—'; } };
 // The dump has used three shapes for a resource group over time; normalize all to
 // [{ url, title, organization, ... }]. The format has changed repeatedly, so tolerate
 // every shape we've seen:
@@ -238,20 +239,30 @@ for (const e of entries) {
   const idx = Number(r.idx);
   if (!iso || !Number.isFinite(idx)) continue;
 
-  const R = { read: [], listen: [], watch: [], use: [] };
+  const R = { read: [], listen: [], watch: [], app: [], buy: [], other: [] };
   const media = r.se_media || {};
+  const lm = r.links_media || {};
+  const url = (x) => x.url || x.URL;
+
+  // Bible.is first in read/listen/watch (SE's ordering; the legacy page puts SAB HTML
+  // above it, but the dump's se_sab has no subfolder to link — see CURRENT-ISSUES §1).
+  // read/listen/watch per its media_type code (1–8).
+  for (const l of linkRows(lm['Bible.is'])) {
+    const g = bibleIsGroups(Number(l.media_type));
+    const nm = s(l.title) || 'Bible.is', src = 'Faith Comes By Hearing', u = url(l);
+    if (g.read) R.read.push(res('read', 'web', 'Web', nm, src, u, ext(u)));
+    if (g.listen) R.listen.push(res('listen', 'audio', 'Audio', nm, src, u, ext(u)));
+    if (g.watch) R.watch.push(res('watch', 'video', 'Video', nm, src, u, ext(u)));
+  }
+  for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', s(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
 
   // read
   const otPdf = testament(iso, media.text?.OT, 'pdf', 'Old Testament', 'book');
   const ntPdf = testament(iso, media.text?.NT, 'pdf', 'New Testament', 'book');
   if (otPdf) R.read.push(otPdf);
   if (ntPdf) R.read.push(ntPdf);
-  const lm = r.links_media || {};
-  const url = (x) => x.url || x.URL;
   for (const l of linkRows(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'YouVersion', 'Bible.com (YouVersion)', url(l), ext(url(l))));
   for (const l of linkRows(lm.eBible)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'eBible edition', 'eBible.org', url(l), ext(url(l))));
-  for (const l of linkRows(lm.Kalaam_websites)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || 'Kalaam Media', url(l), ext(url(l))));
-  for (const l of linkRows(lm.other_websites)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || '—', url(l), ext(url(l))));
   if (s(r.se_online_viewer)) R.read.push(res('read', 'web', 'Web', 'Online viewer', 'ScriptureEarth', s(r.se_online_viewer), true));
 
   // listen
@@ -265,17 +276,6 @@ for (const e of entries) {
     R.listen.push(res('listen', 'audio', 'MP3', it.title || base(it.file).replace(/\.txt$/i, '') || 'Audio playlist', 'ScriptureEarth',
       first ? first.url : null, first ? ext(first.url) : false,
       { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file), zipUrl: audioZipUrl(iso, clips) }));
-  }
-  for (const l of linkRows(lm.GRN)) R.listen.push(res('listen', 'audio', 'MP3', s(l.title) || 'GRN recordings', 'Global Recordings Network', url(l), ext(url(l))));
-
-  // Bible.is: read/listen/watch per its media_type code (1–8); restores the audio
-  // listings the old DB split via BibleIs but the flat dump had dropped.
-  for (const l of linkRows(lm['Bible.is'])) {
-    const g = bibleIsGroups(Number(l.media_type));
-    const nm = s(l.title) || 'Bible.is', src = 'Faith Comes By Hearing', u = url(l);
-    if (g.read) R.read.push(res('read', 'web', 'Web', nm, src, u, ext(u)));
-    if (g.listen) R.listen.push(res('listen', 'audio', 'Audio', nm, src, u, ext(u)));
-    if (g.watch) R.watch.push(res('watch', 'video', 'Video', nm, src, u, ext(u)));
   }
 
   // watch
@@ -292,30 +292,40 @@ for (const e of entries) {
       first ? first.url : null, first ? /^https?:/.test(first.url) : false,
       { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file), zipUrl: videoZipUrl(iso, base(it.file), clips) }));
   }
-  for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', s(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
 
-  // use (apps + buy). se_apps sections are { <Platform>: { title:{}, url:{} } }.
+  // apps. se_apps sections are { <Platform>: { title:{}, url:{} } }.
   const apps = r.se_apps || {};
   for (const [section, data] of Object.entries(apps)) {
     const platform = /ios|apple|asset/i.test(section) ? 'iOS app' : 'Android app';
-    for (const app of linkRows(data)) R.use.push(res('use', 'app', 'App', s(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
+    for (const app of linkRows(data)) R.app.push(res('app', 'app', 'App', s(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
   }
-  for (const l of linkRows(r.se_google_play)) R.use.push(res('use', 'app', 'App', s(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
-  for (const l of linkRows(r.se_iPhone)) R.use.push(res('use', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
-  for (const l of linkRows(lm.AppleStore)) R.use.push(res('use', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
-  for (const b of linkRows(r.buy)) R.use.push(res('use', 'buy', 'Buy', s(b.title) || s(b.testament) || s(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
+  for (const l of linkRows(r.se_google_play)) R.app.push(res('app', 'app', 'App', s(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
+  for (const l of linkRows(r.se_iPhone)) R.app.push(res('app', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
+  for (const l of linkRows(lm.AppleStore)) R.app.push(res('app', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
+
+  // buy: the buy table, then links rows flagged buy (e.g. multilanguagemedia.org).
+  for (const b of linkRows(r.buy)) R.buy.push(res('buy', 'buy', 'Buy', s(b.title) || s(b.testament) || s(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
+  for (const l of linkRows(lm.buy)) R.buy.push(res('buy', 'buy', 'Buy', s(l.title) || 'Printed edition', s(l.organization) || host(url(l)), url(l), ext(url(l))));
+
+  // other: resources that aren't Scripture itself — GRN stories/songs, SIL language &
+  // culture resources, Kalaam and other multi-purpose websites.
+  for (const l of linkRows(lm.GRN)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Audio recordings', 'Global Recordings Network', url(l), ext(url(l))));
+  for (const l of linkRows(lm.Kalaam_websites)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || 'Kalaam Media', url(l), ext(url(l))));
+  for (const l of linkRows(lm.other_websites)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || host(url(l)), url(l), ext(url(l))));
+  if (s(r.SIL_link)) R.other.push(res('other', 'web', 'Web', 'Language and culture resources', 'SIL', s(r.SIL_link), true));
 
   // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
   // toward read availability (SAB flag) w/o a link.
   const sab = r.se_sab || {};
   const hasSab = vals(sab.text).length > 0 || vals(sab.audio).length > 0;
 
+  // No `other` key: it's a detail-page section only (no pill/facet/search bit).
   const avail = {
     read: R.read.length > 0 || hasSab,
     listen: R.listen.length > 0,
     watch: R.watch.length > 0,
-    app: R.use.some((x) => x.kind === 'app'),
-    buy: R.use.some((x) => x.kind === 'buy'),
+    app: R.app.length > 0,
+    buy: R.buy.length > 0,
   };
 
   const ln = r.language_name || {};
@@ -419,10 +429,12 @@ function auditData(ents, langs) {
     ['links.YouVersion', (r) => linkRows(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
     ['links.eBible',     (r) => linkRows(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
     ['links.Bible.is',   (r) => linkRows(r.links_media?.['Bible.is']).length, (d) => some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => x.source === 'Faith Comes By Hearing' && x.name !== 'Bible.is Gospel Film')],
-    ['links.GRN',        (r) => linkRows(r.links_media?.GRN).length, (d) => some(d.resources.listen, (x) => x.source === 'Global Recordings Network')],
+    ['links.GRN',        (r) => linkRows(r.links_media?.GRN).length, (d) => some(d.resources.other, (x) => x.source === 'Global Recordings Network')],
+    ['links.Kalaam',     (r) => linkRows(r.links_media?.Kalaam_websites).length, (d) => d.resources.other.length > 0],
+    ['SIL_link',         (r) => s(r.SIL_link), (d) => some(d.resources.other, (x) => x.source === 'SIL')],
     ['watch',            (r) => linkRows(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x) && x.source !== 'Faith Comes By Hearing')],
-    ['buy',              (r) => linkRows(r.buy).length, (d) => some(d.resources.use, (x) => x.kind === 'buy')],
-    ['se_apps',          anyApp, (d) => some(d.resources.use, (x) => x.kind === 'app')],
+    ['buy',              (r) => linkRows(r.buy).length, (d) => d.resources.buy.length > 0],
+    ['se_apps',          anyApp, (d) => d.resources.app.length > 0],
   ];
   const failures = [];
   console.error('data audit (languages with raw field → languages we emitted from it):');
@@ -443,7 +455,7 @@ function auditData(ents, langs) {
   let wRows = 0, wTitled = 0, bRows = 0, bTitled = 0;
   for (const d of langs) {
     for (const x of d.resources.watch) { if (isPlaylist(x)) continue; wRows++; if (!genericWatch.has(x.name)) wTitled++; }
-    for (const x of d.resources.use) { if (x.kind !== 'buy') continue; bRows++; if (x.name !== 'Printed edition') bTitled++; }
+    for (const x of d.resources.buy) { bRows++; if (x.name !== 'Printed edition') bTitled++; }
   }
   console.error(`  watch titles: ${wTitled}/${wRows}   buy titles: ${bTitled}/${bRows}`);
   if (wRows > 0 && wTitled === 0) failures.push('watch: 0 rows have a real title (dump omits watch_what/organization)');

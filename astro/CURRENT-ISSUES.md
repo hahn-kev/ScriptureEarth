@@ -19,8 +19,15 @@ guesses 404. The old SQLite extractor didn't emit these as resources either, so 
 parity, not a regression.
 - **Effect:** `se_sab` presence still counts toward `read` availability (a pill shows),
   but there's no SAB/ePub/software download link on the detail page.
-- **Fix path:** confirm the real URL scheme for these with the API developer, then add
-  the mapping in `extract.mjs` (search for `hasSab` and the `use`/`read` sections).
+- **SAB ordering:** SE wants the SAB HTML reader listed first in Read, above Bible.is (the
+  legacy page's order). Until it's linkable, Bible.is is first. The legacy URL is
+  `SAB_scriptoria.url` when set (external, e.g. media.ipsapps.org), else
+  `/data/<iso>/sab/<subfolder>/`. The dump carries neither, and its `se_sab` covers only 114 of
+  ~936 languages with a reader, so external readers don't even count toward `read`. Guessing
+  the folder is deliberately not done (wrong translation risk); the full rows are requested in
+  `DUMP-API-REQUESTS.md`.
+- **Fix path:** once the dump carries them, emit one Read row per reader (`kind: 'viewer'`,
+  `description` as the name) at the top of `R.read` in `extract.mjs` (search for `hasSab`).
 
 ### 2. Dump-vs-old-SQLite gaps — mostly RESOLVED (see `DUMP-API-REQUESTS.md`)
 A full diff of the JSON build against the old SQLite dump found several gaps. As of 2026-09-22

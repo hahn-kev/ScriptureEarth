@@ -19,7 +19,7 @@ export const ICONS = {
   watch: 'play-circle-outline',
   app: 'install-mobile-outline',
   buy: 'shopping-cart-outline',
-  use: 'apps',
+  other: 'category-outline',
   // actions
   download: 'download',
   play: 'play-arrow',
