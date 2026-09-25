@@ -33,7 +33,9 @@
   "group.read": "阅读",
   "group.listen": "收听",
   "group.watch": "观看",
-  "group.use": "应用与印刷品",
+  "group.app": "应用",
+  "group.buy": "购买",
+  "group.other": "其他",
 
   "country.eyebrow": "国家",
   "unit.languages": "种语言",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "目录条目",
   "detail.onthispage": "本页内容",
   "detail.noresources": "尚未为该语言编入任何资源。",
+  "detail.original": "原网站",
+  "detail.viewlegacy": "在 ScriptureEarth.org 上查看",
 
   "action.readonline": "在线阅读",
   "action.download": "下载",
@@ -55,6 +59,7 @@
   "action.order": "订购",
   "action.openviewer": "打开查看器",
   "action.open": "打开",
+  "action.visit": "访问网站",
 
   "footer.about": "关于",
   "footer.ministry": "SIL Global 的一项事工",

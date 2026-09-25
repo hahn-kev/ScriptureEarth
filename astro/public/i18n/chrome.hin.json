@@ -27,13 +27,15 @@
   "pill.read": "पढ़ें",
   "pill.listen": "सुनें",
   "pill.watch": "देखें",
-  "pill.app": "ऐप",
+  "pill.app": "ऐप्स",
   "pill.buy": "खरीदें",
 
   "group.read": "पढ़ें",
   "group.listen": "सुनें",
   "group.watch": "देखें",
-  "group.use": "ऐप और प्रिंट",
+  "group.app": "ऐप्स",
+  "group.buy": "खरीदें",
+  "group.other": "अन्य",
 
   "country.eyebrow": "देश",
   "unit.languages": "भाषा(एँ)",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "सूची प्रविष्टि",
   "detail.onthispage": "इस पृष्ठ पर",
   "detail.noresources": "इस भाषा के लिए अभी तक कोई संसाधन सूचीबद्ध नहीं है।",
+  "detail.original": "मूल साइट",
+  "detail.viewlegacy": "ScriptureEarth.org पर देखें",
 
   "action.readonline": "ऑनलाइन पढ़ें",
   "action.download": "डाउनलोड करें",
@@ -55,6 +59,7 @@
   "action.order": "ऑर्डर करें",
   "action.openviewer": "व्यूअर खोलें",
   "action.open": "खोलें",
+  "action.visit": "वेबसाइट देखें",
 
   "footer.about": "परिचय",
   "footer.ministry": "SIL Global की एक सेवकाई",

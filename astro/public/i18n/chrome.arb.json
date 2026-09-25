@@ -27,13 +27,15 @@
   "pill.read": "اقرأ",
   "pill.listen": "استمع",
   "pill.watch": "شاهد",
-  "pill.app": "تطبيق",
+  "pill.app": "التطبيقات",
   "pill.buy": "اشترِ",
 
   "group.read": "قراءة",
   "group.listen": "استماع",
   "group.watch": "مشاهدة",
-  "group.use": "التطبيقات والنسخ المطبوعة",
+  "group.app": "التطبيقات",
+  "group.buy": "اشترِ",
+  "group.other": "أخرى",
 
   "country.eyebrow": "البلد",
   "unit.languages": "لغة/لغات",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "مدخل في الفهرس",
   "detail.onthispage": "في هذه الصفحة",
   "detail.noresources": "لا توجد موارد مفهرسة بعد لهذه اللغة.",
+  "detail.original": "الموقع الأصلي",
+  "detail.viewlegacy": "عرض على ScriptureEarth.org",
 
   "action.readonline": "اقرأ عبر الإنترنت",
   "action.download": "تنزيل",
@@ -55,6 +59,7 @@
   "action.order": "اطلب",
   "action.openviewer": "افتح العارض",
   "action.open": "افتح",
+  "action.visit": "زيارة الموقع",
 
   "footer.about": "حول",
   "footer.ministry": "خدمة تابعة لـ SIL Global",

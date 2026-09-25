@@ -33,7 +33,9 @@
   "group.read": "Soma",
   "group.listen": "Sikiliza",
   "group.watch": "Tazama",
-  "group.use": "Programu na Kuchapisha",
+  "group.app": "Programu",
+  "group.buy": "Nunua",
+  "group.other": "Mengine",
 
   "country.eyebrow": "Nchi",
   "unit.languages": "lugha",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Ingizo la katalogi",
   "detail.onthispage": "Kwenye ukurasa huu",
   "detail.noresources": "Bado hakuna rasilimali zilizoorodheshwa kwa lugha hii.",
+  "detail.original": "Tovuti asili",
+  "detail.viewlegacy": "Tazama kwenye ScriptureEarth.org",
 
   "action.readonline": "Soma mtandaoni",
   "action.download": "Pakua",
@@ -55,6 +59,7 @@
   "action.order": "Agiza",
   "action.openviewer": "Fungua kitazamaji",
   "action.open": "Fungua",
+  "action.visit": "Tembelea tovuti",
 
   "footer.about": "Kuhusu",
   "footer.ministry": "Huduma ya SIL Global",

@@ -27,13 +27,15 @@
   "pill.read": "Read",
   "pill.listen": "Listen",
   "pill.watch": "Watch",
-  "pill.app": "App",
+  "pill.app": "Apps",
   "pill.buy": "Buy",
 
   "group.read": "Read",
   "group.listen": "Listen",
   "group.watch": "Watch",
-  "group.use": "Apps & Print",
+  "group.app": "Apps",
+  "group.buy": "Buy",
+  "group.other": "Other",
 
   "country.eyebrow": "Country",
   "unit.languages": "language(s)",
@@ -45,6 +47,8 @@
   "meta.catalogentry": "Catalog entry",
   "detail.onthispage": "On this page",
   "detail.noresources": "No resources catalogued yet for this language.",
+  "detail.original": "Original site",
+  "detail.viewlegacy": "View on ScriptureEarth.org",
 
   "action.readonline": "Read online",
   "action.download": "Download",
@@ -55,6 +59,7 @@
   "action.order": "Order",
   "action.openviewer": "Open viewer",
   "action.open": "Open",
+  "action.visit": "Visit website",
 
   "footer.about": "About",
   "footer.ministry": "A ministry of SIL Global",
