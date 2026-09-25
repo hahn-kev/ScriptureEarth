@@ -839,3 +839,18 @@ footer.site {
     navigation: none;
   }
 }
+
+/* Footer icon-set switch (temporary; see src/lib/icons.mjs) */
+footer.site .icon-switch select {
+  font: inherit;
+  color: var(--sil-navy);
+  border-radius: 4px;
+  padding: 0.15rem 0.3rem;
+  align-self: flex-start;
+}
+footer.site .icon-switch .demo {
+  display: flex;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  color: #fff;
+}
