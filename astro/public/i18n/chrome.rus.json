@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Также:",
-  "meta.catalogentry": "Запись в каталоге",
   "detail.onthispage": "На этой странице",
   "detail.noresources": "Для этого языка пока нет каталогизированных ресурсов.",
   "detail.original": "Исходный сайт",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Читать онлайн",
   "action.download": "Скачать",
-  "action.downloadpdf": "Скачать PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "Воспроизвести",
   "action.watch": "Смотреть",
   "action.getapp": "Установить приложение",

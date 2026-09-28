@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Pia:",
-  "meta.catalogentry": "Ingizo la katalogi",
   "detail.onthispage": "Kwenye ukurasa huu",
   "detail.noresources": "Bado hakuna rasilimali zilizoorodheshwa kwa lugha hii.",
   "detail.original": "Tovuti asili",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Soma mtandaoni",
   "action.download": "Pakua",
-  "action.downloadpdf": "Pakua PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "Cheza",
   "action.watch": "Tazama",
   "action.getapp": "Pata programu",

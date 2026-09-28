@@ -458,6 +458,17 @@ section.block {
   align-items: center;
   gap: 0.4rem;
 }
+/* Alternate names on a card: can be very long (up to ~190 names), so clamp to 2 lines. */
+.lang .alt {
+  color: var(--muted);
+  font-size: 0.82rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
+}
 .pills {
   display: flex;
   flex-wrap: wrap;
@@ -543,6 +554,14 @@ section.block {
   padding: 0.25rem 0.6rem;
   font-size: 0.84rem;
   color: var(--text);
+}
+/* All alternate names on the language page — a wrapping line, not a chip. */
+.alt-names {
+  color: var(--muted);
+  font-size: 0.88rem;
+  line-height: 1.5;
+  margin: calc(-1 * var(--s4)) 0 var(--s6);
+  overflow-wrap: anywhere;
 }
 .chip code {
   font-family: var(--mono);

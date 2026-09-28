@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Also:",
-  "meta.catalogentry": "Catalog entry",
   "detail.onthispage": "On this page",
   "detail.noresources": "No resources catalogued yet for this language.",
   "detail.original": "Original site",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Read online",
   "action.download": "Download",
-  "action.downloadpdf": "Download PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "Play",
   "action.watch": "Watch",
   "action.getapp": "Get app",

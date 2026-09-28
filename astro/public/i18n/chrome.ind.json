@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Juga:",
-  "meta.catalogentry": "Entri katalog",
   "detail.onthispage": "Di halaman ini",
   "detail.noresources": "Belum ada sumber daya yang terdaftar untuk bahasa ini.",
   "detail.original": "Situs asli",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Baca online",
   "action.download": "Unduh",
-  "action.downloadpdf": "Unduh PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "Putar",
   "action.watch": "Tonton",
   "action.getapp": "Dapatkan aplikasi",

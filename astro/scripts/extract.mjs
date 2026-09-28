@@ -48,6 +48,16 @@ function vals(m) {
 }
 const ext = (u) => /^https?:/i.test(String(u || ''));
 const s = (v) => (typeof v === 'string' ? v.trim() : '');
+// Display title from a dump title/description column. The legacy page printed these
+// after a fixed label ("Read/Listen/View  - Adioukrou Bible (NT)"), so thousands carry a
+// "- " / ": " lead-in; some are HTML-escaped (&#x27;). Strip the lead-in and unescape.
+const ENT = { amp: '&', lt: '<', gt: '>', quot: '"', apos: "'", nbsp: ' ' };
+const t = (v) => s(v)
+  .replace(/&(#x[0-9a-f]+|#\d+|[a-z]+);/gi, (m, e) => e[0] === '#'
+    ? String.fromCodePoint(e[1].toLowerCase() === 'x' ? parseInt(e.slice(2), 16) : parseInt(e.slice(1), 10))
+    : (ENT[e.toLowerCase()] ?? m))
+  .replace(/^[\s\-–—:]+/, '')
+  .trim();
 const host = (u) => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return '—'; } };
 // The dump has used three shapes for a resource group over time; normalize all to
 // [{ url, title, organization, ... }]. The format has changed repeatedly, so tolerate
@@ -89,6 +99,31 @@ const bibleIsGroups = (m) => ({
   listen: [1, 3, 4, 5, 6].includes(m),
   watch: [4, 6, 7, 8].includes(m),
 });
+// se_sab: one row per Scripture App Builder HTML reader (the legacy SAB_scriptoria table).
+//   rows: { 0:{ path, url, description } }  ← current
+//     path = SE-hosted reader folder (full URL, e.g. https://www.ScriptureEarth.org/data/adj/sab/adj/)
+//     url  = externally hosted reader (media.ipsapps.org, …); a few are site-relative (/data/…)
+//   legacy: { text:{0:file.html}, audio:{…} } — reader file basenames only, not linkable.
+// Normalize to [{ url, name, local }]; the legacy shape yields [] (see sabLegacyFlag).
+function sabRows(obj) {
+  if (!obj || typeof obj !== 'object') return [];
+  const out = [];
+  for (const [k, v] of Object.entries(obj).sort((a, b) => Number(a[0]) - Number(b[0]))) {
+    if (!/^\d+$/.test(k) || !v || typeof v !== 'object') continue;
+    const local = s(v.path), ext = s(v.url);
+    let u = ext || local;
+    if (!u) continue;
+    // Site-relative reader path → absolute, with the directory slash the server 301s to.
+    if (u.startsWith('/')) u = `${ZIP_BASE}${u}${/\/$|\.[a-z0-9]+$/i.test(u) ? '' : '/'}`;
+    if (!/^https?:\/\//i.test(u)) continue;
+    const name = t(v.description); // "- Adioukrou Bible (NT)", ": Read online" → lead-in stripped
+    out.push({ url: u, name, local: host(u).toLowerCase() === 'scriptureearth.org' });
+  }
+  return out;
+}
+// Older dumps listed reader files under se_sab.text/audio with no folder — count them
+// toward read availability without a link, as before.
+const sabLegacyFlag = (sab) => vals(sab?.text).length > 0 || vals(sab?.audio).length > 0;
 function asset(iso, kind, file) {
   // The dump gives media as full URLs now (older captures used basenames); use the
   // URL as-is, else build it under the standard /data/<iso>/<kind>/ path.
@@ -244,25 +279,31 @@ for (const e of entries) {
   const lm = r.links_media || {};
   const url = (x) => x.url || x.URL;
 
-  // Bible.is first in read/listen/watch (SE's ordering; the legacy page puts SAB HTML
-  // above it, but the dump's se_sab has no subfolder to link — see CURRENT-ISSUES §1).
-  // read/listen/watch per its media_type code (1–8).
+  // SAB HTML readers first in Read (the legacy page's order: SAB above Bible.is). The
+  // reader is a full text+audio+video app, so the legacy label is "Read/Listen/View".
+  // Always opens in a new tab (external=true), like the online viewer: it's a self-
+  // contained app, even when SE hosts it.
+  const sab = r.se_sab || {};
+  for (const x of sabRows(sab)) {
+    R.read.push(res('read', 'viewer', 'Web', x.name || 'Read, listen and view', x.local ? 'ScriptureEarth' : host(x.url), x.url, true));
+  }
+  // Then Bible.is in read/listen/watch per its media_type code (1–8).
   for (const l of linkRows(lm['Bible.is'])) {
     const g = bibleIsGroups(Number(l.media_type));
-    const nm = s(l.title) || 'Bible.is', src = 'Faith Comes By Hearing', u = url(l);
+    const nm = t(l.title) || 'Bible.is', src = 'Faith Comes By Hearing', u = url(l);
     if (g.read) R.read.push(res('read', 'web', 'Web', nm, src, u, ext(u)));
     if (g.listen) R.listen.push(res('listen', 'audio', 'Audio', nm, src, u, ext(u)));
     if (g.watch) R.watch.push(res('watch', 'video', 'Video', nm, src, u, ext(u)));
   }
-  for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', s(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
+  for (const l of linkRows(lm['Bible.is_Gospel_Film'])) R.watch.push(res('watch', 'video', 'Video', t(l.title) || 'Bible.is Gospel Film', 'Faith Comes By Hearing', url(l), ext(url(l))));
 
   // read
   const otPdf = testament(iso, media.text?.OT, 'pdf', 'Old Testament', 'book');
   const ntPdf = testament(iso, media.text?.NT, 'pdf', 'New Testament', 'book');
   if (otPdf) R.read.push(otPdf);
   if (ntPdf) R.read.push(ntPdf);
-  for (const l of linkRows(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'YouVersion', 'Bible.com (YouVersion)', url(l), ext(url(l))));
-  for (const l of linkRows(lm.eBible)) R.read.push(res('read', 'web', 'Web', s(l.title) || 'eBible edition', 'eBible.org', url(l), ext(url(l))));
+  for (const l of linkRows(lm.YouVersion)) R.read.push(res('read', 'web', 'Web', t(l.title) || 'YouVersion', 'Bible.com (YouVersion)', url(l), ext(url(l))));
+  for (const l of linkRows(lm.eBible)) R.read.push(res('read', 'web', 'Web', t(l.title) || 'eBible edition', 'eBible.org', url(l), ext(url(l))));
   if (s(r.se_online_viewer)) R.read.push(res('read', 'web', 'Web', 'Online viewer', 'ScriptureEarth', s(r.se_online_viewer), true));
 
   // listen
@@ -281,7 +322,7 @@ for (const e of entries) {
   // watch
   for (const w of linkRows(r.watch)) {
     const jf = String(w.JesusFilm) === '1', yt = String(w.YouTube) === '1';
-    const nm = s(w.watch_what) || (jf ? 'JESUS Film' : yt ? 'YouTube' : 'Video');
+    const nm = t(w.watch_what) || (jf ? 'JESUS Film' : yt ? 'YouTube' : 'Video');
     const src = s(w.organization) || (jf ? 'Jesus Film Project' : yt ? 'YouTube' : '—');
     R.watch.push(res('watch', 'video', 'Video', nm, src, url(w), ext(url(w))));
   }
@@ -297,27 +338,24 @@ for (const e of entries) {
   const apps = r.se_apps || {};
   for (const [section, data] of Object.entries(apps)) {
     const platform = /ios|apple|asset/i.test(section) ? 'iOS app' : 'Android app';
-    for (const app of linkRows(data)) R.app.push(res('app', 'app', 'App', s(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
+    for (const app of linkRows(data)) R.app.push(res('app', 'app', 'App', t(app.title) || platform, 'Scripture App Builder', url(app), ext(url(app))));
   }
-  for (const l of linkRows(r.se_google_play)) R.app.push(res('app', 'app', 'App', s(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
-  for (const l of linkRows(r.se_iPhone)) R.app.push(res('app', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
-  for (const l of linkRows(lm.AppleStore)) R.app.push(res('app', 'app', 'App', s(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
+  for (const l of linkRows(r.se_google_play)) R.app.push(res('app', 'app', 'App', t(l.title) || 'Google Play', 'Google Play', url(l), ext(url(l))));
+  for (const l of linkRows(r.se_iPhone)) R.app.push(res('app', 'app', 'App', t(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
+  for (const l of linkRows(lm.AppleStore)) R.app.push(res('app', 'app', 'App', t(l.title) || 'iOS app', 'App Store', url(l), ext(url(l))));
 
   // buy: the buy table, then links rows flagged buy (e.g. multilanguagemedia.org).
-  for (const b of linkRows(r.buy)) R.buy.push(res('buy', 'buy', 'Buy', s(b.title) || s(b.testament) || s(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
-  for (const l of linkRows(lm.buy)) R.buy.push(res('buy', 'buy', 'Buy', s(l.title) || 'Printed edition', s(l.organization) || host(url(l)), url(l), ext(url(l))));
+  for (const b of linkRows(r.buy)) R.buy.push(res('buy', 'buy', 'Buy', t(b.title) || t(b.testament) || t(b.buy_what) || 'Printed edition', s(b.organization) || 'Print-on-demand', url(b), ext(url(b))));
+  for (const l of linkRows(lm.buy)) R.buy.push(res('buy', 'buy', 'Buy', t(l.title) || 'Printed edition', s(l.organization) || host(url(l)), url(l), ext(url(l))));
 
   // other: resources that aren't Scripture itself — GRN stories/songs, SIL language &
   // culture resources, Kalaam and other multi-purpose websites.
-  for (const l of linkRows(lm.GRN)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Audio recordings', 'Global Recordings Network', url(l), ext(url(l))));
-  for (const l of linkRows(lm.Kalaam_websites)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || 'Kalaam Media', url(l), ext(url(l))));
-  for (const l of linkRows(lm.other_websites)) R.other.push(res('other', 'web', 'Web', s(l.title) || 'Website', s(l.organization) || host(url(l)), url(l), ext(url(l))));
+  for (const l of linkRows(lm.GRN)) R.other.push(res('other', 'web', 'Web', t(l.title) || 'Audio recordings', 'Global Recordings Network', url(l), ext(url(l))));
+  for (const l of linkRows(lm.Kalaam_websites)) R.other.push(res('other', 'web', 'Web', t(l.title) || 'Website', s(l.organization) || 'Kalaam Media', url(l), ext(url(l))));
+  for (const l of linkRows(lm.other_websites)) R.other.push(res('other', 'web', 'Web', t(l.title) || 'Website', s(l.organization) || host(url(l)), url(l), ext(url(l))));
   if (s(r.SIL_link)) R.other.push(res('other', 'web', 'Web', 'Language and culture resources', 'SIL', s(r.SIL_link), true));
 
-  // se_sab: HTML reader files whose public URL scheme isn't resolvable here — count
-  // toward read availability (SAB flag) w/o a link.
-  const sab = r.se_sab || {};
-  const hasSab = vals(sab.text).length > 0 || vals(sab.audio).length > 0;
+  const hasSab = sabLegacyFlag(sab);
 
   // No `other` key: it's a detail-page section only (no pill/facet/search bit).
   const avail = {
@@ -335,7 +373,7 @@ for (const e of entries) {
     const v = ln[key];
     if (typeof v === 'string' && v.trim()) localizedNames.push(v.trim());
   }
-  const alt = vals(r.alternate_language_names);
+  const alt = [...new Set(vals(r.alternate_language_names))]; // the DB repeats some names
   const countries = countriesOf(r);
   const slug = makeSlug(iso, r.rod, r.var_code, idx);
 
@@ -426,6 +464,7 @@ function auditData(ents, langs) {
     ['se_media.audio',   (r) => vals(r.se_media?.audio?.OT).length || vals(r.se_media?.audio?.NT).length, (d) => some(d.resources.listen, (x) => x.kind === 'audio' && /Testament/.test(x.name))],
     ['playlist_video',   (r) => playlistItems(r.se_media?.playlist_video).length, (d) => some(d.resources.watch, isPlaylist)],
     ['playlist_audio',   (r) => playlistItems(r.se_media?.playlist_audio).length, (d) => some(d.resources.listen, (x) => x.meta && x.meta.playlistFile)],
+    ['se_sab',           (r) => sabRows(r.se_sab).length, (d) => some(d.resources.read, (x) => x.kind === 'viewer')],
     ['links.YouVersion', (r) => linkRows(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
     ['links.eBible',     (r) => linkRows(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
     ['links.Bible.is',   (r) => linkRows(r.links_media?.['Bible.is']).length, (d) => some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => x.source === 'Faith Comes By Hearing' && x.name !== 'Bible.is Gospel Film')],

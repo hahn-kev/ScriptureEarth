@@ -11,23 +11,25 @@ and JSON-harvest ingest paths have been removed. The items below are places the 
 differs from what the old SQLite extractor produced, or where the dump doesn't carry enough to
 build a link.
 
-### 1. ePub / SAB-html / GoBible·MySword·theWord are not emitted as links
-The dump lists these as **basenames only** (`se_media.ePub`, `other_titles.*`,
-`se_sab.text/audio`, `se_other_software.*`), and their public URL scheme isn't the
+### 1. ePub / GoBible·MySword·theWord are not emitted as links
+The dump lists these as **basenames only** (`se_ePub`, `other_titles.*`,
+`se_other_software.*`), and their public URL scheme isn't the
 `/data/<iso>/{PDF,audio,video}/` convention the resolvable assets use — the obvious
 guesses 404. The old SQLite extractor didn't emit these as resources either, so this is
 parity, not a regression.
-- **Effect:** `se_sab` presence still counts toward `read` availability (a pill shows),
-  but there's no SAB/ePub/software download link on the detail page.
-- **SAB ordering:** SE wants the SAB HTML reader listed first in Read, above Bible.is (the
-  legacy page's order). Until it's linkable, Bible.is is first. The legacy URL is
-  `SAB_scriptoria.url` when set (external, e.g. media.ipsapps.org), else
-  `/data/<iso>/sab/<subfolder>/`. The dump carries neither, and its `se_sab` covers only 114 of
-  ~936 languages with a reader, so external readers don't even count toward `read`. Guessing
-  the folder is deliberately not done (wrong translation risk); the full rows are requested in
-  `DUMP-API-REQUESTS.md`.
-- **Fix path:** once the dump carries them, emit one Read row per reader (`kind: 'viewer'`,
-  `description` as the name) at the top of `R.read` in `extract.mjs` (search for `hasSab`).
+- **Effect:** no ePub/software download link on the detail page.
+
+### 1b. RESOLVED (2026-09-28): SAB HTML readers are linked, first in Read
+The dump's `se_sab` now carries the full `SAB_scriptoria` rows:
+`{ "0": { path, url, description } }` — `path` is the SE-hosted reader folder as a full URL
+(`https://www.ScriptureEarth.org/data/<iso>/sab/<subfolder>/`), `url` an externally hosted
+reader (mostly `media.ipsapps.org`), `description` the legacy page's suffix text. 1019
+languages / 1099 readers (812 local, 287 external). `sabRows()` in `extract.mjs` emits one
+`kind: 'viewer'` row per reader at the **top of Read** (legacy order, above Bible.is), opening
+in a new tab. Quirks handled: a few `url`s are site-relative (`/data/mlg/sab/bts`, no slash)
+and get absolutized; descriptions carry a `- ` / `: ` lead-in that is stripped; ~30% have no
+description and fall back to "Read, listen and view" (the legacy label). The older
+`{ text:{}, audio:{} }` shape is still tolerated (read pill only, no link).
 
 ### 2. Dump-vs-old-SQLite gaps — mostly RESOLVED (see `DUMP-API-REQUESTS.md`)
 A full diff of the JSON build against the old SQLite dump found several gaps. As of 2026-09-22

@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Ook:",
-  "meta.catalogentry": "Catalogusvermelding",
   "detail.onthispage": "Op deze pagina",
   "detail.noresources": "Nog geen bronnen gecatalogiseerd voor deze taal.",
   "detail.original": "Oorspronkelijke site",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Online lezen",
   "action.download": "Downloaden",
-  "action.downloadpdf": "PDF downloaden",
+  "action.downloadpdf": "PDF",
   "action.play": "Afspelen",
   "action.watch": "Bekijken",
   "action.getapp": "App downloaden",

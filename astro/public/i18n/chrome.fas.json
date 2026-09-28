@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "همچنین:",
-  "meta.catalogentry": "مورد فهرست",
   "detail.onthispage": "در این صفحه",
   "detail.noresources": "هنوز هیچ منبعی برای این زبان فهرست نشده است.",
   "detail.original": "سایت اصلی",
@@ -52,7 +51,7 @@
 
   "action.readonline": "خواندن آنلاین",
   "action.download": "دانلود",
-  "action.downloadpdf": "دانلود PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "پخش",
   "action.watch": "تماشا",
   "action.getapp": "دریافت اپ",
