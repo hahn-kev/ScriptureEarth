@@ -6,6 +6,8 @@ const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
 const LINE_SEP = '\n';
 const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
+// Score multiplier for a match on the ISO code field (vs. names/countries).
+const ISO_BOOST = 5;
 const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy' };
 
 function decodeSearchIndex(raw) {
@@ -116,11 +118,14 @@ async function getIndex() {
   if (engine) return engine;
   const { data, countries } = await loadSearchData();
   data.forEach((d) => {
-    d._text = [d.nm, ...(d.nms || []), ...(d.alt || []), d.code, d.where].filter(Boolean).join(' ');
+    d._text = [d.nm, ...(d.nms || []), ...(d.alt || []), d.where].filter(Boolean).join(' ');
   });
+  // The ISO code is its own field so a hit on it can be boosted above name/country
+  // hits: typing "adj" should list Adioukrou (code adj) before names that merely
+  // start with "adj".
   engine = new MiniSearch({
     idField: 'idx',
-    fields: ['_text'],
+    fields: ['_text', 'code'],
     storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r'],
     processTerm: (term) => fold(term) || null,
     tokenize,
@@ -161,7 +166,7 @@ async function search(term) {
   const codes = countryByFoldedName.get(fold(t));
   const hits = codes?.length
     ? records.filter((d) => (d.cc || []).some((c) => codes.includes(c))).sort((a, b) => a.nm.localeCompare(b.nm))
-    : ms.search(t, { prefix: true, fuzzy: 0.2, combineWith: 'AND' }).slice(0, 300);
+    : ms.search(t, { prefix: true, fuzzy: 0.2, combineWith: 'AND', boost: { code: ISO_BOOST } }).slice(0, 300);
   results.innerHTML = hits.map(card).join('');
   rcount.textContent = hits.length;
   setSearching(true);
