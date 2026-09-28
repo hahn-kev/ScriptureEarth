@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "Pati:",
-  "meta.catalogentry": "Entry sa katalogo",
   "detail.onthispage": "Sa pahinang ito",
   "detail.noresources": "Wala pang mga mapagkukunang nakalista para sa wikang ito.",
   "detail.original": "Orihinal na site",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Basahin online",
   "action.download": "I-download",
-  "action.downloadpdf": "I-download ang PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "I-play",
   "action.watch": "Panoorin",
   "action.getapp": "Kunin ang app",

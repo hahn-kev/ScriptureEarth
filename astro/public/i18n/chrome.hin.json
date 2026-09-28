@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "साथ ही:",
-  "meta.catalogentry": "सूची प्रविष्टि",
   "detail.onthispage": "इस पृष्ठ पर",
   "detail.noresources": "इस भाषा के लिए अभी तक कोई संसाधन सूचीबद्ध नहीं है।",
   "detail.original": "मूल साइट",
@@ -52,7 +51,7 @@
 
   "action.readonline": "ऑनलाइन पढ़ें",
   "action.download": "डाउनलोड करें",
-  "action.downloadpdf": "PDF डाउनलोड करें",
+  "action.downloadpdf": "PDF",
   "action.play": "चलाएँ",
   "action.watch": "देखें",
   "action.getapp": "ऐप प्राप्त करें",

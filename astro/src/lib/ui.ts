@@ -20,7 +20,7 @@ type Action = { label: string; slug: string; icon: string };
 const OPEN: Action = { label: 'Open', slug: 'action.open', icon: 'open' };
 const ACTIONS: Record<string, Record<string, Action>> = {
   read: {
-    pdf: { label: 'Download PDF', slug: 'action.downloadpdf', icon: 'download' },
+    pdf: { label: 'PDF', slug: 'action.downloadpdf', icon: 'download' },
     viewer: { label: 'Open viewer', slug: 'action.openviewer', icon: 'read' },
     _: { label: 'Read online', slug: 'action.readonline', icon: 'read' },
   },

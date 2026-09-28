@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "기타:",
-  "meta.catalogentry": "카탈로그 항목",
   "detail.onthispage": "이 페이지에서",
   "detail.noresources": "이 언어에 대해 아직 등록된 자료가 없습니다.",
   "detail.original": "원래 사이트",
@@ -52,7 +51,7 @@
 
   "action.readonline": "온라인으로 읽기",
   "action.download": "다운로드",
-  "action.downloadpdf": "PDF 다운로드",
+  "action.downloadpdf": "PDF",
   "action.play": "재생",
   "action.watch": "보기",
   "action.getapp": "앱 받기",

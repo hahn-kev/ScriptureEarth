@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "另有：",
-  "meta.catalogentry": "目录条目",
   "detail.onthispage": "本页内容",
   "detail.noresources": "尚未为该语言编入任何资源。",
   "detail.original": "原网站",
@@ -52,7 +51,7 @@
 
   "action.readonline": "在线阅读",
   "action.download": "下载",
-  "action.downloadpdf": "下载 PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "播放",
   "action.watch": "观看",
   "action.getapp": "获取应用",

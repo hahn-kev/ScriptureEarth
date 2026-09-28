@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "También:",
-  "meta.catalogentry": "Ficha del catálogo",
   "detail.onthispage": "En esta página",
   "detail.noresources": "Aún no hay recursos catalogados para este idioma.",
   "detail.original": "Sitio original",
@@ -52,7 +51,7 @@
 
   "action.readonline": "Leer en línea",
   "action.download": "Descargar",
-  "action.downloadpdf": "Descargar PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "Reproducir",
   "action.watch": "Ver",
   "action.getapp": "Obtener app",

@@ -44,7 +44,6 @@
 
   "meta.iso": "ISO",
   "meta.also": "أيضًا:",
-  "meta.catalogentry": "مدخل في الفهرس",
   "detail.onthispage": "في هذه الصفحة",
   "detail.noresources": "لا توجد موارد مفهرسة بعد لهذه اللغة.",
   "detail.original": "الموقع الأصلي",
@@ -52,7 +51,7 @@
 
   "action.readonline": "اقرأ عبر الإنترنت",
   "action.download": "تنزيل",
-  "action.downloadpdf": "تنزيل PDF",
+  "action.downloadpdf": "PDF",
   "action.play": "تشغيل",
   "action.watch": "مشاهدة",
   "action.getapp": "احصل على التطبيق",
