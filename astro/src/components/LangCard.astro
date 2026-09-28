@@ -9,7 +9,6 @@ const rights = Object.keys(d.availability).filter((k) => d.availability[k]).join
 <a class="lang" href={`/language/${d.identity.slug}/`} data-r={rights}>
   <div class="top"><span class="code">{d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
   {where && <div class="where">{where}</div>}
-  {d.names.alt_names.length > 0 && <div class="alt"><span data-i18n="meta.also">Also:</span> {d.names.alt_names.join(', ')}</div>}
   <div class="pills">{PILLS.filter((p) => d.availability[p.key]).map((p) => (
     <span class="pill" data-r={p.key}><span class={`ic ic-${p.key}`} aria-hidden="true"></span><span data-i18n={`pill.${p.key}`}>{p.label}</span></span>
   ))}</div>

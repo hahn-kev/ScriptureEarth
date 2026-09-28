@@ -79,7 +79,7 @@ function card(r) {
     `<a class="lang" href="/language/${r.slug}/">` +
     `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>` +
     (r.where ? `<div class="where">${esc(r.where)}</div>` : '') +
-    (r.alt?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.alt.join(', '))}</div>` : '') +
+    (r.altHit?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.altHit.join(', '))}</div>` : '') +
     `<div class="pills">${pills}</div></a>`
   );
 }
@@ -119,14 +119,15 @@ async function getIndex() {
   if (engine) return engine;
   const { data, countries } = await loadSearchData();
   data.forEach((d) => {
-    d._text = [d.nm, ...(d.nms || []), ...(d.alt || []), d.where].filter(Boolean).join(' ');
+    d._text = [d.nm, ...(d.nms || []), d.where].filter(Boolean).join(' ');
+    d._alt = (d.alt || []).join(' ');
   });
-  // The ISO code is its own field so a hit on it can be boosted above name/country
-  // hits: typing "adj" should list Adioukrou (code adj) before names that merely
-  // start with "adj".
+  // Separate fields: the ISO code so a hit on it can be boosted above name/country
+  // hits (typing "adj" lists Adioukrou before names starting with "adj"); alternate
+  // names so a result can tell us which of them matched (see altHits).
   engine = new MiniSearch({
     idField: 'idx',
-    fields: ['_text', 'code'],
+    fields: ['_text', '_alt', 'code'],
     storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r', 'alt'],
     processTerm: (term) => fold(term) || null,
     tokenize,
@@ -141,6 +142,16 @@ async function getIndex() {
     else countryByFoldedName.set(k, [code]);
   }
   return engine;
+}
+
+// The alternate names that contributed to a hit. MiniSearch reports the matched
+// index terms per field; an alt name is shown only if one of its tokens is such a
+// term in the _alt field (so a language found by its main name shows no alt names).
+function altHits(hit) {
+  const terms = new Set();
+  for (const [term, fields] of Object.entries(hit.match || {})) if (fields.includes('_alt')) terms.add(term);
+  if (!terms.size) return [];
+  return (hit.alt || []).filter((name) => tokenize(name).some((tok) => terms.has(fold(tok))));
 }
 
 function setSearching(on) {
@@ -167,7 +178,8 @@ async function search(term) {
   const codes = countryByFoldedName.get(fold(t));
   const hits = codes?.length
     ? records.filter((d) => (d.cc || []).some((c) => codes.includes(c))).sort((a, b) => a.nm.localeCompare(b.nm))
-    : ms.search(t, { prefix: true, fuzzy: 0.2, combineWith: 'AND', boost: { code: ISO_BOOST } }).slice(0, 300);
+    : ms.search(t, { prefix: true, fuzzy: 0.2, combineWith: 'AND', boost: { code: ISO_BOOST } }).slice(0, 300)
+        .map((h) => ({ ...h, altHit: altHits(h) }));
   results.innerHTML = hits.map(card).join('');
   rcount.textContent = hits.length;
   setSearching(true);
