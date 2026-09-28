@@ -373,7 +373,7 @@ for (const e of entries) {
     const v = ln[key];
     if (typeof v === 'string' && v.trim()) localizedNames.push(v.trim());
   }
-  const alt = vals(r.alternate_language_names);
+  const alt = [...new Set(vals(r.alternate_language_names))]; // the DB repeats some names
   const countries = countriesOf(r);
   const slug = makeSlug(iso, r.rod, r.var_code, idx);
 

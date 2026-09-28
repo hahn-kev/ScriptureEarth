@@ -79,6 +79,7 @@ function card(r) {
     `<a class="lang" href="/language/${r.slug}/">` +
     `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>` +
     (r.where ? `<div class="where">${esc(r.where)}</div>` : '') +
+    (r.alt?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.alt.join(', '))}</div>` : '') +
     `<div class="pills">${pills}</div></a>`
   );
 }
@@ -126,7 +127,7 @@ async function getIndex() {
   engine = new MiniSearch({
     idField: 'idx',
     fields: ['_text', 'code'],
-    storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r'],
+    storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r', 'alt'],
     processTerm: (term) => fold(term) || null,
     tokenize,
   });
