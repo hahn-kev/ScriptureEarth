@@ -32,8 +32,10 @@ schema (`languages.json`, `countries.json`, `search-index.json`).
 Media values (`se_media.text`/`audio`) are full URLs; playlists come as
 `{ title:{0:..}, filename:{0:<full URL>} }` under `se_media.playlist_video`/`playlist_audio`.
 (Older captures used bare basenames and a flat `{0:file}` playlist shape — the projector still
-tolerates both.) The dump format has changed more than once, so if resources vanish, re-probe a
-fresh dump before assuming a build bug.
+tolerates both.) `se_sab` is `{ "0": { path, url, description } }` — one row per SAB HTML
+reader (`path` = SE-hosted folder URL, `url` = external reader); older captures had
+`{ text:{}, audio:{} }` file lists, still tolerated. The dump format has changed more than
+once, so if resources vanish, re-probe a fresh dump before assuming a build bug.
 
 ## Worktrees: share one data folder (`pnpm run setup:data`)
 
