@@ -111,12 +111,22 @@ const geoSuggest = document.getElementById('geo-suggest');
 const form = document.getElementById('hero-form');
 if (!q || !form || !results) throw new Error('home search markup missing');
 
-let engine = null;
+let indexPromise = null;
 let records = [];
 let countryByFoldedName = new Map();
 
-async function getIndex() {
-  if (engine) return engine;
+// Memoize the in-flight promise, not the finished engine: on a slow network every
+// keystroke calls this before the first fetch resolves, and each would otherwise
+// start its own download. A failed load is forgotten so the next query retries.
+function getIndex() {
+  indexPromise ??= buildIndex().catch((e) => {
+    indexPromise = null;
+    throw e;
+  });
+  return indexPromise;
+}
+
+async function buildIndex() {
   const { data, countries } = await loadSearchData();
   data.forEach((d) => {
     d._text = [d.nm, ...(d.nms || []), d.where].filter(Boolean).join(' ');
@@ -125,7 +135,7 @@ async function getIndex() {
   // Separate fields: the ISO code so a hit on it can be boosted above name/country
   // hits (typing "adj" lists Adioukrou before names starting with "adj"); alternate
   // names so a result can tell us which of them matched (see altHits).
-  engine = new MiniSearch({
+  const engine = new MiniSearch({
     idField: 'idx',
     fields: ['_text', '_alt', 'code'],
     storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r', 'alt'],
@@ -167,7 +177,10 @@ function syncQueryUrl(term) {
   if (location.pathname + location.search !== want) history.replaceState(null, '', want);
 }
 
+let searchSeq = 0;
+
 async function search(term) {
+  const seq = ++searchSeq;
   const t = String(term || '').trim();
   if (!t) {
     setSearching(false);
@@ -175,6 +188,8 @@ async function search(term) {
     return;
   }
   const ms = await getIndex();
+  // Queries typed while the index was loading all resume here; only the newest renders.
+  if (seq !== searchSeq) return;
   const codes = countryByFoldedName.get(fold(t));
   const hits = codes?.length
     ? records.filter((d) => (d.cc || []).some((c) => codes.includes(c))).sort((a, b) => a.nm.localeCompare(b.nm))
