@@ -108,6 +108,7 @@ const featured = document.getElementById('featured');
 const heroStats = document.getElementById('hero-stats');
 const browseLink = document.getElementById('browse-link');
 const geoSuggest = document.getElementById('geo-suggest');
+const worldMap = document.getElementById('world-map');
 const form = document.getElementById('hero-form');
 if (!q || !form || !results) throw new Error('home search markup missing');
 
@@ -155,7 +156,7 @@ function altHits(hit) {
 }
 
 function setSearching(on) {
-  [heroStats, browseLink, featured].forEach((el) => { if (el) el.hidden = on; });
+  [heroStats, browseLink, featured, worldMap].forEach((el) => { if (el) el.hidden = on; });
   // Hide the geo hint while searching; on clear, restore it only if it is active
   // (rendered and not dismissed — geo-suggest.js owns that via data-geo-shown).
   if (geoSuggest) geoSuggest.hidden = on || geoSuggest.dataset.geoShown !== '1';

@@ -81,15 +81,18 @@ encodes two source-level facts:
   non-English locale**'s triad as worst case in the WITH-DEFERRED number.
 - **search index** (`src/pages/index.astro` → `src/scripts/search.js`):
   `/search-index.txt` — fetched **lazily on first search interaction**, only on `home`.
+- **world map** (`src/components/WorldMap.astro` → `src/scripts/world-map.js`): the
+  content-hashed `/_astro/world-map.<hash>.svg` named in the home page's `data-map-url` —
+  fetched **when the map section scrolls near the viewport**, only on `home`.
 
 Recipe shape (all archetypes get the i18n triad in deferred; `home` also gets the
-search index):
+search index and the world map):
 
 ```js
 const I18N_TRIAD = (loc) => [`/i18n/chrome.${loc}.json`, `/i18n/names.${loc}.json`, '/i18n/autonyms.json'];
 const WORST_LOCALE = 'spa';           // pick the largest triad at build time; see §7
 const RECIPE = {
-  home:      { deferred: ['/search-index.txt', ...I18N_TRIAD(WORST_LOCALE)] },
+  home:      { deferred: ['/search-index.txt', MAP_SVG /* from data-map-url */, ...I18N_TRIAD(WORST_LOCALE)] },
   browse:    { deferred: [...I18N_TRIAD(WORST_LOCALE)] },
   countries: { deferred: [...I18N_TRIAD(WORST_LOCALE)] },
   country:   { deferred: [...I18N_TRIAD(WORST_LOCALE)] },
