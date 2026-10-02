@@ -212,9 +212,11 @@ import mapUrl from '../../content/world-map.svg?url';
     }
   }
   @media (max-width: 899px) {
-    /* After a tap, map + list fill the screen below the sticky header; the list scrolls. */
+    /* After a tap, map + list fill the screen below the sticky header; the list scrolls.
+       When the map alone is nearly a screen tall (landscape phone), keep at least 12rem
+       of list under it and let the page scroll instead of squeezing the list to nothing. */
     .world-map.is-open .wm-grid {
-      height: calc(100dvh - var(--wm-hdr) - 8px);
+      height: max(calc(100dvh - var(--wm-hdr) - 8px), calc(var(--wm-col-h, 0px) + var(--s2) + 12rem));
     }
     .world-map.is-open .wm-col {
       flex: none;

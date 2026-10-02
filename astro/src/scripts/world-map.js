@@ -157,15 +157,24 @@ function openList(items) {
     li.append(a);
     ul.append(li);
   }
+  sizeOpen();
   list.hidden = false;
   sec.classList.add('is-open');
   ul.scrollTop = 0;
   // Map to the top of the screen (under the sticky header); on phones the list fills the rest.
-  const hdr = document.querySelector('header.site')?.getBoundingClientRect().height || 0;
-  sec.style.setProperty('--wm-hdr', `${hdr}px`);
-  grid.style.scrollMarginTop = `${hdr + 8}px`;
   grid.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }
+
+// Inputs for the phone "map + list fill the screen" height (CSS in WorldMap.astro): the
+// sticky header's height, and the map column's own height so a landscape phone, where
+// the map alone is taller than the screen, still leaves room for the list.
+function sizeOpen() {
+  const hdr = document.querySelector('header.site')?.getBoundingClientRect().height || 0;
+  sec.style.setProperty('--wm-hdr', `${hdr}px`);
+  sec.style.setProperty('--wm-col-h', `${sec.querySelector('.wm-col').getBoundingClientRect().height}px`);
+  grid.style.scrollMarginTop = `${hdr + 8}px`;
+}
+addEventListener('resize', () => { if (!list.hidden) sizeOpen(); });
 
 function closeList() {
   list.hidden = true;
