@@ -15,7 +15,11 @@ Catalog of languages and countries with scripture resources (read / listen / wat
 ```
 /api/db_dump.php?v=1 ── fetch_dump.mjs ──► data/scripture.json ── extract.mjs ──┬─► content/{languages,countries}.json ─► Astro pages
   (www host, SE_KEY auth)                   (one JSON object)      (projector)   └─► content/search-index.json ─► build_search_index.mjs ─► public/search-index.txt
+
+content/countries.json + scripts/data/ne_110m_countries.geojson + map-points.json ── gen_map.mjs ──► content/world-map.svg (home map)
 ```
+
+**Home world map:** `scripts/gen_map.mjs` (last step of `extract`) renders countries shaded by languages-with-Scripture into `content/world-map.svg` (Web Mercator, Natural Earth 1:110m, integer coords, ~31 KiB brotli; warns over 40 KiB or when a country has no outline/point → add it to `scripts/data/map-points.json`). `src/components/WorldMap.astro` imports it with `?url` (hashed `/_astro/` file, `data-map-url`), and `src/scripts/world-map.js` fetches it only when scrolled near. A tap lists countries near the finger under the map; mouse clicks on a country navigate. Never make it load the language list or search index. Design record: `.scratch/home-language-map/`.
 
 **Source of truth = the consolidated JSON dump** (`data/scripture.json`), one pre-joined object from the API (see `scripts/README-dump.md`). Top-level keys are row ordinals; the real language key is `relationships.idx`. `extract.mjs` (the projector) builds asset URLs from basenames as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`. The dump's shape has changed several times; the projector tolerates every shape seen so far (`linkRows()`, `playlistItems()`), and `SE_STRICT=1` audits a new dump.
 
@@ -33,9 +37,9 @@ Catalog of languages and countries with scripture resources (read / listen / wat
 |---|---|
 | `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/` |
 | `src/layouts/Base.astro` | Chrome, locale boot, header search |
-| `src/components/` | `LangCard.astro`, `ResourceRow.astro` |
+| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`) |
 | `src/lib/ui.ts` | Shared vocab: `GROUPS` vs `PILLS`, action labels |
-| `src/scripts/` | Client bundles: `search.js`, `i18n.js`, `browse.js`, `geo-suggest.js` (hashed Vite bundles; never inline) |
+| `src/scripts/` | Client bundles: `search.js`, `i18n.js`, `browse.js`, `geo-suggest.js`, `world-map.js` (hashed Vite bundles; never inline) |
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
 | `scripts/` | Projector (`extract.mjs`), dump fetch, search-index encoder, precompress, size bench, i18n/geo generators |
 | `public/i18n/` | Chrome + names catalogs (committed) |
@@ -108,6 +112,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 | `scripts/extract.mjs` | **Projector**: `data/scripture.json` → `content/` (builds asset URLs, fetches playlist clips) |
 | `scripts/fetch_dump.mjs` | JSON dump download → `data/scripture.json` (see `scripts/README-dump.md`) |
 | `scripts/build_search_index.mjs` | JSON → `public/search-index.txt` (`auto` stays null) |
+| `scripts/gen_map.mjs` | `content/countries.json` → `content/world-map.svg` (home map; run by `extract`, or `pnpm run gen:map`) |
 | `scripts/precompress_dist.mjs` | In-place brotli on `dist/search-index.txt` + `_headers` |
 | `scripts/build_sizes.mjs`, `scripts/check_sizes.mjs` | Size-regression gate (`bench/SIZE-BENCH-SPEC.md`) |
 | `public/_redirects`, `functions/index.php.js`, `src/pages/language/index.astro` | Legacy URL map (+ bundled `content/lang-map.json`, + shared-ISO chooser) |

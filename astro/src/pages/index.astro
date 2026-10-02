@@ -1,6 +1,7 @@
 ---
 import { getCollection } from 'astro:content';
 import Base from '../layouts/Base.astro';
+import WorldMap from '../components/WorldMap.astro';
 
 const langs = (await getCollection('languages')).map((l) => l.data);
 const withRead = langs.filter((l) => l.availability.read).length;
@@ -23,6 +24,8 @@ const withListen = langs.filter((l) => l.availability.listen).length;
     <p class="hero-more" id="browse-link"><a href="/browse/"><span data-i18n="home.browseAll">Browse all languages</span> →</a></p>
     <div id="geo-suggest" class="geo-suggest geo-suggest-hero" hidden></div>
   </div></section>
+
+  <WorldMap />
 
   <section class="block shell">
     <div class="sec-head" id="rhead" hidden><div><p class="eyebrow" data-i18n="results.heading">Results</p><h2><span id="rcount">0</span></h2></div></div>
