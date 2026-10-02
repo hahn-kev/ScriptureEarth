@@ -30,6 +30,95 @@ const isMouse = (type) => type === 'mouse' && !touchFirst.matches;
 let smallEls = null;
 let youCode = null;
 
+// --- tap-to-zoom: a touch tap zooms the map (not the page) one level on that spot.
+// No panning; taps while zoomed only refresh the list; zoom out via the button or by
+// closing the list. The page scrolls the map into place first, then the viewBox is
+// tweened (strokes stay crisp and hit-testing follows the zoom automatically).
+// PROTOTYPE (to remove before merge): zoom factor and duration can be tuned from the
+// #wm-proto controls, persisted in localStorage.
+const zoomBtn = document.getElementById('wm-zoomout');
+const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
+const P = { zoom: 3, ms: 260 };
+let BASE = null; // full-map viewBox
+let view = null; // current viewBox (map units)
+let zoomed = false;
+let tween = 0;
+
+const protoForm = document.getElementById('wm-proto');
+if (protoForm) {
+  try { Object.assign(P, JSON.parse(localStorage.getItem('wm-proto') || '{}')); } catch {}
+  for (const k of Object.keys(P)) {
+    const el = protoForm.elements[k];
+    if (el) el.value = P[k];
+    const out = protoForm.querySelector(`[data-out="${k}"]`);
+    if (out) out.textContent = P[k];
+  }
+  protoForm.addEventListener('input', (e) => {
+    const k = e.target.name;
+    const v = +e.target.value;
+    P[k] = v;
+    const out = protoForm.querySelector(`[data-out="${k}"]`);
+    if (out) out.textContent = v;
+    try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
+  });
+}
+
+const ease = (t) => 1 - (1 - t) ** 3;
+
+function setView(v, animate) {
+  const svg = wrap.querySelector('svg');
+  if (!svg) return;
+  const ms = animate && !reduceMotion.matches ? P.ms : 0;
+  cancelAnimationFrame(tween);
+  const from = { ...view };
+  const t0 = performance.now();
+  const step = (now) => {
+    const t = ms ? Math.min(1, (now - t0) / ms) : 1;
+    const k = ease(t);
+    const c = ['x', 'y', 'w', 'h'].map((p) => from[p] + (v[p] - from[p]) * k);
+    svg.setAttribute('viewBox', c.join(' '));
+    view = { x: c[0], y: c[1], w: c[2], h: c[3] };
+    if (t < 1) tween = requestAnimationFrame(step);
+  };
+  tween = requestAnimationFrame(step);
+}
+
+function zoomAt(mx, my) {
+  if (!BASE || zoomed) return;
+  const w = BASE.w / P.zoom;
+  const h = BASE.h / P.zoom;
+  const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+  zoomed = true;
+  zoomBtn.hidden = false;
+  setView({ x: clamp(mx - w / 2, 0, BASE.w - w), y: clamp(my - h / 2, 0, BASE.h - h), w, h }, true);
+}
+
+function zoomOut() {
+  if (!zoomed) return;
+  zoomed = false;
+  zoomBtn.hidden = true;
+  setView({ ...BASE }, true);
+}
+
+zoomBtn.addEventListener('click', zoomOut);
+
+// Resolves once the page has stopped scrolling (smooth scrollIntoView has no promise).
+function afterScroll() {
+  return new Promise((resolve) => {
+    let last = scrollY;
+    let still = 0;
+    const t0 = performance.now();
+    const tick = () => {
+      const now = performance.now();
+      if (scrollY === last) still++; else { still = 0; last = scrollY; }
+      // 4 still frames after the scroll had a chance to start, or give up after 900 ms.
+      if ((still >= 4 && now - t0 > 120) || now - t0 > 900) return resolve();
+      requestAnimationFrame(tick);
+    };
+    requestAnimationFrame(tick);
+  });
+}
+
 function load() {
   if (loaded) return;
   loaded = true;
@@ -37,6 +126,9 @@ function load() {
     .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
     .then((svg) => {
       wrap.innerHTML = svg;
+      const vb = wrap.querySelector('svg').viewBox.baseVal;
+      BASE = { x: 0, y: 0, w: vb.width, h: vb.height };
+      view = { ...BASE };
       // Highlight the visitor's guessed country (geo-suggest.js renders it as a link).
       const a = document.querySelector('#geo-suggest a[href^="/country/"]');
       youCode = a ? a.getAttribute('href').split('/')[2] : null;
@@ -108,7 +200,7 @@ function near(x, y) {
   if (!svg) return [];
   if (!smallEls) indexSmall();
   const p = new DOMPoint(x, y).matrixTransform(svg.getScreenCTM().inverse());
-  const scale = svg.getBoundingClientRect().width / svg.viewBox.baseVal.width;
+  const scale = svg.getScreenCTM().a; // screen px per map unit, including any zoom
   const r = RADIUS_PX / scale;
   const found = new Map();
   const add = (el, d) => {
@@ -165,9 +257,12 @@ function openList(items) {
   // units and fight the zoomed view, so leave the page where it is and just show the list.
   const pinched = (window.visualViewport?.scale ?? 1) > 1.01;
   sec.classList.toggle('is-pinched', pinched);
-  if (pinched) return;
+  if (pinched) return Promise.resolve();
   // Map to the top of the screen (under the sticky header); on phones the list fills the rest.
-  grid.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
+  const hdr = document.querySelector('header.site')?.getBoundingClientRect().height || 0;
+  const distance = Math.abs(grid.getBoundingClientRect().top - (hdr + 8));
+  grid.scrollIntoView({ behavior: reduceMotion.matches ? 'auto' : 'smooth', block: 'start' });
+  return distance < 4 ? Promise.resolve() : afterScroll();
 }
 
 // Inputs for the phone "map + list fill the screen" height (CSS in WorldMap.astro): the
@@ -185,15 +280,27 @@ function closeList() {
   list.hidden = true;
   sec.classList.remove('is-open');
   clearNear();
+  zoomOut();
 }
 
 document.getElementById('wm-close').addEventListener('click', closeList);
 addEventListener('keydown', (e) => { if (e.key === 'Escape' && !list.hidden) closeList(); });
 
-wrap.addEventListener('click', (e) => {
+wrap.addEventListener('click', async (e) => {
   const hit = countryOf(e.target);
-  if (isMouse(lastPointer) && hit) { location.href = `/country/${codeOf(hit)}/`; return; }
+  const mouse = isMouse(lastPointer);
+  if (mouse && hit) { location.href = `/country/${codeOf(hit)}/`; return; }
   const items = near(e.clientX, e.clientY);
-  if (items.length) openList(items);
-  else closeList();
+  if (!items.length) {
+    // Ocean with nothing near: close the list, but a near-miss never throws away a zoom.
+    if (!zoomed) closeList();
+    return;
+  }
+  // Remember where the tap landed on the map before the page scroll moves it.
+  const svg = wrap.querySelector('svg');
+  const p = new DOMPoint(e.clientX, e.clientY).matrixTransform(svg.getScreenCTM().inverse());
+  const scrolled = openList(items);
+  if (mouse || zoomed) return; // no zoom for mouse; taps while zoomed only refresh the list
+  await scrolled; // scroll the map into place first, then zoom
+  zoomAt(p.x, p.y);
 });
