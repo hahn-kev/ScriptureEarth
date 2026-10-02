@@ -161,6 +161,11 @@ function openList(items) {
   list.hidden = false;
   sec.classList.add('is-open');
   ul.scrollTop = 0;
+  // Pinch-zoomed page: the scroll and the fill-the-screen height are in layout-viewport
+  // units and fight the zoomed view, so leave the page where it is and just show the list.
+  const pinched = (window.visualViewport?.scale ?? 1) > 1.01;
+  sec.classList.toggle('is-pinched', pinched);
+  if (pinched) return;
   // Map to the top of the screen (under the sticky header); on phones the list fills the rest.
   grid.scrollIntoView({ behavior: matchMedia('(prefers-reduced-motion: reduce)').matches ? 'auto' : 'smooth', block: 'start' });
 }

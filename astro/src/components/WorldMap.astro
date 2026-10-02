@@ -218,6 +218,13 @@ import mapUrl from '../../content/world-map.svg?url';
     .world-map.is-open .wm-grid {
       height: max(calc(100dvh - var(--wm-hdr) - 8px), calc(var(--wm-col-h, 0px) + var(--s2) + 12rem));
     }
+    .world-map.is-open.is-pinched .wm-grid {
+      /* pinch-zoomed: no screen-filling; the list sits under the map at a fixed height */
+      height: auto;
+    }
+    .world-map.is-pinched .wm-list ul {
+      max-height: 18rem;
+    }
     .world-map.is-open .wm-col {
       flex: none;
     }
