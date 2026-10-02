@@ -1,9 +1,10 @@
 // Builds the home-page world maps (countries shaded by how many languages have
 // Scripture, clickable through to /country/<code>/):
-//   content/world-map.svg              — Web Mercator (current default)
-//   content/world-map-equal-earth.svg  — Equal Earth (countries at true relative size)
-// Both are generated so the team can compare them on the PR preview (the switch lives in
-// the map's test panel); one will be dropped once the projection is decided.
+//   content/world-map.svg          — Web Mercator (current default)
+//   content/world-map-<id>.svg     — the other projections in PROJECTIONS below
+//   content/world-map-projections.json — id, label, file and viewBox size of each
+// All are generated so the team can compare them on the PR preview (the switch lives in
+// the map's test panel); all but one will be dropped once the projection is decided.
 //
 // Inputs (all committed or generated earlier in `extract`):
 //   content/countries.json            — per-country language lists (from extract.mjs)
@@ -22,7 +23,8 @@ import { readFileSync, writeFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { brotliCompressSync, constants as Z } from 'node:zlib';
-import { geoEqualEarth, geoMercator, geoPath } from 'd3-geo';
+import { geoEqualEarth, geoMercator, geoNaturalEarth1, geoPath } from 'd3-geo';
+import { geoRobinson, geoWinkel3 } from 'd3-geo-projection';
 
 const root = path.join(path.dirname(fileURLToPath(import.meta.url)), '..');
 const read = (p) => JSON.parse(readFileSync(path.join(root, p), 'utf8'));
@@ -37,8 +39,18 @@ const nameOf = new Map(countries.map((c) => [c.code, c.name.eng]));
 
 const W = 1000;
 
+// The projections to render. Only Mercator needs a latitude crop; the others are fitted
+// to the outlines (Antarctica is already dropped from the input).
+const PROJECTIONS = [
+  { id: 'mercator', label: 'Mercator', file: 'world-map.svg' },
+  { id: 'ee', label: 'Equal Earth', file: 'world-map-ee.svg', make: geoEqualEarth },
+  { id: 'natural', label: 'Natural Earth', file: 'world-map-natural.svg', make: geoNaturalEarth1 },
+  { id: 'robinson', label: 'Robinson', file: 'world-map-robinson.svg', make: geoRobinson },
+  { id: 'winkel', label: 'Winkel Tripel', file: 'world-map-winkel.svg', make: geoWinkel3 },
+];
+
 // Projection fitted to a 1000-unit-wide viewBox; returns the projection and the height.
-function makeProjection(kind) {
+function makeProjection(kind, make) {
   if (kind === 'mercator') {
     // Web Mercator, cropped so Greenland and Tierra del Fuego fit without polar waste.
     const LAT_N = 83.7;
@@ -47,10 +59,9 @@ function makeProjection(kind) {
     proj.translate([W / 2, -proj([0, LAT_N])[1]]);
     return { proj, H: Math.round(proj([0, LAT_S])[1]) };
   }
-  // Equal Earth: equal-area, so countries keep their true relative size. Fitted to the
-  // outlines (Antarctica already dropped from the input), top edge at y = 0.
+  // Fitted to the outlines' width, top edge moved to y = 0.
   const fc = { type: 'FeatureCollection', features: outlines.features };
-  const proj = geoEqualEarth().fitWidth(W, fc);
+  const proj = make().fitWidth(W, fc);
   const [[, y0], [, y1]] = geoPath(proj).bounds(fc);
   const [tx, ty] = proj.translate();
   proj.translate([tx, ty - y0]);
@@ -81,8 +92,8 @@ for (const f of outlines.features) {
   else byCode.set(code, { name: f.properties.name, polys: [...polys] });
 }
 
-function render(kind, file) {
-  const { proj, H } = makeProjection(kind);
+function render({ id: kind, file, make }) {
+  const { proj, H } = makeProjection(kind, make);
   const path0 = geoPath(proj).digits(0);
   let shapes = '';
   let circles = '';
@@ -131,7 +142,8 @@ function render(kind, file) {
   if (missing.length) {
     console.warn(`gen_map: WARNING ${missing.length} countries have no outline and no point, so they are not on the map: ${missing.join(' ')}. Add them to scripts/data/map-points.json.`);
   }
+  return { w: W, h: H };
 }
 
-render('mercator', 'world-map.svg');
-render('equal-earth', 'world-map-equal-earth.svg');
+const manifest = PROJECTIONS.map((p) => ({ id: p.id, label: p.label, file: p.file, ...render(p) }));
+writeFileSync(path.join(root, 'content/world-map-projections.json'), JSON.stringify(manifest, null, 1));

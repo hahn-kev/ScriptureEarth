@@ -34,9 +34,9 @@ let youCode = null;
 // No panning; taps while zoomed only refresh the list; zoom out via the button or by
 // closing the list. The page scrolls the map into place first, then the viewBox is
 // tweened (strokes stay crisp and hit-testing follows the zoom automatically).
-// PROTOTYPE (to remove before merge): zoom factor, duration and projection (Mercator vs
-// Equal Earth) can be changed from the #wm-proto controls, persisted in localStorage;
-// ?proj=ee / ?proj=mercator in the URL sets the projection too, for sharing with testers.
+// PROTOTYPE (to remove before merge): zoom factor, duration and projection can be changed
+// from the #wm-proto controls, persisted in localStorage; ?proj=<id> in the URL (mercator,
+// ee, natural, robinson, winkel) sets the projection too, for sharing with testers.
 const zoomBtn = document.getElementById('wm-zoomout');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
 const P = { zoom: 3, ms: 260, proj: 'mercator' };
@@ -48,9 +48,8 @@ let tween = 0;
 const protoForm = document.getElementById('wm-proto');
 if (protoForm) {
   try { Object.assign(P, JSON.parse(localStorage.getItem('wm-proto') || '{}')); } catch {}
-  const q = new URLSearchParams(location.search).get('proj');
-  if (q) P.proj = /^(ee|equal)/i.test(q) ? 'ee' : 'mercator';
-  if (P.proj !== 'ee') P.proj = 'mercator';
+  const q = (new URLSearchParams(location.search).get('proj') || '').toLowerCase();
+  if (q) P.proj = q.startsWith('equal') ? 'ee' : q;
   try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
   for (const k of Object.keys(P)) {
     const el = protoForm.elements[k];
@@ -126,13 +125,18 @@ function afterScroll() {
   });
 }
 
-const ee = () => P.proj === 'ee';
-wrap.style.aspectRatio = ee() ? wrap.dataset.aspectEe : wrap.dataset.aspect;
+const MAPS = JSON.parse(wrap.dataset.maps || '{}');
+if (!MAPS[P.proj]) {
+  P.proj = 'mercator';
+  if (protoForm?.elements.proj) protoForm.elements.proj.value = 'mercator';
+}
+const current = () => MAPS[P.proj] || { url: wrap.dataset.mapUrl };
+if (current().aspect) wrap.style.aspectRatio = current().aspect;
 
 function load() {
   if (loaded) return;
   loaded = true;
-  fetch(ee() ? wrap.dataset.mapUrlEe : wrap.dataset.mapUrl)
+  fetch(current().url)
     .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
     .then((svg) => {
       wrap.innerHTML = svg;
@@ -154,7 +158,7 @@ function switchProjection() {
   cancelAnimationFrame(tween);
   zoomed = false;
   zoomBtn.hidden = true;
-  wrap.style.aspectRatio = ee() ? wrap.dataset.aspectEe : wrap.dataset.aspect;
+  if (current().aspect) wrap.style.aspectRatio = current().aspect;
   if (!loaded) return; // not fetched yet: load() will pick the chosen map
   loaded = false;
   load();
