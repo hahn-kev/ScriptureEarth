@@ -76,6 +76,9 @@ import mapUrl from '../../content/world-map.svg?url';
     border-radius: var(--radius);
     overflow: hidden;
     touch-action: manipulation;
+    /* Chrome draws its tap highlight around a shape's bounding box (Russia = the whole map);
+       tapped countries already turn orange, so hide it. */
+    -webkit-tap-highlight-color: transparent;
   }
   .wm-map svg {
     display: block;
