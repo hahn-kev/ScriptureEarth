@@ -34,11 +34,12 @@ let youCode = null;
 // No panning; taps while zoomed only refresh the list; zoom out via the button or by
 // closing the list. The page scrolls the map into place first, then the viewBox is
 // tweened (strokes stay crisp and hit-testing follows the zoom automatically).
-// PROTOTYPE (to remove before merge): zoom factor and duration can be tuned from the
-// #wm-proto controls, persisted in localStorage.
+// PROTOTYPE (to remove before merge): zoom factor, duration and projection (Mercator vs
+// Equal Earth) can be changed from the #wm-proto controls, persisted in localStorage;
+// ?proj=ee / ?proj=mercator in the URL sets the projection too, for sharing with testers.
 const zoomBtn = document.getElementById('wm-zoomout');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const P = { zoom: 3, ms: 260 };
+const P = { zoom: 3, ms: 260, proj: 'mercator' };
 let BASE = null; // full-map viewBox
 let view = null; // current viewBox (map units)
 let zoomed = false;
@@ -47,6 +48,10 @@ let tween = 0;
 const protoForm = document.getElementById('wm-proto');
 if (protoForm) {
   try { Object.assign(P, JSON.parse(localStorage.getItem('wm-proto') || '{}')); } catch {}
+  const q = new URLSearchParams(location.search).get('proj');
+  if (q) P.proj = /^(ee|equal)/i.test(q) ? 'ee' : 'mercator';
+  if (P.proj !== 'ee') P.proj = 'mercator';
+  try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
   for (const k of Object.keys(P)) {
     const el = protoForm.elements[k];
     if (el) el.value = P[k];
@@ -55,11 +60,13 @@ if (protoForm) {
   }
   protoForm.addEventListener('input', (e) => {
     const k = e.target.name;
-    const v = +e.target.value;
+    const v = e.target.type === 'range' ? +e.target.value : e.target.value;
+    const projChanged = k === 'proj' && v !== P.proj;
     P[k] = v;
     const out = protoForm.querySelector(`[data-out="${k}"]`);
     if (out) out.textContent = v;
     try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
+    if (projChanged) switchProjection();
   });
 }
 
@@ -119,13 +126,17 @@ function afterScroll() {
   });
 }
 
+const ee = () => P.proj === 'ee';
+wrap.style.aspectRatio = ee() ? wrap.dataset.aspectEe : wrap.dataset.aspect;
+
 function load() {
   if (loaded) return;
   loaded = true;
-  fetch(wrap.dataset.mapUrl)
+  fetch(ee() ? wrap.dataset.mapUrlEe : wrap.dataset.mapUrl)
     .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
     .then((svg) => {
       wrap.innerHTML = svg;
+      smallEls = null;
       const vb = wrap.querySelector('svg').viewBox.baseVal;
       BASE = { x: 0, y: 0, w: vb.width, h: vb.height };
       view = { ...BASE };
@@ -135,6 +146,18 @@ function load() {
       if (youCode) wrap.querySelector(`#${CSS.escape(youCode)}`)?.classList.add('is-you');
     })
     .catch(() => { sec.hidden = true; });
+}
+
+// PROTOTYPE: swap to the other projection's map in place.
+function switchProjection() {
+  closeList();
+  cancelAnimationFrame(tween);
+  zoomed = false;
+  zoomBtn.hidden = true;
+  wrap.style.aspectRatio = ee() ? wrap.dataset.aspectEe : wrap.dataset.aspect;
+  if (!loaded) return; // not fetched yet: load() will pick the chosen map
+  loaded = false;
+  load();
 }
 
 if ('IntersectionObserver' in window) {

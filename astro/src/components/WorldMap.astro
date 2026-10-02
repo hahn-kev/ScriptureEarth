@@ -6,6 +6,18 @@
 // visitor who only searches never downloads it. It never loads the language list or
 // the search index. Legend edges must match BUCKETS in scripts/gen_map.mjs.
 import mapUrl from '../../content/world-map.svg?url';
+// PROTOTYPE: second projection for the team to compare (switch in the test panel or ?proj=ee).
+import mapUrlEe from '../../content/world-map-equal-earth.svg?url';
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+// Reserve each map's real shape (from its viewBox) so nothing jumps when it loads.
+const aspectOf = (file: string) => {
+  const m = /viewBox="0 0 ([\d.]+) ([\d.]+)"/.exec(readFileSync(path.join(process.cwd(), 'content', file), 'utf8'));
+  return m ? `${m[1]} / ${m[2]}` : '1000 / 650';
+};
+const aspect = aspectOf('world-map.svg');
+const aspectEe = aspectOf('world-map-equal-earth.svg');
 ---
 <section class="block shell world-map" id="world-map" aria-labelledby="wm-heading">
   <div class="wm-head">
@@ -15,17 +27,18 @@ import mapUrl from '../../content/world-map.svg?url';
   <div class="wm-grid" id="wm-grid">
     <div class="wm-col">
       <div class="wm-mapbox">
-        <div class="wm-map" id="wm-map" data-map-url={mapUrl} role="img" aria-label="World map: languages with Scripture by country" data-i18n-label="map.label"></div>
+        <div class="wm-map" id="wm-map" data-map-url={mapUrl} data-map-url-ee={mapUrlEe} data-aspect={aspect} data-aspect-ee={aspectEe} style={`aspect-ratio: ${aspect}`} role="img" aria-label="World map: languages with Scripture by country" data-i18n-label="map.label"></div>
         <button type="button" class="wm-zoomout" id="wm-zoomout" aria-label="Whole world" data-i18n-label="map.zoomOut" hidden>−</button>
       </div>
       <div class="wm-legend">
         <span data-i18n="map.legend">Languages per country</span>
         <span><i class="b1"></i>1–4</span><span><i class="b2"></i>5–19</span><span><i class="b3"></i>20–79</span><span><i class="b4"></i>80+</span>
       </div>
-      <!-- PROTOTYPE controls: zoom factor + duration, for tuning on a phone. Remove before merge. -->
+      <!-- PROTOTYPE controls: zoom factor, duration, projection, for testing on a phone. Remove before merge. -->
       <form class="wm-proto" id="wm-proto" onsubmit="return false">
         <label>zoom <input name="zoom" type="range" min="1.5" max="5" step="0.25" value="3" /> <b data-out="zoom">3</b>×</label>
         <label>ms <input name="ms" type="range" min="0" max="700" step="20" value="260" /> <b data-out="ms">260</b></label>
+        <label>projection <select name="proj"><option value="mercator">Mercator</option><option value="ee">Equal Earth</option></select></label>
       </form>
     </div>
     <div class="wm-list" id="wm-list" hidden>
