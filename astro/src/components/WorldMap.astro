@@ -6,13 +6,12 @@
 // visitor who only searches never downloads it. It never loads the language list or
 // the search index. Legend edges must match BUCKETS in scripts/gen_map.mjs.
 import mapUrl from '../../content/world-map.svg?url';
-// PROTOTYPE: every projection gen_map renders, for the team to compare (switch in the test
-// panel or ?proj=<id>). The manifest gives each map's label and viewBox size, so the box
-// reserved for the map takes its real shape and nothing jumps when it loads.
-import projections from '../../content/world-map-projections.json';
-const urls = import.meta.glob('../../content/world-map*.svg', { query: '?url', import: 'default', eager: true }) as Record<string, string>;
-const maps = Object.fromEntries(projections.map((p: any) => [p.id, { label: p.label, url: urls[`../../content/${p.file}`], aspect: `${p.w} / ${p.h}` }]));
-const aspect = maps.mercator.aspect;
+import { readFileSync } from 'node:fs';
+import path from 'node:path';
+
+// Reserve the map's real shape (from its viewBox) so nothing jumps when it loads.
+const viewBox = /viewBox="0 0 ([0-9.]+) ([0-9.]+)"/.exec(readFileSync(path.join(process.cwd(), 'content/world-map.svg'), 'utf8'));
+const aspect = viewBox ? `${viewBox[1]} / ${viewBox[2]}` : '1000 / 436';
 ---
 <section class="block shell world-map" id="world-map" aria-labelledby="wm-heading">
   <div class="wm-head">
@@ -22,19 +21,13 @@ const aspect = maps.mercator.aspect;
   <div class="wm-grid" id="wm-grid">
     <div class="wm-col">
       <div class="wm-mapbox">
-        <div class="wm-map" id="wm-map" data-map-url={mapUrl} data-maps={JSON.stringify(maps)} style={`aspect-ratio: ${aspect}`} role="img" aria-label="World map: languages with Scripture by country" data-i18n-label="map.label"></div>
+        <div class="wm-map" id="wm-map" data-map-url={mapUrl} style={`aspect-ratio: ${aspect}`} role="img" aria-label="World map: languages with Scripture by country" data-i18n-label="map.label"></div>
         <button type="button" class="wm-zoomout" id="wm-zoomout" aria-label="Whole world" data-i18n-label="map.zoomOut" hidden>−</button>
       </div>
       <div class="wm-legend">
         <span data-i18n="map.legend">Languages per country</span>
         <span><i class="b1"></i>1–4</span><span><i class="b2"></i>5–19</span><span><i class="b3"></i>20–79</span><span><i class="b4"></i>80+</span>
       </div>
-      <!-- PROTOTYPE controls: zoom factor, duration, projection, for testing on a phone. Remove before merge. -->
-      <form class="wm-proto" id="wm-proto" onsubmit="return false">
-        <label>zoom <input name="zoom" type="range" min="1.5" max="5" step="0.25" value="3" /> <b data-out="zoom">3</b>×</label>
-        <label>ms <input name="ms" type="range" min="0" max="700" step="20" value="260" /> <b data-out="ms">260</b></label>
-        <label>projection <select name="proj">{projections.map((p: any) => <option value={p.id}>{p.label}</option>)}</select></label>
-      </form>
     </div>
     <div class="wm-list" id="wm-list" hidden>
       <div class="wm-list-head">
@@ -78,7 +71,7 @@ const aspect = maps.mercator.aspect;
     gap: var(--s2);
   }
   .wm-map {
-    aspect-ratio: 1000 / 650;
+    /* aspect-ratio is set inline from the SVG's viewBox */
     width: 100%;
     background: var(--surface-2);
     border-radius: var(--radius);
@@ -110,21 +103,6 @@ const aspect = maps.mercator.aspect;
     line-height: 1;
     box-shadow: var(--shadow-sm);
     cursor: pointer;
-  }
-  .wm-proto {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 6px 14px;
-    margin-block-start: var(--s2);
-    padding: 6px 8px;
-    border: 1px dashed var(--sil-orange);
-    border-radius: 8px;
-    font: 12px ui-monospace, monospace;
-    color: var(--muted);
-  }
-  .wm-proto input[type="range"] {
-    width: 90px;
-    vertical-align: middle;
   }
   .wm-map path,
   .wm-map circle {

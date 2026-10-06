@@ -34,47 +34,22 @@ let youCode = null;
 // No panning; taps while zoomed only refresh the list; zoom out via the button or by
 // closing the list. The page scrolls the map into place first, then the viewBox is
 // tweened (strokes stay crisp and hit-testing follows the zoom automatically).
-// PROTOTYPE (to remove before merge): zoom factor, duration and projection can be changed
-// from the #wm-proto controls, persisted in localStorage; ?proj=<id> in the URL (mercator,
-// ee, natural, robinson, winkel) sets the projection too, for sharing with testers.
+// Zoom factor and duration were tuned on phones during PR review.
+const ZOOM = 3;
+const ZOOM_MS = 260;
 const zoomBtn = document.getElementById('wm-zoomout');
 const reduceMotion = matchMedia('(prefers-reduced-motion: reduce)');
-const P = { zoom: 3, ms: 260, proj: 'mercator' };
 let BASE = null; // full-map viewBox
 let view = null; // current viewBox (map units)
 let zoomed = false;
 let tween = 0;
-
-const protoForm = document.getElementById('wm-proto');
-if (protoForm) {
-  try { Object.assign(P, JSON.parse(localStorage.getItem('wm-proto') || '{}')); } catch {}
-  const q = (new URLSearchParams(location.search).get('proj') || '').toLowerCase();
-  if (q) P.proj = q.startsWith('equal') ? 'ee' : q;
-  try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
-  for (const k of Object.keys(P)) {
-    const el = protoForm.elements[k];
-    if (el) el.value = P[k];
-    const out = protoForm.querySelector(`[data-out="${k}"]`);
-    if (out) out.textContent = P[k];
-  }
-  protoForm.addEventListener('input', (e) => {
-    const k = e.target.name;
-    const v = e.target.type === 'range' ? +e.target.value : e.target.value;
-    const projChanged = k === 'proj' && v !== P.proj;
-    P[k] = v;
-    const out = protoForm.querySelector(`[data-out="${k}"]`);
-    if (out) out.textContent = v;
-    try { localStorage.setItem('wm-proto', JSON.stringify(P)); } catch {}
-    if (projChanged) switchProjection();
-  });
-}
 
 const ease = (t) => 1 - (1 - t) ** 3;
 
 function setView(v, animate) {
   const svg = wrap.querySelector('svg');
   if (!svg) return;
-  const ms = animate && !reduceMotion.matches ? P.ms : 0;
+  const ms = animate && !reduceMotion.matches ? ZOOM_MS : 0;
   cancelAnimationFrame(tween);
   const from = { ...view };
   const t0 = performance.now();
@@ -91,8 +66,8 @@ function setView(v, animate) {
 
 function zoomAt(mx, my) {
   if (!BASE || zoomed) return;
-  const w = BASE.w / P.zoom;
-  const h = BASE.h / P.zoom;
+  const w = BASE.w / ZOOM;
+  const h = BASE.h / ZOOM;
   const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
   zoomed = true;
   zoomBtn.hidden = false;
@@ -125,22 +100,13 @@ function afterScroll() {
   });
 }
 
-const MAPS = JSON.parse(wrap.dataset.maps || '{}');
-if (!MAPS[P.proj]) {
-  P.proj = 'mercator';
-  if (protoForm?.elements.proj) protoForm.elements.proj.value = 'mercator';
-}
-const current = () => MAPS[P.proj] || { url: wrap.dataset.mapUrl };
-if (current().aspect) wrap.style.aspectRatio = current().aspect;
-
 function load() {
   if (loaded) return;
   loaded = true;
-  fetch(current().url)
+  fetch(wrap.dataset.mapUrl)
     .then((r) => (r.ok ? r.text() : Promise.reject(r.status)))
     .then((svg) => {
       wrap.innerHTML = svg;
-      smallEls = null;
       const vb = wrap.querySelector('svg').viewBox.baseVal;
       BASE = { x: 0, y: 0, w: vb.width, h: vb.height };
       view = { ...BASE };
@@ -150,18 +116,6 @@ function load() {
       if (youCode) wrap.querySelector(`#${CSS.escape(youCode)}`)?.classList.add('is-you');
     })
     .catch(() => { sec.hidden = true; });
-}
-
-// PROTOTYPE: swap to the other projection's map in place.
-function switchProjection() {
-  closeList();
-  cancelAnimationFrame(tween);
-  zoomed = false;
-  zoomBtn.hidden = true;
-  if (current().aspect) wrap.style.aspectRatio = current().aspect;
-  if (!loaded) return; // not fetched yet: load() will pick the chosen map
-  loaded = false;
-  load();
 }
 
 if ('IntersectionObserver' in window) {
