@@ -168,9 +168,10 @@ header.site {
 }
 nav.main {
   display: flex;
+  flex: none;
   gap: var(--s5);
   margin-inline-start: var(--s3);
-  flex-wrap: wrap;
+  white-space: nowrap;
 }
 nav.main a {
   display: inline-flex;
@@ -193,7 +194,8 @@ nav.main a[aria-current="page"] {
   border: 1px solid var(--border);
   border-radius: var(--pill);
   padding: 0.4rem 0.8rem;
-  min-width: 200px;
+  flex: 0 1 260px;
+  min-width: 120px;
 }
 .site-search input {
   border: 0;
@@ -205,8 +207,8 @@ nav.main a[aria-current="page"] {
   outline: none;
 }
 .locale-wrap {
-  margin-inline-start: var(--s3);
   display: inline-flex;
+  flex: none;
   align-items: center;
   gap: 0.35rem;
   background: var(--surface-2);
@@ -225,6 +227,10 @@ nav.main a[aria-current="page"] {
   font-weight: 600;
   padding: 0.35rem 0;
   cursor: pointer;
+  field-sizing: content;
+  min-width: 0;
+  max-width: 100%;
+  text-overflow: ellipsis;
 }
 .mag {
   color: var(--muted);
@@ -818,20 +824,36 @@ footer.site .silmark-foot {
   .site-inner {
     flex-wrap: wrap;
     gap: var(--s3) var(--s4);
+    padding-inline: var(--s3);
   }
   .brand {
     order: 0;
     min-width: 0;
   }
-  .locale-pick {
+  .locale-wrap {
     order: 1;
+    flex: 0 1 auto;
+    min-width: 0;
     margin-inline-start: auto;
+    padding-inline: 0.55rem;
+  }
+  .locale-pick {
+    max-width: 7.5rem;
   }
   .site-search {
     order: 2;
     flex: 1 1 100%;
     min-width: 0;
     margin-inline-start: 0;
+  }
+}
+@media (max-width: 360px) {
+  /* narrowest phones: drop the globe so the picker still fits beside the logo */
+  .site-inner {
+    column-gap: var(--s3);
+  }
+  .locale-wrap .ic-locale {
+    display: none;
   }
 }
 

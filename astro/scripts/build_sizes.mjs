@@ -221,10 +221,16 @@ function main() {
     ? [`/i18n/chrome.${worstLocale}.json`, `/i18n/names.${worstLocale}.json`, '/i18n/autonyms.json']
     : [];
 
+  // The home world map SVG has a content-hashed /_astro/ name; WorldMap.astro exposes
+  // it as data-map-url (fetched by script when scrolled near, so not in the HTML scan).
+  const homeHtml = path.join(DIST, 'index.html');
+  const mapRef = existsSync(homeHtml) ? /data-map-url="([^"]+)"/.exec(readFileSync(homeHtml, 'utf8'))?.[1] : null;
+
   // Recipe: every archetype defers the worst-case i18n triad; home also defers
-  // the lazily-fetched search index. (See spec §1.4 / src/scripts/{i18n,search}.js.)
+  // the lazily-fetched search index and world map.
+  // (See spec §1.4 / src/scripts/{i18n,search,world-map}.js.)
   const RECIPE = {
-    home: ['/search-index.txt', ...triad],
+    home: ['/search-index.txt', ...(mapRef ? [mapRef] : []), ...triad],
     browse: [...triad],
     countries: [...triad],
     country: [...triad],
