@@ -17,7 +17,7 @@ const withListen = langs.filter((l) => l.availability.listen).length;
       <input id="q" type="search" enterkeyhint="search" placeholder="Search by language, code, or country…" autocomplete="off" data-i18n-ph="search.ph" />
     </form>
     <div class="stats" id="hero-stats">
-      <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span class="ic ic-languages" aria-hidden="true"></span> <span data-i18n="stats.languages">languages</span></div>
+      <div class="stat"><b class="tnum">{langs.length.toLocaleString()}</b><br /><span class="ic ic-languages" aria-hidden="true"></span> <span data-i18n="stats.languagePages">language pages</span></div>
       <div class="stat"><b class="tnum">{withRead.toLocaleString()}</b><br /><span class="ic ic-read" aria-hidden="true"></span> <span data-i18n="stats.read">to read</span></div>
       <div class="stat"><b class="tnum">{withListen.toLocaleString()}</b><br /><span class="ic ic-listen" aria-hidden="true"></span> <span data-i18n="stats.listen">to listen</span></div>
     </div>
