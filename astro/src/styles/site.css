@@ -798,6 +798,9 @@ footer.site .cc .updated {
   margin-inline-start: auto;
   white-space: nowrap;
 }
+footer.site .cc picture {
+  display: contents;
+}
 footer.site .silmark-foot {
   height: 34px;
   width: auto;

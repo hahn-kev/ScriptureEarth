@@ -39,11 +39,11 @@ Cloudflare Pages cap: **2,000 static + 100 dynamic = 2,100**.
 
 | | Used | Cap |
 |---|---|---|
-| `_redirects` static rows | **31** (11 guards + 17 homepages/aliases + 3 vanity) | 2,000 |
-| `_redirects` dynamic (splat/placeholder) rows | counted within the 31; ≪ 100 | 100 |
+| `_redirects` static rows | **34** (14 guards + 17 homepages/aliases + 3 vanity) | 2,000 |
+| `_redirects` dynamic (splat/placeholder) rows | counted within the 34; ≪ 100 | 100 |
 | Pages Functions files | 1 | — |
 
-~31 of 2,000 — >98% headroom. The 2,100 cap is a non-issue once slug=(B) removes per-entry enumeration.
+~34 of 2,000 — >98% headroom. The 2,100 cap is a non-issue once slug=(B) removes per-entry enumeration.
 
 ## Shadowing / precedence reasoning
 `_redirects` placeholders are **not** anchored regex and `/:iso` matches *any* single path segment —

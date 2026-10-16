@@ -58,7 +58,8 @@ Per page, the static (STRICT) dependency set is derived by:
 
 1. **Flat HTML scan** of the page's `index.html` for `href` / `src` / `srcset`
    attributes; keep only root-absolute refs that resolve to a real file in `dist/`
-   (drop navigational `<a href>`).
+   (drop navigational `<a href>`). A `<picture>` counts only its first `<source>`
+   (the format a current browser fetches), not the fallbacks or the `<img>`.
 2. **One-level `_astro` JS-graph follow**: for each referenced `/_astro/*.js`, scan its
    source for string refs to sibling `/_astro/*.js` chunks and include those too. Guards
    against a future shared/vendor code-split that isn't named directly in the HTML.

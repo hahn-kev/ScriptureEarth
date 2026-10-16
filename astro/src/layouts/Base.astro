@@ -81,7 +81,8 @@ const iconSets = Object.keys(ICON_SETS);
   <header class="site"><div class="shell site-inner">
     <a class="brand" href="/">
         <picture>
-            <source type="image/webp" src="/se-logo.webp" />
+            <source type="image/jxl" srcset="/se-logo.jxl" />
+            <source type="image/webp" srcset="/se-logo.webp" />
             <img class="silmark" src="/se-logo.png" alt="ScriptureEarth" width="50" height="34" />
         </picture>
       <span class="lock"><span class="name">ScriptureEarth</span><span class="sub" data-i18n="brand.tagline">Find God’s Word</span></span>
@@ -112,7 +113,11 @@ const iconSets = Object.keys(ICON_SETS);
       </div>
     </div>
     <div class="cc">
-      <img class="silmark-foot" src="/sil-logo.webp" alt="SIL" width="63" height="34" />
+      <picture>
+        <source type="image/jxl" srcset="/sil-logo.jxl" />
+        <source type="image/webp" srcset="/sil-logo.webp" />
+        <img class="silmark-foot" src="/sil-logo.png" alt="SIL" width="63" height="34" />
+      </picture>
       <span data-i18n="footer.note">A static rebuild of the ScriptureEarth discovery site.</span>
       <span class="updated" title={buildTimestamp}><span data-i18n="footer.updated">Last updated</span> <time datetime={buildDate}>{buildDate}</time></span>
     </div>

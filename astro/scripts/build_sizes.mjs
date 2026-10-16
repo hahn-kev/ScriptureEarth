@@ -28,7 +28,7 @@ function bucketOf(p) {
   if (e === '.html' || p.endsWith('/')) return 'html';
   if (e === '.css') return 'css';
   if (e === '.js' || e === '.mjs') return 'js';
-  if (['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg', '.ico'].includes(e)) return 'img';
+  if (['.png', '.jpg', '.jpeg', '.webp', '.avif', '.jxl', '.gif', '.svg', '.ico'].includes(e)) return 'img';
   if (['.woff', '.woff2', '.ttf', '.otf'].includes(e)) return 'font';
   if (['.json', '.txt', '.bin', '.xml', '.csv'].includes(e)) return 'data';
   return 'other';
@@ -57,8 +57,13 @@ function size(file, pinned = false) {
 
 // Static refs a flat HTML scan can see: href/src/srcset resolving to a real
 // asset file under dist/ (navigational <a href> to directories are dropped).
+// A <picture> counts only its first <source> (what a current browser fetches);
+// the later sources and the <img> fallback are for older browsers.
 function scanHtml(htmlFile) {
-  const html = readFileSync(htmlFile, 'utf8');
+  const html = readFileSync(htmlFile, 'utf8').replace(/<picture\b[^>]*>([\s\S]*?)<\/picture>/g, (block, inner) => {
+    const first = inner.match(/<source\b[^>]*>/);
+    return first ? first[0] : inner;
+  });
   const refs = new Set();
   for (const m of html.matchAll(/(?:href|src)\s*=\s*"([^"]+)"/g)) refs.add(m[1]);
   for (const m of html.matchAll(/srcset\s*=\s*"([^"]+)"/g)) {

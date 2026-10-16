@@ -8,3 +8,10 @@
 # their content changes the ?v, so returning visitors fetch the new version.
 /i18n/*
   Cache-Control: public, max-age=31536000, immutable
+
+# Lossless JPEG XL logos (see AGENTS.md). Set the type explicitly in case the host
+# does not map .jxl, so <picture> type="image/jxl" sources decode.
+/se-logo.jxl
+  Content-Type: image/jxl
+/sil-logo.jxl
+  Content-Type: image/jxl
