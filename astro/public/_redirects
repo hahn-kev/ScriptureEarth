@@ -33,6 +33,8 @@
 /se-logo.webp      /se-logo.webp             200
 /sil-logo.jxl      /sil-logo.jxl             200
 /se-logo.jxl       /se-logo.jxl              200
+/sil-logo.png      /sil-logo.png             200
+/se-logo.png       /se-logo.png              200
 
 # === L3/L4/L5  Locale homepages + localized alias index files -> / + ?lang= ==
 # Plain (no query) hits only; deep-link queries on these paths are caught by the
