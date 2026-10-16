@@ -97,6 +97,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
 - CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.
+- Logos: `public/*.jxl` are lossless JPEG XL (`cjxl in.png out.jxl -d 0 -e 11 --allow_expert_options`, libjxl ≥0.11), served first via `<picture>` with the `.webp` as fallback. Lossless AVIF tested 40–110% larger, so no AVIF. New `.jxl` files need a `_headers` `Content-Type: image/jxl` entry and a `_redirects` guard.
 - Changing chrome keys: update `scripts/i18n/en.json` (English master, not copied to public) **and** every `public/i18n/chrome.<loc>.json`. Adding a UI locale: an entry in `public/i18n/locales.json` (`bcp` is what browser languages match against) + catalogs.
 - `I18N_VERSION` hashes `src/scripts/i18n.js` + `public/i18n/*` via `process.cwd()` — build from repo root of this package.
 

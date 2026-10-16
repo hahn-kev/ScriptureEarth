@@ -28,7 +28,7 @@ function bucketOf(p) {
   if (e === '.html' || p.endsWith('/')) return 'html';
   if (e === '.css') return 'css';
   if (e === '.js' || e === '.mjs') return 'js';
-  if (['.png', '.jpg', '.jpeg', '.webp', '.avif', '.gif', '.svg', '.ico'].includes(e)) return 'img';
+  if (['.png', '.jpg', '.jpeg', '.webp', '.avif', '.jxl', '.gif', '.svg', '.ico'].includes(e)) return 'img';
   if (['.woff', '.woff2', '.ttf', '.otf'].includes(e)) return 'font';
   if (['.json', '.txt', '.bin', '.xml', '.csv'].includes(e)) return 'data';
   return 'other';
