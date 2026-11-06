@@ -18,26 +18,34 @@ export const PILLS = [
 // icon = a key of src/lib/icons.mjs (rendered as <span class="ic ic-<icon>">).
 type Action = { label: string; slug: string; icon: string };
 const OPEN: Action = { label: 'Open', slug: 'action.open', icon: 'open' };
+const VIEWER: Action = { label: 'Open viewer', slug: 'action.openviewer', icon: 'read' };
+const DOWNLOAD: Action = { label: 'Download', slug: 'action.download', icon: 'download' };
 const ACTIONS: Record<string, Record<string, Action>> = {
   read: {
     pdf: { label: 'PDF', slug: 'action.downloadpdf', icon: 'download' },
-    viewer: { label: 'Open viewer', slug: 'action.openviewer', icon: 'read' },
+    viewer: VIEWER,
+    download: DOWNLOAD,
     _: { label: 'Read online', slug: 'action.readonline', icon: 'read' },
   },
   listen: {
     audio: { label: 'Play', slug: 'action.play', icon: 'play' },
-    _: { label: 'Download', slug: 'action.download', icon: 'download' },
+    viewer: VIEWER,
+    _: DOWNLOAD,
   },
   watch: {
+    viewer: VIEWER,
     _: { label: 'Watch', slug: 'action.watch', icon: 'watch' },
   },
   app: {
+    download: DOWNLOAD,
     _: { label: 'Get app', slug: 'action.getapp', icon: 'app' },
   },
   buy: {
     _: { label: 'Order', slug: 'action.order', icon: 'buy' },
   },
   other: {
+    download: DOWNLOAD,
+    contact: { label: 'Contact', slug: 'action.contact', icon: 'open' },
     _: { label: 'Visit website', slug: 'action.visit', icon: 'open' },
   },
 };
@@ -78,6 +86,8 @@ export function badge(group: string, r: { format?: string; kind?: string; url?: 
   if (h === 'apps.apple.com') return { icon: 'apple', label: 'App Store' };
   switch (r.kind) {
     case 'pdf': return { icon: 'pdf', label: fmt || 'PDF' };
+    case 'download': return { icon: 'download', label: fmt || 'Download' };
+    case 'viewer': return { icon: group === 'listen' ? 'audio' : group === 'watch' ? 'video' : 'web', label: fmt || 'Web' };
     case 'web': return { icon: 'web', label: fmt || 'Web' };
     case 'audio': return { icon: 'audio', label: fmt || 'Audio' };
     case 'video': return { icon: 'video', label: fmt || 'Video' };

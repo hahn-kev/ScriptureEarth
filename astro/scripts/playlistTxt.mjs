@@ -33,14 +33,16 @@ export function parsePlaylistTxt(text) {
   const subfolder = (header[0] || '').trim();
   const imagesMode = (header[2] || '').trim().toLowerCase() === 'images';
   const clips = [];
-  for (const line of lines) {
+  for (const [lineNo, line] of lines.entries()) {
     if (!line.trim()) continue;
     const cols = line.split('\t');
     if (!/^\d+$/.test(cols[0] ?? '')) continue; // skip header / non-clip lines
     const title = (cols[1] && cols[1].trim()) || `Clip ${cols[0]}`;
     const url = absUrl(cols[3]);
     if (!url) continue;
-    const clip = { index: Number(cols[0]), title, url };
+    // `line` = 0-based line number in the .txt. The legacy zip endpoint
+    // (00-PlaylistDownloadVideoZip.php) reads line <checkBox>+2, so its index is line-2.
+    const clip = { index: Number(cols[0]), line: lineNo, title, url };
     const img = (cols[2] ?? '').trim();
     if (img) {
       if (imagesMode && subfolder) clip.image = `${ASSET_BASE}/data/~images/${subfolder}/${encodeURIComponent(img)}`;

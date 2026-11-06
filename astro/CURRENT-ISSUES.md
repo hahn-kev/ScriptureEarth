@@ -11,13 +11,35 @@ and JSON-harvest ingest paths have been removed. The items below are places the 
 differs from what the old SQLite extractor produced, or where the dump doesn't carry enough to
 build a link.
 
-### 1. ePub / GoBible·MySword·theWord are not emitted as links
-The dump lists these as **basenames only** (`se_ePub`, `other_titles.*`,
-`se_other_software.*`), and their public URL scheme isn't the
-`/data/<iso>/{PDF,audio,video}/` convention the resolvable assets use — the obvious
-guesses 404. The old SQLite extractor didn't emit these as resources either, so this is
-parity, not a regression.
-- **Effect:** no ePub/software download link on the detail page.
+### 1. RESOLVED (2026-11-06): GoBible·MySword·theWord and other_titles are linked
+The dump now gives full URLs for `se_other_software.*` (under `/data/<iso>/study/`) and
+`other_titles.*`. GoBible + MySword are listed under Apps, theWord under Other (labelled from
+its `testament` + `alphabet` columns), and other_titles PDFs/audio/video under Read/Listen/Watch.
+
+### 1a. Placeholders: data we know about but can't show properly
+Rather than silently dropping a resource the dump doesn't describe well enough, the page shows
+it with an amber, dashed **placeholder** (`.ph`, chrome keys `ph.*`, texts in
+`PLACEHOLDERS` in `scripts/resource-labels.mjs`) so the gap gets noticed. Counts and the asks
+behind each are in `DUMP-API-REQUESTS.md` § Priority 2b: *Title missing* (other_titles),
+*Playlist file not found* (568 video playlists whose `.txt` 404s — mostly JESUS Film),
+*Zip not available*, *File location unknown* (the one ePub), *Book not recognized*,
+*Link missing*. The projector marks rows with `missing: 'link'|'playlist'|'file'` and
+`zipMissing`; the name side uses `label` parts with a `ph.*` key.
+
+### 1c. Generic phrases are localized; real titles are not
+Resource names that are fixed phrases (the dump's "Audio recording", "texto bíblico",
+"Nuevo Testamento", our own fallbacks like "Online viewer") are matched against `PHRASES` in
+`scripts/resource-labels.mjs` (English + Spanish variants, accent/case-insensitive) and
+rendered as `data-i18n` spans. Anything not in that dictionary is a real title and stays as
+entered. New generic phrases in the dump need a dictionary entry + chrome keys in every
+catalog. Translations for ind/hin/swa/fil/fas (and Dutch book names) were written for this
+change, not taken from the legacy tables; worth a native-speaker review.
+
+### 1d. Testament audio is grouped by book from filenames
+The dump has no book/chapter numbers for `se_media.audio`, so `parseAudioSet()` reads them
+from the filename (USFM code or 2-digit book number; NT numbering is 40- or 41-based per set).
+~99% agree with the legacy DB; unparsed files land in a *Book not recognized* group with no
+zip. Per-book zips use the legacy `00-AudioSaveZip.php?T=&iso=&rod=&Books=<0-based book>`.
 
 ### 1b. RESOLVED (2026-09-28): SAB HTML readers are linked, first in Read
 The dump's `se_sab` now carries the full `SAB_scriptoria` rows:
@@ -25,7 +47,8 @@ The dump's `se_sab` now carries the full `SAB_scriptoria` rows:
 (`https://www.ScriptureEarth.org/data/<iso>/sab/<subfolder>/`), `url` an externally hosted
 reader (mostly `media.ipsapps.org`), `description` the legacy page's suffix text. 1019
 languages / 1099 readers (812 local, 287 external). `sabRows()` in `extract.mjs` emits one
-`kind: 'viewer'` row per reader at the **top of Read** (legacy order, above Bible.is), opening
+`kind: 'viewer'` row per reader at the **top of Read, Listen and Watch** (a text-only reader —
+"texto bíblico" / "Bible text" — only in Read), above everything else, opening
 in a new tab. Quirks handled: a few `url`s are site-relative (`/data/mlg/sab/bts`, no slash)
 and get absolutized; descriptions carry a `- ` / `: ` lead-in that is stripped; ~30% have no
 description and fall back to "Read, listen and view" (the legacy label). The older
@@ -63,9 +86,9 @@ absence isn't mistaken for a bug.
 
 ### 5. Video playlists depend on fetching `.txt` listings — never skip for a deploy
 Video playlists (e.g. JESUS Film) are stored as a `.txt` filename; `extract.mjs` fetches
-each to expand its per-clip rows. A playlist with no fetched clips has no URL, so the
-**whole row is dropped**. A build made with `SE_SKIP_PLAYLISTS=1` (a dev-speed flag) drops
-them all — the flag is documented dev-only. CI does **not** use `setup:data`; it lets
+each to expand its per-clip rows. A playlist with no fetched clips has no URL, so it shows
+the **"Playlist file not found" placeholder**. A build made with `SE_SKIP_PLAYLISTS=1` (a
+dev-speed flag) turns them all into placeholders — the flag is documented dev-only. CI does **not** use `setup:data`; it lets
 `extract.mjs` fetch the `.txt` listings from the server (`pnpm run setup:data` is local-dev
 convenience only).
 
@@ -103,11 +126,12 @@ localStorage, so correctness is fine (a rebuild is picked up on the next 304 che
 one conditional request per search session instead of an immutable hit. Hashing it means emitting
 a manifest the home page reads and updating the `_redirects` guard + `precompress_dist.mjs`.
 
-### 9. Country names are not localized
-Locale catalogs cover UI chrome (`chrome.<loc>.json`) and language names (`names.<loc>.json`);
-there is no `countries.<loc>.json`, so country names on cards, detail pages and `/countries/` stay
-English in every locale (ticket 14 wrinkle). The dump carries `countries_names` per locale, so the
-catalog could be seeded from it and applied via a `data-i18n-country=<CC>` hook.
+### 9. RESOLVED (2026-11-06): Country names are localized
+`data-i18n-country=<CC>` spans (cards, search results, language/country pages, `/countries/`)
+are filled by `i18n.js` from the browser's `Intl.DisplayNames` (CLDR), like the home map, with
+the baked English name as fallback. No catalog download. Names follow CLDR, so a few differ
+from the legacy site's own translations (e.g. Arabic spellings). The `/countries/` list stays
+sorted by English name.
 
 ### 10. The `/language/` chooser and `/404` pages are English-only
 Their few strings have no `data-i18n` keys (adding keys means touching all 14 chrome catalogs).
