@@ -4,40 +4,87 @@ import { actionIcon, actionLabel, actionSlug, badge } from '../lib/ui';
 interface Props { group: string; r: any; }
 const { group, r } = Astro.props;
 const clips = ['watch', 'listen'].includes(group) && Array.isArray(r.meta?.clips) && r.meta.clips.length > 1 ? r.meta.clips : null;
-const blank = group === 'watch' || r.external;
+const books = group === 'listen' && Array.isArray(r.meta?.books) && r.meta.books.length ? r.meta.books : null;
+const blank = r.external || (group === 'watch' && r.kind !== 'download');
 const isAudio = group === 'listen';
 const mediaKind = isAudio ? 'audio' : 'video';
+const clipUnit = isAudio ? 'unit.tracks' : 'unit.clips';
 const clipWord = isAudio ? 'tracks' : 'clips';
 const clipFmt = isAudio ? 'Track' : 'Clip';
-const clipAction = isAudio ? 'Play' : 'Watch';
+const clipAction = isAudio ? 'action.play' : 'action.watch';
+const clipActionEn = isAudio ? 'Play' : 'Watch';
 const clipIcon = isAudio ? 'play' : 'watch';
 const icon = actionIcon(group, r.kind);
+// Placeholder texts (English; localized via ph.* chrome keys). Keep in sync with
+// PLACEHOLDERS in scripts/resource-labels.mjs.
+const PH: Record<string, string> = { link: 'Link missing', playlist: 'Playlist file not found', file: 'File location unknown', zip: 'Zip not available' };
 const fmt = badge(group, r);
 // A direct media file can play inline (<video>/<audio>) and offer a download; an
 // external watch page (jesusfilm.org, youtube, …) can't, so it keeps its link.
 const isMedia = (u: string) => /\.(mp4|m4v|webm|ogv|ogg|mp3|m4a|wav|aac|flac)(\?|$)/i.test(String(u || ''));
-const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist header, etc.
+const rowPlayer = !books && (!!r.meta?.playlistFile || !!r.meta?.direct) && isMedia(r.url); // playlist header, single SE file
+const download = r.kind === 'download' || r.kind === 'pdf';
+// "{n} things": English baked, the localizer swaps the template and fills {n}.
+const count = (key: string, n: number, word: string) => ({ key, n, text: `${n} ${word}` });
+const bookCount = books && count('unit.books', books.filter((b: any) => b.zip).length || books.length, 'books');
 ---
 <div class="res-row">
   <span class="fmt" role="img" aria-label={fmt.label} title={fmt.label}><span class={`ic ic-${fmt.icon}`}></span></span>
   <div>
-    <div class="rr-name">{r.name}</div>
-    {r.source && <div class="rr-src">{r.source}</div>}
+    <div class="rr-name">{r.label
+      ? r.label.map((p: [string | null, string]) => (p[0] ? <span class={p[0].startsWith('ph.') ? 'ph' : undefined} data-i18n={p[0]}>{p[1]}</span> : p[1]))
+      : r.name}</div>
+    {r.source && (r.srcKey ? <div class="rr-src" data-i18n={r.srcKey}>{r.source}</div> : <div class="rr-src">{r.source}</div>)}
   </div>
-  {rowPlayer
+  {r.missing
+    ? <span class="act ph" data-i18n={`ph.${r.missing}`}>{PH[r.missing] || 'Missing'}</span>
+    : books
+    ? null
+    : rowPlayer
     ? <span class="clip-actions">
         <button type="button" class="act" data-play data-src={r.url} data-kind={mediaKind}><span class={`ic ic-${icon}`} aria-hidden="true"></span><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</button>
         {r.meta?.zipUrl
-          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer"><span class="ic ic-download" aria-hidden="true"></span>Download all</a>
-          : <a class="act dl" href={r.url} download><span class="ic ic-download" aria-hidden="true"></span>Download</a>}
+          ? <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer"><span class="ic ic-download" aria-hidden="true"></span><span data-i18n="action.downloadall">Download all</span></a>
+          : r.zipMissing
+          ? <span class="act dl ph" data-i18n="ph.zip">{PH.zip}</span>
+          : <a class="act dl" href={r.url} download><span class="ic ic-download" aria-hidden="true"></span><span data-i18n="action.download">Download</span></a>}
       </span>
     : r.url
-      ? <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined}><span class={`ic ic-${icon}`} aria-hidden="true"></span><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
+      ? <span class="clip-actions">
+          <a class="act" href={r.url} rel="noopener noreferrer" target={blank ? '_blank' : undefined} download={download && !r.external ? '' : undefined}><span class={`ic ic-${icon}`} aria-hidden="true"></span><span data-i18n={actionSlug(group, r.kind)}>{actionLabel(group, r.kind)}</span> →</a>
+          {r.zipMissing && <span class="act dl ph" data-i18n="ph.zip">{PH.zip}</span>}
+          {r.meta?.zipUrl && <a class="act dl" href={r.meta.zipUrl} target="_blank" rel="noopener noreferrer"><span class="ic ic-download" aria-hidden="true"></span><span data-i18n="action.downloadall">Download all</span></a>}
+        </span>
       : <span class="act muted">—</span>}
 </div>
+{books && (
+  <details class="res-clips">
+    <summary><span data-i18n={bookCount.key} data-i18n-n={bookCount.n}>{bookCount.text}</span></summary>
+    {books.map((b: any) => {
+      const ch = count('unit.chapters', b.ch.length, 'chapters');
+      return (
+        <div class="res-row book-row">
+          <span class="fmt" role="img" aria-label="Audio" title="Audio"><span class="ic ic-audio"></span></span>
+          <div class="book-main">
+            <div class="rr-name"><span class={b.ph ? 'ph' : undefined} data-i18n={b.key}>{b.name}</span> <span class="rr-src" data-i18n={ch.key} data-i18n-n={ch.n}>{ch.text}</span></div>
+            <div class="ch-list">
+              {b.ch.map((c: any) => <button type="button" class="ch" data-play data-src={c.url} data-kind="audio" aria-label={`${b.name} ${c.n}`}>{c.n}</button>)}
+            </div>
+          </div>
+          <span class="clip-actions">
+            <button type="button" class="act" data-play-book><span class="ic ic-play" aria-hidden="true"></span><span data-i18n="action.play">Play</span> →</button>
+            {b.zip
+              ? <a class="act dl" href={b.zip} target="_blank" rel="noopener noreferrer"><span class="ic ic-download" aria-hidden="true"></span><span data-i18n="action.downloadzip">Download (zip)</span></a>
+              : null}
+          </span>
+        </div>
+      );
+    })}
+  </details>
+)}
 {clips && (
   <details class="res-clips">
-    <summary>{clips.length} {clipWord}</summary>
+    <summary><span data-i18n={clipUnit} data-i18n-n={clips.length}>{clips.length} {clipWord}</span></summary>
     {clips.map((c: any) => (
       <div class="res-row">
         {c.image
@@ -46,43 +93,61 @@ const rowPlayer = !!r.meta?.playlistFile && isMedia(r.url); // audio playlist he
         <div><div class="rr-name">{c.title}</div></div>
         {isMedia(c.url)
           ? <span class="clip-actions">
-              <button type="button" class="act" data-play data-src={c.url} data-kind={mediaKind}><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span>{clipAction} →</button>
-              <a class="act dl" href={c.url} download><span class="ic ic-download" aria-hidden="true"></span>Download</a>
+              <button type="button" class="act" data-play data-src={c.url} data-kind={mediaKind}><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span><span data-i18n={clipAction}>{clipActionEn}</span> →</button>
+              <a class="act dl" href={c.url} download><span class="ic ic-download" aria-hidden="true"></span><span data-i18n="action.download">Download</span></a>
             </span>
-          : <a class="act" href={c.url} target="_blank" rel="noopener noreferrer"><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span>{clipAction} →</a>}
+          : <a class="act" href={c.url} target="_blank" rel="noopener noreferrer"><span class={`ic ic-${clipIcon}`} aria-hidden="true"></span><span data-i18n={clipAction}>{clipActionEn}</span> →</a>}
       </div>
     ))}
   </details>
 )}
 
 <script>
-  // Inline media player for playlist rows/clips. Delegated so the one bundled copy
-  // handles every [data-play] button on the page. Only one player open at a time.
-  document.addEventListener('click', (e) => {
-    const btn = (e.target as HTMLElement).closest('[data-play]') as HTMLElement | null;
-    if (!btn) return;
-    e.preventDefault();
-    const row = btn.closest('.res-row');
-    if (!row) return;
-    const next = row.nextElementSibling as HTMLElement | null;
-    if (next && next.classList.contains('clip-player')) { // toggle off
-      next.querySelector('video,audio')?.pause();
-      next.remove();
-      return;
-    }
-    document.querySelectorAll('.clip-player').forEach((p) => { // close others
+  // Inline media player for playlist rows, clips and book chapters. Delegated so the one
+  // bundled copy handles every [data-play] button on the page. One player at a time.
+  // A chapter button (.ch) auto-advances to the next chapter of its book when it ends.
+  function closePlayers() {
+    document.querySelectorAll('.clip-player').forEach((p) => {
       (p.querySelector('video,audio') as HTMLMediaElement | null)?.pause();
       p.remove();
     });
+    document.querySelectorAll('.ch[aria-pressed="true"]').forEach((b) => b.setAttribute('aria-pressed', 'false'));
+  }
+  function play(btn: HTMLElement) {
+    const row = btn.closest('.res-row');
+    if (!row) return;
+    const src = btn.getAttribute('data-src') || '';
+    const next = row.nextElementSibling as HTMLElement | null;
+    const open = next && next.classList.contains('clip-player') ? next : null;
+    closePlayers();
+    if (open && open.dataset.src === src) return; // same button again: toggle off
     const kind = btn.getAttribute('data-kind') === 'audio' ? 'audio' : 'video';
     const wrap = document.createElement('div');
     wrap.className = 'clip-player';
+    wrap.dataset.src = src;
     const media = document.createElement(kind) as HTMLMediaElement;
     media.controls = true;
     media.autoplay = true;
     media.preload = 'metadata';
-    media.src = btn.getAttribute('data-src') || '';
+    media.src = src;
+    if (btn.classList.contains('ch')) {
+      btn.setAttribute('aria-pressed', 'true');
+      media.addEventListener('ended', () => {
+        const after = btn.nextElementSibling as HTMLElement | null;
+        if (after && after.matches('.ch[data-play]')) play(after);
+      });
+    }
     wrap.appendChild(media);
     row.insertAdjacentElement('afterend', wrap);
+  }
+  document.addEventListener('click', (e) => {
+    const target = e.target as HTMLElement;
+    const book = target.closest('[data-play-book]') as HTMLElement | null;
+    const btn = book
+      ? (book.closest('.res-row')?.querySelector('.ch-list [data-play]') as HTMLElement | null)
+      : (target.closest('[data-play]') as HTMLElement | null);
+    if (!btn) return;
+    e.preventDefault();
+    play(btn);
   });
 </script>
