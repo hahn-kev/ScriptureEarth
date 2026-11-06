@@ -1,0 +1,57 @@
+---
+// Legacy menu: Promotion Materials (promotionMaterials/promotion.php). Only 640px WebP
+// thumbnails ship (public/promotion/). The video and full-size print files stay on the
+// legacy host, like Scripture files under scriptureearth.org/data/; that keeps ~19 MB
+// out of dist/ and git. Keep public/_redirects free of a /promotionMaterials/* rule.
+import Prose from '../../layouts/Prose.astro';
+
+const ORIG = 'https://www.scriptureearth.org/promotionMaterials/';
+const orig = (f: string) => ORIG + encodeURIComponent(f);
+interface Item { thumb: string; file: string; caption: string; w: number; h: number }
+const english: Item[] = [
+  { thumb: 'card-globe-qr', file: 'SE.org card - globe - QR.jpg', caption: 'ScriptureEarth.org card: globe, QR code', w: 640, h: 368 },
+  { thumb: 'card-globe', file: 'SE.org card - globe.jpg', caption: 'ScriptureEarth.org card: globe', w: 640, h: 367 },
+  { thumb: 'card-lumo', file: 'SE.org card - LUMO.jpg', caption: 'ScriptureEarth.org card: LUMO', w: 640, h: 366 },
+  { thumb: 'card-share-front', file: 'SE.org card - Share it - front.jpg', caption: 'ScriptureEarth.org card from Deb & Ramón Padilla (front)', w: 640, h: 366 },
+  { thumb: 'card-share-back', file: 'SE.org card - Share it - back.jpg', caption: 'ScriptureEarth.org card from Deb & Ramón Padilla (back)', w: 640, h: 366 },
+  { thumb: 'poster-man-take-cards', file: 'SE.org - man poster - take cards.jpg', caption: 'Poster: man, take cards', w: 512, h: 640 },
+  { thumb: 'poster-women-qr', file: 'SE.org - women poster - QR.jpg', caption: 'Poster: women, QR code', w: 485, h: 640 },
+  { thumb: 'poster-women-take-cards', file: 'SE.org - women poster - take cards.jpg', caption: 'Poster: women, take cards', w: 485, h: 640 },
+  { thumb: 'qr', file: 'SE.org - QR.png', caption: 'ScriptureEarth.org QR code', w: 300, h: 300 },
+];
+const spanish: Item[] = [
+  { thumb: 'tarjeta-frente', file: 'Tarjeta-FRENTE.jpg', caption: 'Tarjeta (frente)', w: 640, h: 356 },
+  { thumb: 'tarjeta-reverso', file: 'Tarjeta-REVERSO.jpg', caption: 'Tarjeta (reverso)', w: 640, h: 356 },
+];
+const video = orig('ScriptureEarth.org.mp4');
+---
+<Prose title="Promotion Materials" titleKey="nav.promotion" wide>
+  <p class="lead">Cards, posters and a short video to help people find ScriptureEarth. Download and print them freely.</p>
+
+  <h2>English</h2>
+  <p>Read about ScriptureEarth on Outreach Canada: <a href="https://outreach.ca/article/ArticleId/3937/Scripture-Earth-One-of-the-largest-repositories-of-Bible-resources-available" rel="noopener">“Scripture Earth: One of the largest repositories of Bible resources available”</a>.</p>
+  <ul class="promo-grid">
+    <li><figure>
+      <video controls preload="none" poster="/promotion/video-poster.webp" width="498" height="282">
+        <source src={video} type="video/mp4" />
+      </video>
+      <figcaption>Jim McCabe: 3-minute video · <a href={video} download><span class="ic ic-download" aria-hidden="true"></span>Download MP4 (15 MB)</a></figcaption>
+    </figure></li>
+    {english.map((i) => (
+      <li><figure>
+        <a href={orig(i.file)}><img src={`/promotion/${i.thumb}-thumb.webp`} alt={i.caption} width={i.w} height={i.h} loading="lazy" decoding="async" /></a>
+        <figcaption>{i.caption} · <a href={orig(i.file)} download><span class="ic ic-download" aria-hidden="true"></span>Download</a></figcaption>
+      </figure></li>
+    ))}
+  </ul>
+
+  <h2 lang="es">Artículos en español</h2>
+  <ul class="promo-grid" lang="es">
+    {spanish.map((i) => (
+      <li><figure>
+        <a href={orig(i.file)}><img src={`/promotion/${i.thumb}-thumb.webp`} alt={i.caption} width={i.w} height={i.h} loading="lazy" decoding="async" /></a>
+        <figcaption>{i.caption} · <a href={orig(i.file)} download><span class="ic ic-download" aria-hidden="true"></span>Descargar</a></figcaption>
+      </figure></li>
+    ))}
+  </ul>
+</Prose>

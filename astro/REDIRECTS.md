@@ -69,9 +69,12 @@ Pages); with no deep-link query it calls `next()` and the static `.php` rules fi
 5. **Scoped to `functions/index.php.js`** (not a root `_middleware.js`) so Pages invokes Functions only on
    `/index.php` — home/pages/assets are pure static and not counted as Functions invocations. Residual:
    query-bearing `00<loc>.php` deep links aren't handled (add per-locale files sharing the handler if needed).
-6. **`?st=<iso>`** ("start at", L4) and niche `.php` (`iso_direct.php`, `00<loc>-CTPHC.php`) are not
+6. **`?st=<iso>`** ("start at", L4) and niche `.php` (`iso_direct.php`) are not
    mapped; they fall to the `.php`→`/`+`?lang=` rules. Add a final `/*.php / 302` safety net only if
    server-log sweep shows meaningful traffic (§5.6).
+   The legacy site-menu pages are mapped path-only: `00<loc>-CTPHC.php` (any `?I=` section) → `/about/`,
+   `/Feedback/Feedback.php` → `/contact/`, `/promotionMaterials/promotion.php` → `/promotion/`. Not the rest of
+   `/promotionMaterials/*`: `/promotion/` links the video and print originals there on the legacy host.
 7. **Validate ordering with `wrangler pages dev` / preview** before launch — confirm `/site.css`,
    `/browse/`, `/aaa`, `/abt-3053`, `/index.php?iso=abt&rod=3053`, and `?sortby=country&name=GT` all
    resolve as intended.

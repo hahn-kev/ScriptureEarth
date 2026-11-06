@@ -1,0 +1,39 @@
+---
+// Header ☰ menu: the legacy site's hamburger menu. A native popover (light-dismiss,
+// Esc, top layer, focus return), so no JS. Browsers without popover support still
+// have every link in the footer. Languages/Countries show here only at ≤760px, where
+// nav.main is hidden.
+import {
+  ABOUT_HEADING, ABOUT_LINKS, CONTACT, COUNTRIES, DONATE, HELP, HOME, LANGUAGES, PROMOTION,
+  isCurrent, type SiteLink,
+} from '../lib/siteLinks';
+
+const path = Astro.url.pathname;
+const cur = (l: SiteLink) => (isCurrent(l.href, path) ? 'page' : undefined);
+---
+<button class="menu-btn" type="button" popovertarget="site-menu" aria-label="Menu" data-i18n-label="nav.menu">
+  <span class="ic ic-menu" aria-hidden="true"></span>
+</button>
+<nav id="site-menu" class="site-menu" popover aria-label="Menu" data-i18n-label="nav.menu">
+  <ul>
+    {[LANGUAGES, COUNTRIES].map((l) => (
+      <li class="mobile-only"><a href={l.href} aria-current={cur(l)}><span data-i18n={l.key}>{l.label}</span></a></li>
+    ))}
+    <li class="mobile-only sep" role="separator"></li>
+    {[HOME, HELP].map((l) => (
+      <li><a href={l.href} aria-current={cur(l)}><span data-i18n={l.key}>{l.label}</span></a></li>
+    ))}
+    <li class="grp">
+      <span class="grp-h" data-i18n={ABOUT_HEADING.key}>{ABOUT_HEADING.label}</span>
+      <ul>
+        {ABOUT_LINKS.map((l) => (
+          <li><a href={l.href} aria-current={cur(l)}><span data-i18n={l.key}>{l.label}</span></a></li>
+        ))}
+      </ul>
+    </li>
+    <li class="sep" role="separator"></li>
+    <li><a href={CONTACT.href} aria-current={cur(CONTACT)}><span data-i18n={CONTACT.key}>{CONTACT.label}</span></a></li>
+    <li><a href={DONATE.href} target="_blank" rel="noopener"><span data-i18n={DONATE.key}>{DONATE.label}</span><span class="ic ic-open" aria-hidden="true"></span></a></li>
+    <li><a href={PROMOTION.href} aria-current={cur(PROMOTION)}><span data-i18n={PROMOTION.key}>{PROMOTION.label}</span></a></li>
+  </ul>
+</nav>

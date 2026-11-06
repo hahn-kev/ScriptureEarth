@@ -1,0 +1,25 @@
+---
+// Legacy menu: About › Copyright (00eng-CTPHC.php?I=CR). Body English only.
+import Prose from '../../layouts/Prose.astro';
+import { ABOUT_LINKS } from '../../lib/siteLinks';
+const year = new Date().getFullYear();
+---
+<Prose title="About" titleKey="footer.about">
+  <h2 data-i18n="nav.copyright">Copyright</h2>
+  <p>© {year} SIL Global</p>
+  <p>The <em>ScriptureEarth.org</em> website is managed by SIL Global. SIL’s service with ethnolinguistic minority communities is motivated by the belief that all people are created in the image of God, and that languages and cultures are part of the richness of God’s creation.</p>
+  <p>The purpose of this site is to provide access to Scripture products for the languages of the world. Individual copyright and licensing information is indicated on each product by its contributing organization.</p>
+  <p>Some of the media formats on ScriptureEarth’s website include:</p>
+  <ul>
+    <li>video</li>
+    <li>audio</li>
+    <li>text to read offline (PDFs)</li>
+    <li>text to read online (sometimes with follow-along audio)</li>
+    <li>mobile apps</li>
+    <li>links to purchase printed Bibles and other resources</li>
+  </ul>
+  <h2>More</h2>
+  <ul>
+    {ABOUT_LINKS.slice(1).map((l) => <li><a href={l.href} data-i18n={l.key}>{l.label}</a></li>)}
+  </ul>
+</Prose>

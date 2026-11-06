@@ -24,6 +24,14 @@
 /country/*         /country/:splat           200
 /language/*        /language/:splat          200
 /i18n/*            /i18n/:splat              200
+/help              /help/                    301
+/help/*            /help/:splat              200
+/about             /about/                   301
+/about/*           /about/:splat             200
+/contact           /contact/                 301
+/contact/*         /contact/:splat           200
+/promotion         /promotion/               301
+/promotion/*       /promotion/:splat         200
 
 # Known top-level static assets (contain '.'/'-', would otherwise be eaten by /:iso)
 /favicon.ico       /favicon.ico              200
@@ -57,6 +65,23 @@
 /00f-Ecritures_Indice.php   /?lang=fra        301
 /00i-Scripture_Index.php    /?lang=eng        301
 /00p-Escrituras_Indice.php  /?lang=por        301
+
+# Legacy site-menu pages (hamburger menu) -> static pages. Path-only: the CTPHC
+# ?I=CR|CU|TC|P|H section query is ignored and every locale lands on /about/.
+# No /promotionMaterials/* catch-all: /promotion/ links its originals (video, print
+# files) on the legacy host at those paths.
+/Feedback/Feedback.php            /contact/      301
+/promotionMaterials/promotion.php /promotion/    301
+/00eng-CTPHC.php                  /about/        301
+/00spa-CTPHC.php                  /about/        301
+/00por-CTPHC.php                  /about/        301
+/00fra-CTPHC.php                  /about/        301
+/00nld-CTPHC.php                  /about/        301
+/00deu-CTPHC.php                  /about/        301
+/00cmn-CTPHC.php                  /about/        301
+/00kor-CTPHC.php                  /about/        301
+/00rus-CTPHC.php                  /about/        301
+/00arb-CTPHC.php                  /about/        301
 
 # === L2  Vanity short URLs -> language detail (3,779 legacy rows in 3 rules) ==
 # Most-specific first (2 dashes, then 1, then 0). The slug equals the old vanity
