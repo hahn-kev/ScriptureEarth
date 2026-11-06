@@ -1,0 +1,22 @@
+---
+// Text pages from the legacy site menu (Help, About, Contact, Promotion). The body is
+// English for now; only the crumbs and <h1> swap through chrome keys (`titleKey`).
+import Base from './Base.astro';
+import { ABOUT_HEADING, HOME } from '../lib/siteLinks';
+
+interface Props { title: string; titleKey: string; underAbout?: boolean; wide?: boolean }
+const { title, titleKey, underAbout = false, wide = false } = Astro.props;
+---
+<Base title={`${title} — ScriptureEarth`}>
+  <section class="block shell">
+    <nav class="crumbs">
+      <a href={HOME.href}><span class="ic ic-home" aria-hidden="true"></span><span data-i18n={HOME.key}>{HOME.label}</span></a><span>›</span>
+      {underAbout && <><a href="/about/" data-i18n={ABOUT_HEADING.key}>{ABOUT_HEADING.label}</a><span>›</span></>}
+      <span data-i18n={titleKey}>{title}</span>
+    </nav>
+    <article class:list={['prose', { wide }]}>
+      <h1 data-i18n={titleKey}>{title}</h1>
+      <slot />
+    </article>
+  </section>
+</Base>
