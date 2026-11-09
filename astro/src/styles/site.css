@@ -829,9 +829,13 @@ footer.site .silmark-foot {
     position: static;
   }
 }
-/* Header ☰ menu (src/components/SiteMenu.astro): native popover, top layer. */
+/* Header ☰ menu (src/components/SiteMenu.astro): <details>. The panel is positioned
+   against the sticky header.site, so it sits just under the header at every width. */
+.menu {
+  flex: none;
+}
 .menu-btn {
-  display: inline-grid;
+  display: grid;
   place-items: center;
   flex: none;
   width: 2.25rem;
@@ -843,7 +847,12 @@ footer.site .silmark-foot {
   color: var(--text);
   font-size: 1.25rem;
   cursor: pointer;
+  list-style: none;
 }
+.menu-btn::-webkit-details-marker {
+  display: none;
+}
+.menu[open] .menu-btn,
 .menu-btn:hover {
   color: var(--accent);
   border-color: var(--accent-2);
@@ -853,11 +862,11 @@ footer.site .silmark-foot {
   outline-offset: 2px;
 }
 .site-menu {
-  position: fixed;
-  inset: var(--menu-top, 4.25rem) max(var(--s3), calc((100vw - var(--shell)) / 2)) auto auto;
-  margin: 0;
-  width: min(19rem, calc(100vw - 2 * var(--s3)));
-  max-height: calc(100dvh - 5.5rem);
+  position: absolute;
+  top: calc(100% + var(--s1));
+  inset-inline-end: max(var(--s3), calc((100% - var(--shell)) / 2));
+  width: min(19rem, calc(100% - 2 * var(--s3)));
+  max-height: calc(100dvh - 9rem);
   overflow: auto;
   padding: var(--s2) 0;
   border: 1px solid var(--border);
@@ -866,9 +875,6 @@ footer.site .silmark-foot {
   color: var(--text);
   box-shadow: var(--shadow-md);
   font-size: 0.95rem;
-}
-[dir="rtl"] .site-menu {
-  inset: var(--menu-top, 4.25rem) auto auto max(var(--s3), calc((100vw - var(--shell)) / 2));
 }
 .site-menu ul {
   list-style: none;
@@ -1067,11 +1073,8 @@ footer.site .silmark-foot {
     min-width: 0;
     margin-inline-start: 0;
   }
-  .menu-btn {
+  .menu {
     order: 3;
-  }
-  .site-menu {
-    --menu-top: 7.25rem;
   }
   .site-menu .mobile-only {
     display: block;

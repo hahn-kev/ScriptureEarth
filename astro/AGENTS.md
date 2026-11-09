@@ -37,7 +37,7 @@ content/countries.json + scripts/data/ne_110m_countries.geojson + map-points.jso
 |---|---|
 | `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/`; site-menu pages `/help/`, `/about/` (+ `partners/`, `terms/`, `privacy/`), `/contact/`, `/promotion/` (layout `src/layouts/Prose.astro`, English bodies) |
 | `src/layouts/Base.astro` | Chrome, locale boot, header search |
-| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`), `SiteMenu.astro` (header ☰: native `popover`, no JS; links from `src/lib/siteLinks.ts`, shared with the footer) |
+| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`), `SiteMenu.astro` (header ☰: a `<details>` disclosure, works without JS; a tiny inline script adds light-dismiss; links from `src/lib/siteLinks.ts`, shared with the footer) |
 | `src/lib/ui.ts` | Shared vocab: `GROUPS` vs `PILLS`, action labels |
 | `src/scripts/` | Client bundles: `search.js`, `i18n.js`, `browse.js`, `geo-suggest.js`, `world-map.js` (hashed Vite bundles; never inline) |
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
