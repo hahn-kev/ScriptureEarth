@@ -13,6 +13,7 @@ export const PILLS = [
   { key: 'watch', label: 'Watch' },
   { key: 'app', label: 'Apps' },
   { key: 'buy', label: 'Buy' },
+  { key: 'other', label: 'Other' },
 ] as const;
 
 // icon = a key of src/lib/icons.mjs (rendered as <span class="ic ic-<icon>">).

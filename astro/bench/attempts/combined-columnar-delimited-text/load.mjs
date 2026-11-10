@@ -5,7 +5,7 @@ const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
 const LINE_SEP = '\n';
 
-export const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
+export const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy', 'other'];
 
 export async function load({ dir }) {
   const raw = await readFile(path.join(dir, 'data.txt'), 'utf8');

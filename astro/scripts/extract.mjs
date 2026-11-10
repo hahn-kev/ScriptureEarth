@@ -504,13 +504,13 @@ for (const e of entries) {
 
   const hasSab = sabLegacyFlag(sab);
 
-  // No `other` key: it's a detail-page section only (no pill/facet/search bit).
   const avail = {
     read: R.read.length > 0 || hasSab,
     listen: R.listen.length > 0,
     watch: R.watch.length > 0,
     app: R.app.length > 0,
     buy: R.buy.length > 0,
+    other: R.other.length > 0,
   };
 
   const ln = r.language_name || {};
