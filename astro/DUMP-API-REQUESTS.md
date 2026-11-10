@@ -89,6 +89,20 @@ The projector reads whatever it can; where a title is absent it falls back to a 
 | **Bible.is audio** | dump can't distinguish text vs audio | `scripture_main.BibleIs` code (1–4) | The old site listed Bible.is under **both read and listen** using the `BibleIs` code (2,3,4 → text; 1,3,4 → audio). The dump gives one `links_media["Bible.is"]` URL with no type, so ~2,000 languages lost their Bible.is **listen** entry. Please expose the type (a code, or split `Bible.is_text` / `Bible.is_audio`). |
 | **Study tools** | absent from the dump | `study` table (`ScriptureURL` / `othersiteURL`, `ScriptureDescription`) | ~600 languages had a study/tools resource; there is no `study` field in the dump at all. |
 
+## Priority 2b — shown on the page as placeholders today (2026-11)
+
+The new site shows a visible placeholder (amber, dashed) wherever the dump lacks what's
+needed, so these gaps are easy to spot on a language page:
+
+| placeholder | count | what's missing | source in DB |
+|---|---|---|---|
+| **Title missing** | 646 PDFs, 11 audio, 20 video | `other_titles.other_PDF` / `other_audio` / `other_video_download` are bare URLs. The old page printed `other` + `other_title` (e.g. mil: "Read selecciones del Antiguo Testamento: Historias antiguas"). | `other_titles.other`, `other_titles.other_title` |
+| **Playlist file not found** | 568 video playlists (564 are `JESUSFilm-<iso>.txt`) | The playlist `.txt` the dump names returns 404 on scriptureearth.org (e.g. `/data/aaa/video/JESUSFilm-aaa.txt`). Either remove the rows or restore the files. | `PlaylistVideo` |
+| **Zip not available** | 12 playlists | The download playlist's filename has spaces/parentheses (`arzLUK(Lumo).txt`, `LukeVideo-beo .txt`, …), which `00-PlaylistDownloadVideoZip.php` rejects (`^[a-zA-Z0-9._-]*$`), or the file is missing (`qws-ScrSlide-download.txt`). The legacy page can't zip these either. | file names on disk |
+| **File location unknown** | 1 (Keley-i) | `se_ePub` gives `"Keley-i Bible.epub"` with no folder, and a junk title `"format"`. Please send a full URL and a real title. | ePub table |
+| **Book not recognized** | 5 testament audio sets | Testament audio files carry no book/chapter numbers in the dump, so the projector parses them from the filename (~99% agree with the DB). Adding `book` + `chapter` per file (the DB has `OT/NT_Audio_Book`, `…_Chapter`) would remove the guesswork. | `OT_Audio_Media`, `NT_Audio_Media` |
+| **Link missing** | 1 `watch` row | A row with a title but no URL. | `watch` |
+
 ## Priority 3 — confirmations (no change needed, just verify stability)
 
 - `se_media.text` / `audio` values are now **full URLs** (were basenames). Fine — just confirm this is intentional and stable.
