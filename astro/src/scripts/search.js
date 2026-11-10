@@ -5,10 +5,10 @@ import MiniSearch from 'minisearch';
 const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
 const LINE_SEP = '\n';
-const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
+const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy', 'other'];
 // Score multiplier for a match on the ISO code field (vs. names/countries).
 const ISO_BOOST = 5;
-const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy' };
+const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy', other: 'Other' };
 
 function decodeSearchIndex(raw) {
   const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] = raw.split(LINE_SEP);

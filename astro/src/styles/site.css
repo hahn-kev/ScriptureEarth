@@ -517,6 +517,10 @@ section.block {
   color: var(--r-buy);
   border-color: color-mix(in srgb, var(--r-buy) 35%, transparent);
 }
+.pill[data-r="other"] {
+  color: var(--r-other);
+  border-color: color-mix(in srgb, var(--r-other) 35%, transparent);
+}
 .crumbs {
   display: flex;
   gap: 0.5rem;

@@ -22,7 +22,7 @@ const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
 const LINE_SEP = '\n';
 
-export const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy'];
+export const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy', 'other'];
 
 function assertSafe(value, context) {
   if (typeof value !== 'string') return;

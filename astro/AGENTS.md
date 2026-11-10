@@ -92,7 +92,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 ## Code Conventions & Common Patterns
 
 - Trailing slashes always (`trailingSlash: 'always'`, `build.format: 'directory'`). Links: `/language/${slug}/`.
-- `GROUPS`: `read|listen|watch|app|buy|other` (detail resource sections, in display order; Bible.is rows lead read/listen/watch). `PILLS`: `read|listen|watch|app|buy` (cards/facets/search bits). `other` (GRN, SIL.org, Kalaam, other websites) is a detail section only, with no pill. `availability.watch` can be true with empty `resources.watch`.
+- `GROUPS`: `read|listen|watch|app|buy|other` (detail resource sections, in display order; Bible.is rows lead read/listen/watch). `PILLS`: `read|listen|watch|app|buy|other` (cards/facets/search bits; `other` = GRN, SIL.org, Kalaam, other websites, appended as search bit 5). `availability.watch` can be true with empty `resources.watch`.
 - Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, aria-labels `data-i18n-label`, names `data-i18n-name={idx}`.
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
 - CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
