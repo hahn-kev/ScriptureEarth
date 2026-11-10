@@ -710,6 +710,57 @@ button.act:hover {
   color: var(--muted);
   padding: var(--s2) 0;
 }
+/* Placeholder: the dump lacks what's needed to show this properly (missing title, link,
+   playlist file, …). Deliberately visible so data gaps get noticed and fixed. */
+.ph {
+  color: #8a5300;
+  font-style: italic;
+  font-weight: 500;
+  background: #fff4e0;
+  border: 1px dashed #d99a2b;
+  border-radius: 4px;
+  padding: 0 0.35em;
+}
+.res-row .act.ph {
+  font-size: 0.82rem;
+}
+/* Testament audio: one row per book, chapter numbers as play buttons. */
+.book-row {
+  align-items: flex-start;
+}
+.book-row .book-main {
+  min-width: 0;
+}
+.book-row .rr-name .rr-src {
+  font-weight: 400;
+  margin-inline-start: var(--s2);
+}
+.ch-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+  margin-top: var(--s2);
+}
+.ch {
+  min-width: 2rem;
+  padding: 0.15rem 0.4rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: none;
+  color: var(--accent);
+  font: inherit;
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  cursor: pointer;
+}
+.ch:hover {
+  border-color: var(--accent);
+}
+.ch[aria-pressed='true'] {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: #fff;
+}
 .with-side {
   display: grid;
   grid-template-columns: minmax(0, 1fr) 300px;

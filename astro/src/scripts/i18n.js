@@ -32,11 +32,33 @@ function baked(n, attr) {
   return m[key];
 }
 
+// Country names come from the browser's CLDR data (Intl.DisplayNames), keyed by the
+// ISO 3166 code in data-i18n-country; the baked English name is the fallback.
+let dn = null;
+let dnLang = '';
+function countryName(code) {
+  const lang = document.documentElement.lang;
+  try {
+    if (lang !== dnLang) { dn = new Intl.DisplayNames([lang], { type: 'region' }); dnLang = lang; }
+    const n = dn.of(code);
+    return n && n !== code ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 function apply(chrome, names, root = document) {
   // Capture baked English before overwrite so switching back to English restores it.
+  // A template with {n} (e.g. "{n} chapters") is filled from data-i18n-n.
   root.querySelectorAll('[data-i18n]').forEach((n) => {
     const b = baked(n);
-    n.textContent = (chrome && chrome[n.getAttribute('data-i18n')]) || b;
+    const tpl = chrome && chrome[n.getAttribute('data-i18n')];
+    const num = n.getAttribute('data-i18n-n');
+    n.textContent = tpl ? (num != null ? tpl.replace('{n}', num) : tpl) : b;
+  });
+  root.querySelectorAll('[data-i18n-country]').forEach((n) => {
+    const b = baked(n);
+    n.textContent = countryName(n.getAttribute('data-i18n-country')) || b;
   });
   root.querySelectorAll('[data-i18n-ph]').forEach((n) => {
     const b = baked(n, 'placeholder');
@@ -59,6 +81,7 @@ function toEnglish(root = document) {
   root.querySelectorAll('[data-i18n-ph]').forEach((n) => { n.setAttribute('placeholder', baked(n, 'placeholder')); });
   root.querySelectorAll('[data-i18n-label]').forEach((n) => { n.setAttribute('aria-label', baked(n, 'aria-label')); });
   root.querySelectorAll('[data-i18n-name]').forEach((n) => { n.textContent = baked(n); });
+  root.querySelectorAll('[data-i18n-country]').forEach((n) => { n.textContent = baked(n); });
   document.documentElement.removeAttribute('data-i18n-pending');
 }
 

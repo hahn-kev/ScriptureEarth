@@ -78,7 +78,7 @@ function card(r) {
   return (
     `<a class="lang" href="/language/${r.slug}/">` +
     `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>` +
-    (r.where ? `<div class="where">${esc(r.where)}</div>` : '') +
+    (r.cc?.length ? `<div class="where">${r.cc.map((c) => `<span data-i18n-country="${esc(c)}">${esc(COUNTRIES[c] || c)}</span>`).join(', ')}</div>` : '') +
     (r.altHit?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.altHit.join(', '))}</div>` : '') +
     `<div class="pills">${pills}</div></a>`
   );
@@ -115,6 +115,8 @@ if (!q || !form || !results) throw new Error('home search markup missing');
 let indexPromise = null;
 let records = [];
 let countryByFoldedName = new Map();
+// code → English name, for result cards (localized by i18n.js via data-i18n-country).
+let COUNTRIES = {};
 
 // Memoize the in-flight promise, not the finished engine: on a slow network every
 // keystroke calls this before the first fetch resolves, and each would otherwise
@@ -129,6 +131,7 @@ function getIndex() {
 
 async function buildIndex() {
   const { data, countries } = await loadSearchData();
+  COUNTRIES = countries;
   data.forEach((d) => {
     d._text = [d.nm, ...(d.nms || []), d.where].filter(Boolean).join(' ');
     d._alt = (d.alt || []).join(' ');
