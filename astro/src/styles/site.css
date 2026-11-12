@@ -613,12 +613,12 @@ section.block {
   color: var(--muted);
   font-size: 0.85rem;
 }
-/* "Other versions of this language": same-ISO entries, under the resource groups. */
-.versions {
+/* "Similar languages": same-ISO entries, under the resource groups. */
+.similar {
   margin-top: var(--s6);
   scroll-margin-top: 5rem;
 }
-.versions h2 {
+.similar h2 {
   font-size: 1.2rem;
   margin-bottom: var(--s4);
 }

@@ -7,7 +7,7 @@ import { GROUPS } from '../../lib/ui';
 
 export async function getStaticPaths() {
   const langs = await getCollection('languages');
-  // "Other versions": entries sharing this ISO code (dialects, scripts, editions of one
+  // "Similar languages": entries sharing this ISO code (dialects, scripts, editions of one
   // language). ISO 639-3 private-use codes (qaa–qtz) are placeholders — `qqq` holds 18
   // unrelated sign languages — so they never group.
   const byIso: Record<string, any[]> = {};
@@ -52,8 +52,8 @@ const legacyUrl = `https://www.scriptureearth.org/00eng.php?idx=${d.idx}`;
         ))}
 
         {versions.length > 0 && (
-          <div class="versions" id="versions">
-            <h2 data-i18n="detail.otherVersions">Other versions of this language</h2>
+          <div class="similar" id="similar">
+            <h2 data-i18n="detail.similarLanguages">Similar languages</h2>
             <div class="lang-grid">{versions.map((v: any) => <LangCard d={v} />)}</div>
           </div>
         )}
@@ -63,7 +63,7 @@ const legacyUrl = `https://www.scriptureearth.org/00eng.php?idx=${d.idx}`;
         <h4 data-i18n="detail.onthispage">On this page</h4>
         <div class="toc">
           {activeGroups.map((g) => (<a href={`#${g.key}`}><span class={`ic ic-${g.key}`} data-r={g.key} aria-hidden="true"></span><span data-i18n={`group.${g.key}`}>{g.label}</span><span class="c tnum">{d.resources[g.key].length}</span></a>))}
-          {versions.length > 0 && <a href="#versions"><span class="ic ic-locale" aria-hidden="true"></span><span data-i18n="detail.otherVersions">Other versions of this language</span><span class="c tnum">{versions.length}</span></a>}
+          {versions.length > 0 && <a href="#similar"><span class="ic ic-locale" aria-hidden="true"></span><span data-i18n="detail.similarLanguages">Similar languages</span><span class="c tnum">{versions.length}</span></a>}
         </div>
         {d.countries.length > 0 && (
           <>
