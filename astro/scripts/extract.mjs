@@ -546,6 +546,7 @@ for (const e of entries) {
     slug,
     code: iso,
     nm: name,
+    vn: r.var_name || '',
     auto: null,
     nms: [...new Set(localizedNames)].filter((n) => n !== name),
     alt,

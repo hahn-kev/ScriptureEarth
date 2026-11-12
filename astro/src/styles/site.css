@@ -453,16 +453,27 @@ section.block {
   font-size: 1.06rem;
   line-height: 1.2;
 }
+/* Variant subtitle (e.g. "Traditional orthography") telling same-named cards apart. */
+.lang .variant {
+  color: var(--text);
+  font-size: 0.9rem;
+  line-height: 1.3;
+  margin-block-start: calc(var(--s3) * -0.5);
+}
 .lang .auto {
   color: var(--muted);
   font-size: 0.9rem;
 }
+/* Country list on a card: up to ~20 countries, so clamp to 2 lines like .alt. */
 .lang .where {
   color: var(--muted);
   font-size: 0.88rem;
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
+  line-height: 1.35;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  line-clamp: 2;
+  overflow: hidden;
 }
 /* Alternate names on a card: can be very long (up to ~190 names), so clamp to 2 lines. */
 .lang .alt {
@@ -564,6 +575,12 @@ section.block {
   padding: 0.25rem 0.6rem;
   font-size: 0.84rem;
   color: var(--text);
+}
+/* A chip holding running text (the language page's country list): wraps instead of
+   laying each word out as a flex item. */
+.chip.chip-text {
+  display: inline-block;
+  line-height: 1.5;
 }
 /* All alternate names on the language page — a wrapping line, not a chip. */
 .alt-names {
