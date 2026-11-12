@@ -9,7 +9,7 @@
 //   load.mjs    (required) export async function load({ dir })
 //               reads this attempt's data file(s) + does whatever decoding
 //               work would happen client-side, and returns the record array
-//               in the canonical shape (idx, slug, code, nm, auto, nms, alt,
+//               in the canonical shape (idx, slug, code, nm, vn, auto, nms, alt,
 //               where, cc, r). The harness hashes this to check correctness.
 //   (anything else in the dir is counted as shipped "data" — json, bin, etc.)
 //

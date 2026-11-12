@@ -9,7 +9,7 @@ export const RIGHTS = ['read', 'listen', 'watch', 'app', 'buy', 'other'];
 
 export async function load({ dir }) {
   const raw = await readFile(path.join(dir, 'data.txt'), 'utf8');
-  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] =
+  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine, vnLine] =
     raw.split(LINE_SEP);
 
   const countries = {};
@@ -26,6 +26,7 @@ export async function load({ dir }) {
   const altCol = altLine.split(RECORD_SEP);
   const ccCol = ccLine.split(RECORD_SEP);
   const rCol = rLine.split(RECORD_SEP);
+  const vnCol = (vnLine || '').split(RECORD_SEP);
 
   return idxCol.map((idxStr, i) => {
     const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
@@ -35,6 +36,7 @@ export async function load({ dir }) {
       slug: slugCol[i] === '' ? codeCol[i] : slugCol[i],
       code: codeCol[i],
       nm: nmCol[i],
+      vn: vnCol[i] || '',
       auto: null,
       nms: nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP),
       alt: altCol[i] === '' ? [] : altCol[i].split(ELEMENT_SEP),

@@ -11,7 +11,7 @@ const ISO_BOOST = 5;
 const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy', other: 'Other' };
 
 function decodeSearchIndex(raw) {
-  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine] = raw.split(LINE_SEP);
+  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine, vnLine] = raw.split(LINE_SEP);
   const countries = {};
   for (const entry of headerLine.split(RECORD_SEP)) {
     const sepIdx = entry.indexOf(ELEMENT_SEP);
@@ -25,6 +25,7 @@ function decodeSearchIndex(raw) {
   const altCol = altLine.split(RECORD_SEP);
   const ccCol = ccLine.split(RECORD_SEP);
   const rCol = rLine.split(RECORD_SEP);
+  const vnCol = (vnLine || '').split(RECORD_SEP);
   const data = idxCol.map((idxStr, i) => {
     const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
     const mask = Number(rCol[i]);
@@ -33,6 +34,7 @@ function decodeSearchIndex(raw) {
       slug: slugCol[i] === '' ? codeCol[i] : slugCol[i],
       code: codeCol[i],
       nm: nmCol[i],
+      vn: vnCol[i] || '',
       nms: nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP),
       alt: altCol[i] === '' ? [] : altCol[i].split(ELEMENT_SEP),
       where: cc.map((c) => countries[c]).join(', '),
@@ -78,6 +80,7 @@ function card(r) {
   return (
     `<a class="lang" href="/language/${r.slug}/">` +
     `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>` +
+    (r.vn ? `<div class="variant">${esc(r.vn)}</div>` : '') +
     (r.cc?.length ? `<div class="where">${r.cc.map((c) => `<span data-i18n-country="${esc(c)}">${esc(COUNTRIES[c] || c)}</span>`).join(', ')}</div>` : '') +
     (r.altHit?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.altHit.join(', '))}</div>` : '') +
     `<div class="pills">${pills}</div></a>`
@@ -133,7 +136,7 @@ async function buildIndex() {
   const { data, countries } = await loadSearchData();
   COUNTRIES = countries;
   data.forEach((d) => {
-    d._text = [d.nm, ...(d.nms || []), d.where].filter(Boolean).join(' ');
+    d._text = [d.nm, d.vn, ...(d.nms || []), d.where].filter(Boolean).join(' ');
     d._alt = (d.alt || []).join(' ');
   });
   // Separate fields: the ISO code so a hit on it can be boosted above name/country
@@ -142,7 +145,7 @@ async function buildIndex() {
   const engine = new MiniSearch({
     idField: 'idx',
     fields: ['_text', '_alt', 'code'],
-    storeFields: ['idx', 'slug', 'code', 'nm', 'where', 'r', 'alt'],
+    storeFields: ['idx', 'slug', 'code', 'nm', 'vn', 'where', 'r', 'alt'],
     processTerm: (term) => fold(term) || null,
     tokenize,
   });
