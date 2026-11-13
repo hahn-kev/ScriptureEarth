@@ -35,9 +35,9 @@ content/countries.json + scripts/data/ne_110m_countries.geojson + map-points.jso
 
 | Path | Role |
 |---|---|
-| `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/` |
+| `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/`; site-menu pages `/help/`, `/about/` (+ `partners/`, `terms/`, `privacy/`), `/contact/`, `/promotion/` (layout `src/layouts/Prose.astro`, English bodies) |
 | `src/layouts/Base.astro` | Chrome, locale boot, header search |
-| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`) |
+| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`), `SiteMenu.astro` (header ☰: a `<details>` disclosure, works without JS; a tiny inline script adds light-dismiss; links from `src/lib/siteLinks.ts`, shared with the footer) |
 | `src/lib/ui.ts` | Shared vocab: `GROUPS` vs `PILLS`, action labels |
 | `src/scripts/` | Client bundles: `search.js`, `i18n.js`, `browse.js`, `geo-suggest.js`, `world-map.js` (hashed Vite bundles; never inline) |
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
@@ -95,7 +95,8 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 - `GROUPS`: `read|listen|watch|app|buy|other` (detail resource sections, in display order; within read/listen/watch: SAB "Read, listen and view" reader first, then ScriptureEarth's own items, then partners like Bible.is). Generic resource phrases and placeholders come from `scripts/resource-labels.mjs` (see `CURRENT-ISSUES.md` §1a/1c). `PILLS`: `read|listen|watch|app|buy|other` (cards/facets/search bits; `other` = GRN, SIL.org, Kalaam, other websites, appended as search bit 5). `availability.watch` can be true with empty `resources.watch`.
 - Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, aria-labels `data-i18n-label`, names `data-i18n-name={idx}`.
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
-- CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
+- CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`; its links move into the ☰ panel (`.mobile-only`), and the ☰ button sits beside the search on header row 2.
+- Site menu/footer links live in `src/lib/siteLinks.ts`; add a link there, not in markup. Promotion originals stay on the legacy host (see `CURRENT-ISSUES.md`).
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.
 - Logos: `public/*.jxl` are lossless JPEG XL (`cjxl in.png out.jxl -d 0 -e 11 --allow_expert_options`, libjxl ≥0.11), served via `<picture>`: `.jxl` → `.webp` → lossless `.png` `<img>` for old browsers. Lossless AVIF tested 40–110% larger, so no AVIF. New `.jxl` files need a `_headers` `Content-Type: image/jxl` entry and a `_redirects` guard.
 - Changing chrome keys: update `scripts/i18n/en.json` (English master, not copied to public) **and** every `public/i18n/chrome.<loc>.json`. Adding a UI locale: an entry in `public/i18n/locales.json` (`bcp` is what browser languages match against) + catalogs.
