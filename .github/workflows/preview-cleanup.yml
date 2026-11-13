@@ -72,39 +72,48 @@ jobs:
           cutoff=$(date -u -d "${MAX_AGE_DAYS} days ago" +%Y-%m-%dT%H:%M:%SZ)
           echo "Pruning preview deployments created before ${cutoff}"
 
-          deleted=0 kept=0 skipped=0 page=1
+          # Collect every candidate first, then delete. Deleting while paging
+          # shifts later deployments onto earlier pages and skips them.
+          # The Pages API caps per_page at 25 and returns 400 above that.
+          candidates=$(mktemp)
+          scanned=0 page=1
           while :; do
-            resp=$(curl -fsS -H "$auth" "${api}?per_page=100&page=${page}")
-            if [ "$(printf '%s' "$resp" | jq -r '.success')" != "true" ]; then
-              echo "::error::Cloudflare API listing failed"
-              printf '%s\n' "$resp" | jq -r '.errors' >&2 || true
+            code=$(curl -sS -o /tmp/list.json -w '%{http_code}' -H "$auth" \
+              "${api}?env=preview&per_page=25&page=${page}")
+            if [ "$code" != "200" ] || [ "$(jq -r '.success' /tmp/list.json)" != "true" ]; then
+              echo "::error::Cloudflare API listing failed (HTTP ${code})"
+              jq -c '.errors // .' /tmp/list.json >&2 || cat /tmp/list.json >&2
               exit 1
             fi
 
-            count=$(printf '%s' "$resp" | jq '.result | length')
+            count=$(jq '.result | length' /tmp/list.json)
             [ "$count" -eq 0 ] && break
 
-            # id + created_on for preview deployments older than the cutoff
-            while IFS=$'\t' read -r id created; do
-              [ -z "$id" ] && continue
-              code=$(curl -s -o /tmp/del.json -w '%{http_code}' -X DELETE -H "$auth" "${api}/${id}")
-              if [ "$code" = "200" ]; then
-                echo "deleted ${id} (${created})"
-                deleted=$((deleted + 1))
-              else
-                # Aliased/live deployments are refused without ?force=true — leave them.
-                echo "skipped ${id} (${created}) — HTTP ${code}"
-                skipped=$((skipped + 1))
-              fi
-            done < <(printf '%s' "$resp" | jq -r \
-              --arg cutoff "$cutoff" \
-              '.result[] | select(.environment == "preview" and .created_on < $cutoff) | "\(.id)\t\(.created_on)"')
+            jq -r --arg cutoff "$cutoff" \
+              '.result[] | select(.environment == "preview" and .created_on < $cutoff) | "\(.id)\t\(.created_on)"' \
+              /tmp/list.json >> "$candidates"
 
-            kept=$((kept + count))
+            scanned=$((scanned + count))
+            total_pages=$(jq -r '.result_info.total_pages // 0' /tmp/list.json)
+            [ "$total_pages" -gt 0 ] && [ "$page" -ge "$total_pages" ] && break
             page=$((page + 1))
           done
 
-          echo "Done. deleted=${deleted} skipped=${skipped} scanned=${kept}"
+          deleted=0 skipped=0
+          while IFS=$'\t' read -r id created; do
+            [ -z "$id" ] && continue
+            code=$(curl -s -o /tmp/del.json -w '%{http_code}' -X DELETE -H "$auth" "${api}/${id}")
+            if [ "$code" = "200" ]; then
+              echo "deleted ${id} (${created})"
+              deleted=$((deleted + 1))
+            else
+              # Aliased/live deployments are refused without ?force=true — leave them.
+              echo "skipped ${id} (${created}) — HTTP ${code}: $(jq -c '.errors' /tmp/del.json 2>/dev/null)"
+              skipped=$((skipped + 1))
+            fi
+          done < "$candidates"
+
+          echo "Done. deleted=${deleted} skipped=${skipped} scanned=${scanned}"
           {
             echo "### Cloudflare preview cleanup"
             echo ""
