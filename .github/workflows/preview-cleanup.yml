@@ -2,14 +2,18 @@ name: Preview cleanup
 
 # Scheduled prune of stale Cloudflare Pages *preview* deployments for the
 # se-proto-en project. preview.yml creates one preview deployment per push on
-# every PR branch and never deletes them, so they accumulate forever. This job
-# lists all deployments and deletes preview-environment ones older than 30 days.
+# every PR branch and never deletes them, and Cloudflare cannot clean them up on
+# its own: they are Direct Uploads, so `--branch` is only a label and Cloudflare
+# never learns that a branch was merged or deleted.
 #
-# Production deployments are never touched (environment filter). Deployments that
-# are still aliased (e.g. the current head of an open PR branch) are refused by
-# the API without ?force=true, which we deliberately do not pass — so a live
-# branch alias is preserved even if it is older than 30 days, and only truly
-# stale, superseded preview builds are pruned.
+# Rules, for preview deployments created more than MAX_AGE_DAYS (30) ago:
+#   - Superseded builds (not aliased): deleted.
+#   - The latest build of a branch (aliased; it backs <branch>.se-proto-en.pages.dev):
+#     Cloudflare refuses a plain DELETE. We look up the branch's PR and force-delete
+#     only when every PR for that branch closed more than MAX_AGE_DAYS ago, so a
+#     closed PR's preview link stays up for a month after it closes. Open PRs, PRs
+#     closed recently, and branches with no PR keep their link.
+# Production deployments are never touched (environment filter).
 #
 # The job self-gates: until the Cloudflare secrets are configured it skips
 # (green) with a notice. Required configuration:
@@ -23,12 +27,13 @@ on:
   workflow_dispatch:
     inputs:
       max_age_days:
-        description: 'Delete preview deployments older than this many days'
+        description: 'Delete previews older than this, and branch links of PRs closed longer ago than this (days)'
         required: false
         default: '30'
 
 permissions:
   contents: read
+  pull-requests: read  # look up whether a preview's branch has an open or recently closed PR
 
 concurrency:
   group: preview-cleanup
@@ -62,6 +67,7 @@ jobs:
       CF_ACCOUNT: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
       PROJECT: se-proto-en
       MAX_AGE_DAYS: ${{ github.event.inputs.max_age_days || '30' }}
+      GH_TOKEN: ${{ github.token }}
     steps:
       - name: Prune stale preview deployments
         run: |
@@ -90,7 +96,7 @@ jobs:
             [ "$count" -eq 0 ] && break
 
             jq -r --arg cutoff "$cutoff" \
-              '.result[] | select(.environment == "preview" and .created_on < $cutoff) | "\(.id)\t\(.created_on)"' \
+              '.result[] | select(.environment == "preview" and .created_on < $cutoff) | [.id, .created_on, (.deployment_trigger.metadata.branch // "")] | @tsv' \
               /tmp/list.json >> "$candidates"
 
             scanned=$((scanned + count))
@@ -99,25 +105,86 @@ jobs:
             page=$((page + 1))
           done
 
-          deleted=0 skipped=0
-          while IFS=$'\t' read -r id created; do
+          # Branch verdicts, cached so each branch hits the GitHub API once:
+          #   force:<closed>   every PR for the branch closed before the cutoff
+          #   keep:<reason>    open PR, closed too recently, or no PR found
+          declare -A verdict
+          branch_verdict() {
+            local b=$1 prs
+            if [ -z "${verdict[$b]+x}" ]; then
+              prs=$(gh pr list -R "$GITHUB_REPOSITORY" --head "$b" --state all --limit 50 --json state,closedAt) \
+                || { verdict[$b]="keep:PR lookup failed"; return; }
+              verdict[$b]=$(jq -r --arg cutoff "$cutoff" '
+                if length == 0 then "keep:no PR found"
+                elif any(.[]; .state == "OPEN") then "keep:PR open"
+                else (map(.closedAt) | max) as $c
+                  | if $c < $cutoff then "force:\($c)" else "keep:PR closed \($c[:10])" end
+                end' <<<"$prs")
+            fi
+          }
+
+          # Log lines lead with the action and branch so a run reads by branch:
+          #   deleted  <branch>  superseded build (<date>, <id>)
+          #   deleted  <branch>  branch link, PR closed <date> (<id>)
+          #   kept     <branch>  branch link, <reason> (<id>)
+          log() { printf '%-8s %-45s %s\n' "$1" "${2:-(unknown branch)}" "$3"; }
+
+          deleted=0 expired=0 kept=0 failed=0
+          kept_rows=$(mktemp)
+          while IFS=$'\t' read -r id created branch; do
             [ -z "$id" ] && continue
+            day=${created%%T*}
             code=$(curl -s -o /tmp/del.json -w '%{http_code}' -X DELETE -H "$auth" "${api}/${id}")
             if [ "$code" = "200" ]; then
-              echo "deleted ${id} (${created})"
+              log deleted "$branch" "superseded build (${day}, ${id})"
               deleted=$((deleted + 1))
+              continue
+            fi
+
+            # 8000035: still aliased, i.e. the latest build behind a branch preview link.
+            if ! jq -e '[.errors[]?.code] | index(8000035)' /tmp/del.json >/dev/null 2>&1; then
+              echo "::warning::could not delete ${branch:-(unknown branch)} build ${id} (${day}) — HTTP ${code}: $(jq -c '.errors' /tmp/del.json 2>/dev/null)"
+              failed=$((failed + 1))
+              continue
+            fi
+
+            if [ -z "$branch" ]; then
+              v="keep:branch unknown"
             else
-              # Aliased/live deployments are refused without ?force=true — leave them.
-              echo "skipped ${id} (${created}) — HTTP ${code}: $(jq -c '.errors' /tmp/del.json 2>/dev/null)"
-              skipped=$((skipped + 1))
+              branch_verdict "$branch"
+              v=${verdict[$branch]}
+            fi
+            if [ "${v%%:*}" != "force" ]; then
+              log kept "$branch" "branch link, ${v#keep:} (built ${day}, ${id})"
+              printf '| `%s` | %s | %s |\n' "${branch:-(unknown)}" "${v#keep:}" "$day" >> "$kept_rows"
+              kept=$((kept + 1))
+              continue
+            fi
+
+            closed=${v#force:}
+            code=$(curl -s -o /tmp/del.json -w '%{http_code}' -X DELETE -H "$auth" "${api}/${id}?force=true")
+            if [ "$code" = "200" ]; then
+              log deleted "$branch" "branch link, PR closed ${closed%%T*} (${id})"
+              expired=$((expired + 1))
+            else
+              echo "::warning::force delete of ${branch} branch link ${id} failed — HTTP ${code}: $(jq -c '.errors' /tmp/del.json 2>/dev/null)"
+              failed=$((failed + 1))
             fi
           done < "$candidates"
 
-          echo "Done. deleted=${deleted} skipped=${skipped} scanned=${scanned}"
+          echo "Done. deleted=${deleted} expired_links=${expired} kept=${kept} failed=${failed} scanned=${scanned}"
           {
             echo "### Cloudflare preview cleanup"
             echo ""
             echo "- Cutoff: \`${cutoff}\` (older than ${MAX_AGE_DAYS} days)"
-            echo "- Deleted: ${deleted}"
-            echo "- Skipped (aliased/live): ${skipped}"
+            echo "- Deleted superseded builds: ${deleted}"
+            echo "- Deleted branch links (PR closed before cutoff): ${expired}"
+            echo "- Kept branch links: ${kept}"
+            echo "- Failed: ${failed}"
+            if [ -s "$kept_rows" ]; then
+              echo ""
+              echo "| Kept branch link | Reason | Built |"
+              echo "| --- | --- | --- |"
+              sort "$kept_rows"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
