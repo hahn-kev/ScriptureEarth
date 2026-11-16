@@ -1,0 +1,14 @@
+---
+// Legacy menu: Contact Us. The legacy PHP form (Feedback/Feedback.php) mailed this same
+// public address, so the static site links to it with mailto instead of a form.
+import Prose from '../../layouts/Prose.astro';
+import { CONTACT_EMAIL } from '../../lib/siteLinks';
+---
+<Prose title="Contact Us" titleKey="nav.contact">
+  <p class="lead">Questions, feedback, or a problem with a language page? Email us.</p>
+  <div class="callout">
+    <a class="mail" href={`mailto:${CONTACT_EMAIL}?subject=ScriptureEarth`}>{CONTACT_EMAIL}</a>
+  </div>
+  <p>If you are writing about a specific language, include its name or its three-letter code (shown on the language page) so we can find it quickly.</p>
+  <p class="note">ScriptureEarth is a ministry of <a href="https://www.sil.org/">SIL Global</a>. See the <a href="/about/privacy/">Privacy Policy</a> for how we handle what you send us.</p>
+</Prose>

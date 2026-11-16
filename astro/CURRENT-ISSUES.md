@@ -135,3 +135,18 @@ sorted by English name.
 
 ### 10. The `/language/` chooser and `/404` pages are English-only
 Their few strings have no `data-i18n` keys (adding keys means touching all 14 chrome catalogs).
+
+### 11. Help, About, Contact and Promotion page bodies are English-only
+These pages port the legacy site menu (`src/pages/{help,about,contact,promotion}/`). Only their
+crumbs and `<h1>` swap via chrome keys; long prose doesn't fit the chrome-overlay i18n. The legacy
+site has the About texts (Copyright, Partners, Terms, Privacy) in 10 locales in
+`00<loc>-CTPHC.php` (repo root), so translated bodies could be baked per locale or swapped in as
+fragments. The `nav.*` menu labels for `fas`, `fil`, `hin`, `ind`, `swa`, and `nav.menu` in every
+locale, are new translations (no legacy phrase) awaiting native-speaker review.
+
+### 12. Promotion originals live on the legacy host
+`/promotion/` ships only WebP thumbnails (`public/promotion/`); the video and full-size print
+files link to `www.scriptureearth.org/promotionMaterials/` (~19 MB kept out of `dist/` and git).
+If that host goes away, move the files to wherever `/data/` assets end up. Don't add a
+`/promotionMaterials/*` redirect while the links point there. Cross-origin, the `download`
+attribute is ignored, so "Download" opens the file instead.

@@ -21,6 +21,7 @@ export const ICON_SETS = {
       languages: 'translate',
       countries: 'public',
       locale: 'language',
+      menu: 'menu',
       // resource rights / groups — match the data-r keys used by pills, facets and groups
       read: 'menu-book-outline',
       listen: 'headphones-outline',
@@ -53,6 +54,7 @@ export const ICON_SETS = {
       languages: 'language',
       countries: 'world',
       locale: 'language',
+      menu: 'menu-2',
       read: 'book',
       listen: 'headphones',
       watch: 'circle-caret-right',
@@ -84,6 +86,7 @@ export const ICON_SETS = {
       languages: 'fluent:translate-24-regular',
       countries: 'globe-24',
       locale: 'fluent:local-language-24-regular',
+      menu: 'fluent:navigation-24-regular',
       read: 'book-open-24',
       listen: 'headphones-24',
       watch: 'video-24',

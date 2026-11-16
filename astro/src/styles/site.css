@@ -152,12 +152,16 @@ header.site {
   display: flex;
   flex-direction: column;
   line-height: 1.1;
+  min-width: 0;
 }
 .brand .name {
   font-weight: 700;
   font-size: 1.2rem;
   letter-spacing: -0.01em;
   color: var(--heading);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 .brand .sub {
   font-size: 0.62rem;
@@ -165,6 +169,12 @@ header.site {
   letter-spacing: 0.14em;
   color: var(--muted);
   font-weight: 700;
+  /* never wider than the name: long translated taglines truncate */
+  width: 0;
+  min-width: 100%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 nav.main {
   display: flex;
@@ -891,6 +901,218 @@ footer.site .silmark-foot {
     position: static;
   }
 }
+/* Header ☰ menu (src/components/SiteMenu.astro): <details>. The panel is positioned
+   against the sticky header.site, so it sits just under the header at every width. */
+.menu {
+  flex: none;
+}
+.menu-btn {
+  display: grid;
+  place-items: center;
+  flex: none;
+  width: 2.25rem;
+  height: 2.25rem;
+  padding: 0;
+  border: 1px solid var(--border);
+  border-radius: var(--pill);
+  background: var(--surface-2);
+  color: var(--text);
+  font-size: 1.25rem;
+  cursor: pointer;
+  list-style: none;
+}
+.menu-btn::-webkit-details-marker {
+  display: none;
+}
+.menu[open] .menu-btn,
+.menu-btn:hover {
+  color: var(--accent);
+  border-color: var(--accent-2);
+}
+.menu-btn:focus-visible {
+  outline: 2px solid var(--ring);
+  outline-offset: 2px;
+}
+.site-menu {
+  position: absolute;
+  top: calc(100% + var(--s1));
+  inset-inline-end: max(var(--s3), calc((100% - var(--shell)) / 2));
+  width: min(19rem, calc(100% - 2 * var(--s3)));
+  max-height: calc(100dvh - 9rem);
+  overflow: auto;
+  padding: var(--s2) 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: var(--shadow-md);
+  font-size: 0.95rem;
+}
+.site-menu ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+.site-menu a {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem var(--s4);
+  color: var(--text);
+}
+.site-menu a:hover,
+.site-menu a:focus-visible {
+  background: var(--tint);
+  color: var(--accent);
+}
+.site-menu a[aria-current="page"] {
+  color: var(--accent);
+  font-weight: 600;
+}
+.site-menu a .ic {
+  color: var(--muted);
+  font-size: 0.9em;
+}
+.site-menu .grp-h {
+  display: block;
+  padding: var(--s3) var(--s4) var(--s1);
+  font-size: var(--t-eyebrow);
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.site-menu .grp a {
+  padding-inline-start: var(--s6);
+}
+.site-menu .sep {
+  height: 1px;
+  margin: var(--s2) 0;
+  background: var(--border);
+}
+.site-menu .mobile-only {
+  display: none;
+}
+
+/* Text pages (src/layouts/Prose.astro): Help, About, Contact, Promotion. */
+.prose {
+  max-width: 46rem;
+  color: var(--text);
+  line-height: 1.6;
+}
+.prose.wide {
+  max-width: none;
+}
+.prose h1 {
+  font-size: var(--t-h1);
+  margin: 0 0 var(--s5);
+}
+.prose h2 {
+  font-size: var(--t-h2);
+  margin: var(--s6) 0 var(--s3);
+}
+.prose h3 {
+  font-size: var(--t-h3);
+  margin: var(--s5) 0 var(--s2);
+}
+.prose ul {
+  padding-inline-start: var(--s5);
+}
+.prose li + li {
+  margin-top: var(--s1);
+}
+.prose .lead {
+  font-size: var(--t-lead);
+}
+.prose .note {
+  color: var(--muted);
+  font-size: var(--t-sm);
+}
+.prose .callout {
+  padding: var(--s4) var(--s5);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+.prose .callout .mail {
+  font-size: var(--t-lead);
+  font-weight: 600;
+}
+.org-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(15rem, 1fr));
+  gap: var(--s3);
+  padding: 0;
+  list-style: none;
+}
+.prose .org-grid,
+.prose .promo-grid {
+  padding: 0;
+}
+.prose .org-grid li + li {
+  margin-top: 0;
+}
+.org-grid li {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  padding: var(--s3) var(--s4);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.org-grid b {
+  color: var(--heading);
+}
+.org-grid a {
+  overflow-wrap: anywhere;
+  font-size: var(--t-sm);
+}
+.promo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(16rem, 1fr));
+  gap: var(--s5);
+  padding: 0;
+  list-style: none;
+}
+.promo-grid figure {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--s2);
+}
+.promo-grid img,
+.promo-grid video {
+  width: 100%;
+  height: auto;
+  display: block;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  background: var(--surface);
+}
+.promo-grid figcaption {
+  font-size: var(--t-sm);
+  color: var(--muted);
+}
+.promo-grid figcaption a {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  font-weight: 600;
+}
+
+@media (min-width: 761px) and (max-width: 960px) {
+  .site-inner {
+    gap: var(--s3);
+  }
+  nav.main {
+    gap: var(--s4);
+    margin-inline-start: 0;
+  }
+  .site-search {
+    min-width: 6rem;
+  }
+}
 @media (max-width: 760px) {
   nav.main {
     display: none;
@@ -903,6 +1125,7 @@ footer.site .silmark-foot {
   }
   .brand {
     order: 0;
+    flex: 1 1 0;
     min-width: 0;
   }
   .locale-wrap {
@@ -915,11 +1138,18 @@ footer.site .silmark-foot {
   .locale-pick {
     max-width: 7.5rem;
   }
+  /* row 2: search + the ☰ menu button beside it (row 1 stays brand + locale picker) */
   .site-search {
     order: 2;
-    flex: 1 1 100%;
+    flex: 1 1 calc(100% - 2.25rem - var(--s4));
     min-width: 0;
     margin-inline-start: 0;
+  }
+  .menu {
+    order: 3;
+  }
+  .site-menu .mobile-only {
+    display: block;
   }
 }
 @media (max-width: 360px) {

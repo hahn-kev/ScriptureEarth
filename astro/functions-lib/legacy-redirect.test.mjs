@@ -58,13 +58,15 @@ test('handler returns a redirect response', () => {
   assert.equal(res.headers.get('Location'), '/language/tzo-02641/?lang=eng');
 });
 
-// Every .php row in public/_redirects needs a Function route, or its query-string deep
-// links silently fall back to the home page (path-only rules can't read the query).
-test('every legacy .php redirect row has a Function route in the same locale', () => {
+// Every .php row in public/_redirects that targets the home page is a legacy index entry
+// point: it needs a Function route, or its query-string deep links silently fall back to
+// the home page (path-only rules can't read the query). Rows with another target (the
+// site-menu pages -> /about/, /contact/, /promotion/) are path-only by design.
+test('every legacy index .php redirect row has a Function route in the same locale', () => {
   const rows = readFileSync(new URL('../public/_redirects', import.meta.url), 'utf8')
     .split('\n')
     .map((l) => l.trim().split(/\s+/))
-    .filter(([from]) => from?.endsWith('.php'));
+    .filter(([from, target]) => from?.endsWith('.php') && /^\/(\?lang=\w+)?$/.test(target));
   assert.equal(rows.length, 17);
   const routes = new Set(readdirSync(new URL('../functions/', import.meta.url)));
   for (const [from, target] of rows) {

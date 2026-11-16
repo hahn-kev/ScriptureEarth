@@ -39,7 +39,7 @@ The resolver (`functions-lib/legacy-redirect.js`, bound to the map by `functions
 `/00spa.php` → `/?lang=spa`, as the old site kept the visitor in that file's language.
 
 **Tests:** `pnpm run test:redirects` (`functions-lib/legacy-redirect.test.mjs`, no extract needed). It also
-fails if a `.php` row in `_redirects` has no route file, or one in a different locale.
+fails if a home-page `.php` row in `_redirects` has no route file, or one in a different locale.
 
 **Lookup map:** `scripts/extract.mjs` writes `content/lang-map.json` (`idx` → slug for every entry, `iso` → slug
 for the ~4,000 ISOs with exactly one entry, `multi` = the 96 ISOs shared by several entries). The Function
@@ -84,9 +84,12 @@ Pages); the Function answers every hit on those paths itself, so the static `.ph
    Functions only on the 17 legacy `.php` paths — home/pages/assets are pure static and not counted as
    Functions invocations. A new legacy entry point needs a `_redirects` row *and* a route file.
 6. **`?st=<iso>`** ("start at", L4) is not mapped (it lands on the locale home), and niche `.php`
-   (`iso_direct.php`, `00<loc>-CTPHC.php`) have no rule at all. An unpadded ROD (`rod=2641`) never
+   (`iso_direct.php`) have no rule at all. An unpadded ROD (`rod=2641`) never
    worked on the old site either; it falls back to bare-ISO resolution. Add a final `/*.php / 302` safety net only if
    server-log sweep shows meaningful traffic (§5.6).
+   The legacy site-menu pages are mapped path-only: `00<loc>-CTPHC.php` (any `?I=` section) → `/about/`,
+   `/Feedback/Feedback.php` → `/contact/`, `/promotionMaterials/promotion.php` → `/promotion/`. Not the rest of
+   `/promotionMaterials/*`: `/promotion/` links the video and print originals there on the legacy host.
 7. **Validate ordering with `wrangler pages dev` / preview** before launch — confirm `/site.css`,
    `/browse/`, `/aaa`, `/abt-3053`, `/index.php?iso=abt&rod=3053`, `/00i-Scripture_Index.php?iso=tzo&rod=02641`,
    and `?sortby=country&name=GT` all
