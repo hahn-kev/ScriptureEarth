@@ -92,6 +92,9 @@
 #   /acr-00000-a -> /language/acr-00000-a/   (34 legacy rows)
 #   /abt-3053    -> /language/abt-3053/       (175 legacy rows)
 #   /aaa         -> /language/aaa/            (3,570 legacy rows)
+# Deaf languages with the placeholder ISO qqq live at /language/sgn-<rod>/, and the legacy
+# /qqq-<rod> rows all name retired RODs (IAPSL, SSSL...), so send them to the qqq chooser.
+/qqq-:rod          /language/?iso=qqq         302
 /:iso-:rod-:var    /language/:iso-:rod-:var/  301
 /:iso-:rod         /language/:iso-:rod/       301
 /:iso              /language/:iso/            301

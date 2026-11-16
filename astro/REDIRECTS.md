@@ -7,7 +7,9 @@ Implements the resolved URL-scheme decision (`issues/08-url-scheme-redirect-map.
 - **`functions/*.php.js`** — one Function route per legacy `.php` entry point (17), for query-string deep links `_redirects` can't read. Shared logic: `functions-lib/legacy-redirect.js`.
 
 Assumes **slug strategy (B)**: the language-detail slug *is* the legacy vanity string
-`<iso>[-<rod>][-<var>]`, so `/language/kek/`, `/language/abt-3053/`, `/language/acr-00000-a/`.
+`<iso>[-<rod>][-<var>]`, so `/language/kek/`, `/language/abt-3053/`, `/language/acr-00000-a/`. Exception: Deaf languages with the placeholder ISO `qqq` use `sgn-<rod>`
+(`/language/sgn-ao84/`); `?iso=qqq&rod=` resolves there, and the legacy `/qqq-<rod>` vanity rows
+(all retired RODs) go to the `qqq` chooser.
 This is what collapses ~3,779 legacy rows to 3 rules and removes the iso→idx lookup entirely.
 
 ## What each rule group does

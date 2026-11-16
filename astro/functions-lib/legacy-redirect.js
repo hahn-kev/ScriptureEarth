@@ -47,8 +47,9 @@ export function resolveLegacy(q, map, lang = null) {
     const varc = (q.get('var') || q.get('Variant_Code') || '').trim().toLowerCase();
     if (varc && !rod) rod = '00000'; // variant present but rod omitted -> default rod
     if (rod || varc) {
-      let slug = iso;
-      if (rod) slug += `-${rod}`;
+      // Slugs are lowercase; Deaf languages with the placeholder ISO qqq live at sgn-<rod>.
+      let slug = iso === 'qqq' ? 'sgn' : iso;
+      if (rod) slug += `-${rod.toLowerCase()}`;
       if (varc) slug += `-${varc}`;
       if (isSlug(map, slug)) return to(`/language/${slug}/`, 301);
       // Assembled slug doesn't exist (stale rod/var) — fall through to bare-iso resolution.
