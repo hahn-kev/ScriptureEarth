@@ -1,6 +1,7 @@
 // Home MiniSearch: prefix + fuzzy over names, ISO, country. Exact English
 // country names list that country's languages instead of ranking one hit first.
 import MiniSearch from 'minisearch';
+import { parseAutonym } from '../lib/autonym';
 
 const RECORD_SEP = '\x1f';
 const ELEMENT_SEP = '\t';
@@ -11,7 +12,7 @@ const ISO_BOOST = 5;
 const PILL_LABEL = { read: 'Read', listen: 'Listen', watch: 'Watch', app: 'Apps', buy: 'Buy', other: 'Other' };
 
 function decodeSearchIndex(raw) {
-  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine, vnLine] = raw.split(LINE_SEP);
+  const [headerLine, idxLine, codeLine, slugLine, nmLine, nmsLine, altLine, ccLine, rLine, vnLine, auLine] = raw.split(LINE_SEP);
   const countries = {};
   for (const entry of headerLine.split(RECORD_SEP)) {
     const sepIdx = entry.indexOf(ELEMENT_SEP);
@@ -26,8 +27,11 @@ function decodeSearchIndex(raw) {
   const ccCol = ccLine.split(RECORD_SEP);
   const rCol = rLine.split(RECORD_SEP);
   const vnCol = (vnLine || '').split(RECORD_SEP);
+  // Autonym: an index into the record's nms (build_search_index.mjs), empty for none.
+  const auCol = (auLine || '').split(RECORD_SEP);
   const data = idxCol.map((idxStr, i) => {
     const cc = ccCol[i] === '' ? [] : ccCol[i].split(ELEMENT_SEP);
+    const nms = nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP);
     const mask = Number(rCol[i]);
     return {
       idx: Number(idxStr),
@@ -35,7 +39,8 @@ function decodeSearchIndex(raw) {
       code: codeCol[i],
       nm: nmCol[i],
       vn: vnCol[i] || '',
-      nms: nmsCol[i] === '' ? [] : nmsCol[i].split(ELEMENT_SEP),
+      nms,
+      au: auCol[i] ? nms[Number(auCol[i])] || '' : '',
       alt: altCol[i] === '' ? [] : altCol[i].split(ELEMENT_SEP),
       where: cc.map((c) => countries[c]).join(', '),
       cc,
@@ -73,13 +78,25 @@ function tokenize(text) {
   return tokens;
 }
 
+// Same markup as LangCard.astro; html[data-autonym] picks the design in site.css.
+function autonymHtml(r) {
+  const parts = parseAutonym(r.au);
+  if (!parts.length || parts[0].native.toLowerCase() === String(r.nm).toLowerCase()) return '';
+  const rom = (p) => (p.roman ? `<span class="rom">${esc(p.roman)}</span>` : '');
+  return (
+    `<span class="auto" lang="${esc(r.code)}" title="${esc(r.au)}"><bdi class="an">${esc(parts[0].native)}</bdi>${rom(parts[0])}` +
+    parts.slice(1).map((p) => `<span class="more">, <bdi>${esc(p.native)}</bdi>${rom(p)}</span>`).join('') +
+    '</span>'
+  );
+}
+
 function card(r) {
   const pills = (r.r || [])
     .map((k) => `<span class="pill" data-r="${k}"><span class="ic ic-${k}" aria-hidden="true"></span><span data-i18n="pill.${k}">${PILL_LABEL[k]}</span></span>`)
     .join('');
   return (
     `<a class="lang" href="/language/${r.slug}/">` +
-    `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span></div>` +
+    `<div class="top"><span class="code">${esc(r.code)}</span><span class="nm" data-i18n-name="${r.idx}">${esc(r.nm)}</span>${autonymHtml(r)}</div>` +
     (r.vn ? `<div class="variant">${esc(r.vn)}</div>` : '') +
     (r.cc?.length ? `<div class="where">${r.cc.map((c) => `<span data-i18n-country="${esc(c)}">${esc(COUNTRIES[c] || c)}</span>`).join(', ')}</div>` : '') +
     (r.altHit?.length ? `<div class="alt"><span data-i18n="meta.also">Also:</span> ${esc(r.altHit.join(', '))}</div>` : '') +
@@ -145,7 +162,7 @@ async function buildIndex() {
   const engine = new MiniSearch({
     idField: 'idx',
     fields: ['_text', '_alt', 'code'],
-    storeFields: ['idx', 'slug', 'code', 'nm', 'vn', 'where', 'r', 'alt'],
+    storeFields: ['idx', 'slug', 'code', 'nm', 'vn', 'au', 'where', 'r', 'alt'],
     processTerm: (term) => fold(term) || null,
     tokenize,
   });

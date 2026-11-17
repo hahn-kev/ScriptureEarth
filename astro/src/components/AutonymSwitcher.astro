@@ -25,8 +25,8 @@ import { AUTONYM_DESIGNS } from '../lib/autonym';
   (function () {
     var root = document.documentElement;
     var bar = document.querySelector('.aw');
-    // Only on pages with language cards that have an autonym.
-    if (!document.querySelector('.lang .auto')) { bar.hidden = true; document.body.classList.add('aw-off'); return; }
+    // Only on pages with language cards that have an autonym, and on home (search results).
+    if (!document.querySelector('.lang .auto') && !document.getElementById('q')) { bar.hidden = true; document.body.classList.add('aw-off'); return; }
     var btns = [].slice.call(bar.querySelectorAll('[data-k]'));
     var note = document.getElementById('aw-note');
     var hide = document.getElementById('aw-hide');
