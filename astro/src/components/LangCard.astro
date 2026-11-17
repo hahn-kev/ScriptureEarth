@@ -1,12 +1,19 @@
 ---
 import { PILLS } from '../lib/ui';
+import { cardAutonym } from '../lib/autonym';
 
 interface Props { d: any; }
 const { d } = Astro.props;
 const rights = Object.keys(d.availability).filter((k) => d.availability[k]).join(' ');
+// One markup for every design under review; html[data-autonym] picks how it shows (site.css).
+const auto = cardAutonym(d);
 ---
 <a class="lang" href={`/language/${d.identity.slug}/`} data-r={rights}>
-  <div class="top"><span class="code">{d.identity.code ?? d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
+  <div class="top"><span class="code">{d.identity.code ?? d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span>{auto.length > 0 && (
+    <span class="auto" lang={d.identity.iso} title={d.names.autonym}><bdi class="an">{auto[0].native}</bdi>{auto[0].roman && <span class="rom">{auto[0].roman}</span>}{auto.slice(1).map((p) => (
+      <span class="more">, <bdi>{p.native}</bdi>{p.roman && <span class="rom">{p.roman}</span>}</span>
+    ))}</span>
+  )}</div>
   {d.identity.variant_name && <div class="variant">{d.identity.variant_name}</div>}
   {d.countries.length > 0 && <div class="where">{d.countries.map((c: any, i: number) => (<>{i > 0 && ', '}<span data-i18n-country={c.code}>{c.name_eng}</span></>))}</div>}
   <div class="pills">{PILLS.filter((p) => d.availability[p.key]).map((p) => (

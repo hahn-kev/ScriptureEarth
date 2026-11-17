@@ -470,8 +470,77 @@ section.block {
   line-height: 1.3;
   margin-block-start: calc(var(--s3) * -0.5);
 }
+/* Autonym on a card. Designs under review: html[data-autonym] = none|a|b|c|d|e, default c
+   (AutonymSwitcher.astro). Keep the chosen one and delete the rest once decided. */
+.lang .top {
+  flex-wrap: wrap;
+  row-gap: 0.15rem;
+}
 .lang .auto {
+  flex-basis: 100%;
+  min-width: 0;
+  color: var(--text);
+  font-size: 0.95rem;
+  line-height: 1.3;
+}
+.lang .auto .more {
+  display: none;
+}
+.lang .auto .rom {
   color: var(--muted);
+  font-style: italic;
+  font-size: 0.85rem;
+  margin-inline-start: 0.4em;
+}
+html[data-autonym="none"] .lang .auto {
+  display: none;
+}
+/* A: every name, romanization in brackets, muted */
+html[data-autonym="a"] .lang .auto {
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+html[data-autonym="a"] .lang .auto .more {
+  display: inline;
+}
+html[data-autonym="a"] .lang .auto .rom {
+  color: inherit;
+  font: inherit;
+  margin-inline-start: 0.3em;
+}
+html[data-autonym="a"] .lang .auto .rom::before {
+  content: "(";
+}
+html[data-autonym="a"] .lang .auto .rom::after {
+  content: ")";
+}
+/* B, D, E: first native name only */
+html[data-autonym="b"] .lang .auto .rom,
+html[data-autonym="d"] .lang .auto .rom,
+html[data-autonym="e"] .lang .auto .rom {
+  display: none;
+}
+/* D: on the title line, after the English name */
+html[data-autonym="d"] .lang .auto {
+  flex: 0 1 auto;
+  color: var(--muted);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+/* E: autonym is the title, English name below it */
+html[data-autonym="e"] .lang .auto {
+  flex: 1 1 0;
+  color: var(--heading);
+  font-weight: 700;
+  font-size: 1.15rem;
+  line-height: 1.2;
+}
+html[data-autonym="e"] .lang .top:has(.auto) .nm {
+  order: 2;
+  flex-basis: 100%;
+  color: var(--muted);
+  font-weight: 400;
   font-size: 0.9rem;
 }
 /* Country list on a card: up to ~20 countries, so clamp to 2 lines like .alt. */
