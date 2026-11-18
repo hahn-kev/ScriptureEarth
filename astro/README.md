@@ -22,6 +22,11 @@ The dump keys entries by a row ordinal (the real key is `relationships.idx`); th
 URLs as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`. Details + how to test your key:
 [`scripts/README-dump.md`](scripts/README-dump.md).
 
+**Refreshing your local dump:** put `SE_KEY=…` (uncommented) in `config.env` in the shared data
+folder (`git config se.datadir`), then `pnpm run fetch:dump`. `pnpm run audit:fields` then lists
+any dump fields the site doesn't use yet. See
+[Get the latest dump](scripts/README-dump.md#get-the-latest-dump-quick-reference).
+
 ## Build & run
 ```bash
 pnpm install
@@ -49,7 +54,7 @@ pnpm run preview             # serve dist/
   client bundles (search, i18n localizer, browse facets, geo hint), stylesheet.
 - `public/` — static assets: `_headers`, `_redirects`, logos, favicon, and **`i18n/*.json`** (see below).
   `search-index.txt` is generated (git-ignored).
-- `functions/index.php.js` + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
+- `functions/*.php.js` (logic in `functions-lib/`, tests: `pnpm run test:redirects`) + `public/_redirects` — Cloudflare legacy-URL redirects (see `REDIRECTS.md`).
 - `scripts/` — `fetch_dump.mjs` (dump API → `data/scripture.json`), `extract.mjs` (projector → content JSON),
   `build_search_index.mjs`, `precompress_dist.mjs`, `build_sizes.mjs`/`check_sizes.mjs`, i18n/geo generators.
 - `content/`, `data/`, `public/search-index.txt`, `dist/` — **generated / local; git-ignored.**

@@ -65,6 +65,7 @@ async function main() {
     assertSafe(r.slug, `record ${r.idx} slug`);
     assertSafe(r.code, `record ${r.idx} code`);
     assertSafe(r.nm, `record ${r.idx} nm`);
+    assertSafe(r.vn, `record ${r.idx} vn`);
     for (const key of ['nms', 'alt', 'cc']) {
       for (const el of r[key]) {
         if (el === '') throw new Error(`record ${r.idx} field "${key}" contains an empty-string element`);
@@ -92,7 +93,11 @@ async function main() {
     })
     .join(RECORD_SEP);
 
-  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol];
+  // Variant name (e.g. "Traditional orthography"); empty for most records. Last line so
+  // an older decoder simply ignores it.
+  const vnCol = records.map((r) => r.vn || '').join(RECORD_SEP);
+
+  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol, vnCol];
   await writeFile(OUT_PATH, lines.join(LINE_SEP), 'utf8');
   console.error(`  search-index.txt        ${records.length}  ${Math.round((await import('node:fs')).statSync(OUT_PATH).size / 1024)} KB`);
 }

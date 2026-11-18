@@ -1,0 +1,68 @@
+---
+// Legacy menu: About › Content providers and partners (00eng-CTPHC.php?I=CU). Body English only.
+// The legacy logos are left out: text cards keep the page light and need no new assets.
+import Prose from '../../layouts/Prose.astro';
+import { CONTACT_EMAIL } from '../../lib/siteLinks';
+
+const groups: { heading: string; orgs: { name: string; urls: string[] }[] }[] = [
+  {
+    heading: 'Some of our collaborators',
+    orgs: [
+      { name: 'Faith Comes By Hearing / Hosanna / Bible.is', urls: ['https://www.faithcomesbyhearing.com/'] },
+      { name: 'Jesus Film Media', urls: ['https://jesusfilmmedia.org/'] },
+      { name: 'eBible', urls: ['https://ebible.org/'] },
+      { name: 'YouVersion', urls: ['https://www.youversion.com/'] },
+      { name: 'Biblica', urls: ['https://www.biblica.com/'] },
+      { name: 'Find a Bible', urls: ['https://find.bible/'] },
+      { name: 'Viña Studios', urls: ['https://www.vinyastudios.org/en/', 'https://deditos.org/'] },
+      { name: 'Global Recordings Network', urls: ['https://globalrecordings.net/en'] },
+    ],
+  },
+  {
+    heading: 'Wycliffe',
+    orgs: [
+      { name: 'Wycliffe Global Alliance', urls: ['https://www.wycliffe.net/'] },
+      { name: 'Wycliffe USA', urls: ['https://www.wycliffe.org/'] },
+      { name: 'Wycliffe UK', urls: ['https://www.wycliffe.org.uk/'] },
+      { name: 'Wycliffe Canada', urls: ['https://www.wycliffe.ca/'] },
+      { name: 'Wycliffe Australia', urls: ['https://wycliffe.org.au/'] },
+    ],
+  },
+  {
+    heading: 'Bible Societies',
+    orgs: [
+      { name: 'American Bible Society', urls: ['https://www.americanbible.org/'] },
+      { name: 'Canadian Bible Society', urls: ['https://www.biblesociety.ca/'] },
+      { name: 'Bible Society of Brazil', urls: ['https://sbb.org.br/'] },
+    ],
+  },
+  {
+    heading: 'Bible League',
+    orgs: [
+      { name: 'Liga Bíblica México', urls: ['https://www.laligabiblica.org.mx/'] },
+      { name: 'Bible League (USA)', urls: ['https://www.bibleleague.org/'] },
+    ],
+  },
+  {
+    heading: 'Other websites',
+    orgs: [{ name: 'MegaVoice', urls: ['https://megavoice.com/'] }],
+  },
+];
+const host = (u: string) => u.replace(/^https?:\/\//, '').replace(/\/$/, '');
+---
+<Prose title="Content providers and partners" titleKey="nav.partners" underAbout wide>
+  <ul class="org-grid">
+    <li><b>Questions or feedback</b><a href={`mailto:${CONTACT_EMAIL}`}>{CONTACT_EMAIL}</a></li>
+    <li><b>SIL Global</b><a href="https://www.sil.org/">www.sil.org</a></li>
+  </ul>
+  {groups.map((g) => (
+    <>
+      <h2>{g.heading}</h2>
+      <ul class="org-grid">
+        {g.orgs.map((o) => (
+          <li><b>{o.name}</b>{o.urls.map((u) => <a href={u} rel="noopener">{host(u)}</a>)}</li>
+        ))}
+      </ul>
+    </>
+  ))}
+</Prose>

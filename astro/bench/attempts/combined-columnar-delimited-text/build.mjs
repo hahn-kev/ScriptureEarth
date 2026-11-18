@@ -86,6 +86,8 @@ export async function build({ sourcePath, dir }) {
     })
     .join(RECORD_SEP);
 
-  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol];
+  const vnCol = records.map((r) => r.vn || '').join(RECORD_SEP);
+
+  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol, vnCol];
   await writeFile(path.join(dir, 'data.txt'), lines.join(LINE_SEP), 'utf8');
 }

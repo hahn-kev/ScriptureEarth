@@ -5,11 +5,14 @@
 // same data the live site's per-language nav renders. See scripts/README-dump.md.
 //
 // Run: node scripts/extract.mjs   (then build_search_index.mjs — `pnpm run extract`)
+// Reading a new dump field? Add it to FIELDS in scripts/dump_fields.mjs, or the unused-field
+// report (pnpm run audit:fields, and the preview CI job) keeps flagging it.
 import { mkdirSync, writeFileSync, statSync, readFileSync } from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { loadPlaylistClips } from './playlistTxt.mjs';
 import { dataPaths } from './data-dir.mjs';
+import { analyse } from './dump_fields.mjs';
 import { BOOK_EN, parseAudioSet, label, compose, part, en, ph, PLACEHOLDERS } from './resource-labels.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -180,6 +183,27 @@ function playlistItems(pl) {
   }
   return [];
 }
+// Other SE-hosted titles (the legacy other_titles table): stories, devotionals, ePubs, …
+//   current (2026-11): se_media.other_text / se_media.other_audio /
+//     se_download_media.other_video_download, each { 0:{ title, summary, url } }
+//   older: other_titles.{other_PDF,other_audio,other_video_download} = { 0: url } (no titles)
+// Normalize to [{ url, title, summary }] per kind.
+function otherTitles(r) {
+  const rows = (o) => linkRows(o).filter((x) => s(x.url));
+  const old = r.other_titles || {};
+  return {
+    text: [...rows(r.se_media?.other_text), ...rows(old.other_PDF)],
+    audio: [...rows(r.se_media?.other_audio), ...rows(old.other_audio)],
+    video: [...rows(r.se_download_media?.other_video_download), ...rows(old.other_video_download)],
+  };
+}
+// The legacy page printed "<title>: <summary>" (summary = the other_title column). Either
+// may be blank or carry a stray "- " / ":" — strip those before joining.
+function otherName(o) {
+  const clean = (v) => t(v).replace(/[\s:–—-]+$/, '');
+  const parts = [clean(o.title), clean(o.summary)].filter(Boolean);
+  return parts.length ? { name: parts.join(': ') } : compose(ph('ph.title'));
+}
 // Fallback title when the dump gives no playlist title: drop .txt + trailing language
 // code, special-case JESUS Film, else split CamelCase/separators into words.
 function playlistTitle(file) {
@@ -205,6 +229,8 @@ function res(group, kind, fmt, name, source, url, external, meta = {}) {
   if (cleaned.missing) { out.missing = cleaned.missing; delete cleaned.missing; }
   else if (!url && !cleaned.books) out.missing = cleaned.playlistFile ? 'playlist' : 'link';
   if (cleaned.zipMissing) { out.zipMissing = true; delete cleaned.zipMissing; }
+  // A longer description shown as its own line under the name (e.g. eBible's summary).
+  if (cleaned.desc) { out.desc = cleaned.desc; delete cleaned.desc; }
   return out;
 }
 
@@ -372,12 +398,12 @@ for (const e of entries) {
   const ntPdf = testamentPdf(iso, media.text?.NT, 'NT');
   if (otPdf) R.read.push(otPdf);
   if (ntPdf) R.read.push(ntPdf);
-  // other_titles.* are bare URLs: the legacy title columns (other, other_title) aren't in
-  // the dump yet (DUMP-API-REQUESTS.md), so they show a "Title missing" placeholder with
-  // the file name as the source line.
-  for (const u of vals(r.other_titles?.other_PDF)) {
-    const isPdf = /\.pdf(\?|$)/i.test(u);
-    R.read.push(res('read', isPdf ? 'pdf' : 'download', isPdf ? 'PDF' : fileExt(u), compose(ph('ph.title')), fileName(u), asset(iso, 'PDF', u), false));
+  // Other titles: "<title>: <summary>" (see otherName), file name as the source line. A row
+  // with no title or summary (older dumps) shows a "Title missing" placeholder.
+  const others = otherTitles(r);
+  for (const o of others.text) {
+    const u = s(o.url), isPdf = /\.pdf(\?|$)/i.test(u);
+    R.read.push(res('read', isPdf ? 'pdf' : 'download', isPdf ? 'PDF' : fileExt(u), otherName(o), fileName(u), asset(iso, 'PDF', u), false));
   }
   // se_ePub: { 0: { title: "format", url: "Keley-i Bible.epub" } } — a bare filename whose
   // folder on the server is unknown, and a junk title. Placeholder until the dump has a URL.
@@ -399,8 +425,9 @@ for (const e of entries) {
       first ? first.url : null, first ? ext(first.url) : false,
       { clips: clips.length > 1 ? clips : undefined, playlistFile: base(it.file), zipUrl: audioZipUrl(iso, clips) }));
   }
-  for (const u of vals(r.other_titles?.other_audio)) {
-    R.listen.push(res('listen', 'audio', 'MP3', compose(ph('ph.title')), fileName(u), asset(iso, 'audio', u), false, { direct: true }));
+  for (const o of others.audio) {
+    const u = s(o.url);
+    R.listen.push(res('listen', 'audio', 'MP3', otherName(o), fileName(u), asset(iso, 'audio', u), false, { direct: true }));
   }
 
   // watch: SE playlists, other SE video, then partners. A streaming playlist takes its
@@ -426,8 +453,9 @@ for (const e of entries) {
     watchPlaylist(it, playlistClips.get(`${iso}\t${base(it.file)}`) || [], dl);
   }
   for (const d of dlVideo.filter((x) => !x.used)) watchPlaylist(d, playlistClips.get(`${iso}\t${d.base}`) || [], d);
-  for (const u of vals(r.other_titles?.other_video_download)) {
-    R.watch.push(res('watch', 'video', 'MP4', compose(ph('ph.title')), fileName(u), asset(iso, 'video', u), false, { direct: true }));
+  for (const o of others.video) {
+    const u = s(o.url);
+    R.watch.push(res('watch', 'video', 'MP4', otherName(o), fileName(u), asset(iso, 'video', u), false, { direct: true }));
   }
 
   // Bible.is in read/listen/watch per its media_type code (1–8), after SE's own items.
@@ -448,7 +476,12 @@ for (const e of entries) {
     const title = t(String(l.title || '').replace(/^\s*(Bible\.com\s*\(YouVersion\)|YouVersion(\.com)?)\s*/i, ''));
     R.read.push(res('read', 'web', 'Web', title ? L(title) : { name: 'YouVersion' }, 'Bible.com (YouVersion)', url(l), ext(url(l))));
   }
-  for (const l of linkRows(lm.eBible)) R.read.push(res('read', 'web', 'Web', L(l.title, 'res.ebible'), 'eBible.org', url(l), ext(url(l))));
+  // eBible: title is usually the vernacular publication name; description is an English
+  // summary ("The New Testament in the … language"), shown as a line under it.
+  for (const l of linkRows(lm.eBible)) {
+    const nm = L(l.title, 'res.ebible'), desc = t(l.description);
+    R.read.push(res('read', 'web', 'Web', nm, 'eBible.org', url(l), ext(url(l)), { desc: desc && desc !== nm.name ? desc : null }));
+  }
   for (const w of linkRows(r.watch)) {
     const jf = String(w.JesusFilm) === '1', yt = String(w.YouTube) === '1';
     const nm = L(w.watch_what, jf ? 'res.jesusFilm' : 'res.video');
@@ -473,6 +506,11 @@ for (const e of entries) {
   const sw = r.se_other_software || {};
   for (const l of linkRows(sw.GoBible)) R.app.push(res('app', 'download', 'Java', L(l.title, 'res.gobible'), 'GoBible', asset(iso, 'study', url(l)), false));
   for (const l of linkRows(sw.MySword)) R.app.push(res('app', 'download', 'MySword', L(l.title, 'res.mysword'), 'MySword', asset(iso, 'study', url(l)), false));
+  // BibleShow.net: a Windows Bible program per publication ({ publication, url } → get.php?file=….exe).
+  for (const l of linkRows(lm['BibleShow.net'])) {
+    const nm = L(l.publication || l.title);
+    R.app.push(res('app', 'download', 'Windows', nm.name ? nm : { name: 'BibleShow' }, 'BibleShow.net', url(l), ext(url(l))));
+  }
 
   // buy: the buy table, then links rows flagged buy (e.g. multilanguagemedia.org).
   for (const b of linkRows(r.buy)) R.buy.push(res('buy', 'buy', 'Buy', L(t(b.title) || t(b.testament) || t(b.buy_what), 'res.printed'), s(b.organization) || en('src.pod'), url(b), ext(url(b))));
@@ -521,8 +559,16 @@ for (const e of entries) {
     if (typeof v === 'string' && v.trim()) localizedNames.push(v.trim());
   }
   const alt = [...new Set(vals(r.alternate_language_names))]; // the DB repeats some names
+  // The language's own name(s), as curated in the SE database (may list several, with romanizations).
+  const autonym = t(ln[AUTONYM_KEY]) || null;
+  if (autonym && autonym.toLowerCase() !== name.toLowerCase()) localizedNames.push(autonym);
   const countries = countriesOf(r);
-  const slug = makeSlug(iso, r.rod, r.var_code, idx);
+  // Deaf languages without an ISO 639-3 code carry the placeholder ISO "qqq"; show their
+  // ROD code instead, as the Sign Language Indicator (SLI), e.g. "AO84" (AO = country).
+  // Their slug swaps qqq for sgn (ISO 639-2's sign-language group): /language/sgn-ao84/.
+  const sli = iso.toLowerCase() === 'qqq' && s(r.rod) ? s(r.rod) : '';
+  const code = sli || iso;
+  const slug = makeSlug(sli ? 'sgn' : iso, r.rod, r.var_code, idx);
 
   languages.push({
     idx,
@@ -530,12 +576,14 @@ for (const e of entries) {
       iso,
       slug,
       rod: r.rod,
+      code,
+      code_kind: sli ? 'sli' : 'iso',
       variant_code: r.var_code || '',
       variant_name: r.var_name || '',
       iso_query: `iso=${iso}`,
       idx_query: `idx=${idx}`,
     },
-    names: { default_locale: 'eng', localized: { eng: name }, autonym: null, alt_names: alt },
+    names: { default_locale: 'eng', localized: { eng: name }, autonym, alt_names: alt },
     countries,
     availability: avail,
     resources: R,
@@ -544,8 +592,9 @@ for (const e of entries) {
   search.push({
     idx,
     slug,
-    code: iso,
+    code,
     nm: name,
+    vn: r.var_name || '',
     auto: null,
     nms: [...new Set(localizedNames)].filter((n) => n !== name),
     alt,
@@ -615,14 +664,18 @@ function auditData(ents, langs) {
     ['links.YouVersion', (r) => linkRows(r.links_media?.YouVersion).length, (d) => some(d.resources.read, (x) => x.source === 'Bible.com (YouVersion)')],
     ['links.eBible',     (r) => linkRows(r.links_media?.eBible).length, (d) => some(d.resources.read, (x) => x.source === 'eBible.org')],
     ['links.Bible.is',   (r) => linkRows(r.links_media?.['Bible.is']).length, (d) => some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => x.source === 'Faith Comes By Hearing' && x.name !== 'Bible.is Gospel Film')],
+    ['links.BibleShow',  (r) => linkRows(r.links_media?.['BibleShow.net']).length, (d) => some(d.resources.app, (x) => x.source === 'BibleShow.net')],
+    ['autonym',          (r) => s(r.language_name?.[AUTONYM_KEY]), (d) => !!d.names.autonym],
     ['links.GRN',        (r) => linkRows(r.links_media?.GRN).length, (d) => some(d.resources.other, (x) => x.source === 'Global Recordings Network')],
     ['links.Kalaam',     (r) => linkRows(r.links_media?.Kalaam_websites).length, (d) => d.resources.other.length > 0],
     ['SIL_link',         (r) => s(r.SIL_link), (d) => some(d.resources.other, (x) => x.source === 'SIL')],
     ['watch',            (r) => linkRows(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x) && x.kind !== 'viewer' && !x.meta?.direct && x.source !== 'Faith Comes By Hearing')],
     ['buy',              (r) => linkRows(r.buy).length, (d) => d.resources.buy.length > 0],
     ['se_apps',          anyApp, (d) => some(d.resources.app, (x) => x.kind === 'app')],
-    ['dl.playlist_video', (r) => playlistItems(r.se_download_media?.playlist_video).length, (d) => some(d.resources.watch, (x) => x.meta?.zipUrl)],
-    ['other_PDF',        (r) => vals(r.other_titles?.other_PDF).length, (d) => some(d.resources.read, (x) => x.label?.[0]?.[0] === 'ph.title')],
+    ['dl.playlist_video', (r) => playlistItems(r.se_download_media?.playlist_video).length, (d) => some(d.resources.watch, (x) => x.meta?.zipUrl || x.zipMissing)],
+    // other titles: emitted = a row whose URL is one of this language's other-title files.
+    ...['text', 'audio', 'video'].map((k) => [`other_${k}`, (r) => otherTitles(r)[k].length,
+      (d, r) => { const files = new Set(otherTitles(r)[k].map((o) => fileName(s(o.url)))); return some([...d.resources.read, ...d.resources.listen, ...d.resources.watch], (x) => files.has(x.source)); }]),
     ['sw.GoBible',       (r) => linkRows(r.se_other_software?.GoBible).length, (d) => some(d.resources.app, (x) => x.source === 'GoBible')],
     ['sw.MySword',       (r) => linkRows(r.se_other_software?.MySword).length, (d) => some(d.resources.app, (x) => x.source === 'MySword')],
     ['sw.theWord',       (r) => Object.keys(r.se_other_software?.theWord || {}).length, (d) => some(d.resources.other, (x) => x.source === 'theWord')],
@@ -635,7 +688,7 @@ function auditData(ents, langs) {
       if (!rawFn(e.relationships || {})) continue;
       raw++;
       const d = byIdx.get(Number(e.relationships?.idx));
-      if (d && emitFn(d)) emitted++;
+      if (d && emitFn(d, e.relationships || {})) emitted++;
     }
     const flag = raw > 0 && emitted === 0 ? '  ✗ SHAPE CHANGED' : (emitted < raw * 0.5 ? '  ⚠ partial' : '');
     console.error(`  ${name.padEnd(18)} ${String(raw).padStart(5)} → ${String(emitted).padStart(5)}${flag}`);
@@ -651,6 +704,12 @@ function auditData(ents, langs) {
   console.error(`  watch titles: ${wTitled}/${wRows}   buy titles: ${bTitled}/${bRows}`);
   if (wRows > 0 && wTitled === 0) failures.push('watch: 0 rows have a real title (dump omits watch_what/organization)');
   if (bRows > 0 && bTitled === 0) failures.push('buy: 0 rows have a real title (dump omits buy_what/organization)');
+  // A raw-vs-emitted check can't see a field that MOVED: the old path reads 0 → 0 and passes
+  // (other_titles.* → se_media.other_text etc. went unnoticed that way). dump_fields.mjs knows
+  // every path the projector reads; any of those groups with no data at all is a failure.
+  const fields = analyse(raw);
+  for (const id of fields.missing) failures.push(`${id}: no data anywhere in the dump — renamed or moved? (pnpm run audit:fields)`);
+  if (fields.unclassified.length) console.error(`  ${fields.unclassified.length} dump field path(s) not read by extract.mjs — see pnpm run audit:fields`);
   return failures;
 }
 
@@ -675,7 +734,7 @@ console.error('writing content/...');
 dump('languages.json', languages);
 dump('countries.json', countriesOut);
 dump('search-index.json', search);
-// Legacy-URL resolver map for functions/index.php.js (bundled into the Pages Function at
+// Legacy-URL resolver map for functions-lib/route.js (bundled into the Pages Functions at
 // deploy time). idx -> slug for ?idx= deep links; iso -> slug for ISOs with exactly one
 // entry; multi = ISOs shared by several entries (the /language/ chooser page handles those).
 {

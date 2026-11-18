@@ -2,6 +2,8 @@
 import locales from '../../public/i18n/locales.json';
 import { I18N_VERSION } from '../lib/i18nVersion';
 import { DEFAULT_SET, ICON_SETS } from '../lib/icons.mjs';
+import SiteMenu from '../components/SiteMenu.astro';
+import { ABOUT_LINKS, CONTACT, DONATE, HELP, PROMOTION } from '../lib/siteLinks';
 import '../styles/site.css';
 import '../styles/icons.css';
 
@@ -97,14 +99,19 @@ const iconSets = Object.keys(ICON_SETS);
         <option value={code}>{meta.label}</option>
       ))}
     </select></label>
+    <SiteMenu />
   </div></header>
 
   <slot />
 
   <footer class="site"><div class="shell">
     <div class="fin">
-      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/"><span class="ic ic-languages" aria-hidden="true"></span><span data-i18n="nav.languages">Languages</span></a><a href="/countries/"><span class="ic ic-countries" aria-hidden="true"></span><span data-i18n="nav.countries">Countries</span></a></div>
-      <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span></div>
+      <div class="fcol"><b>ScriptureEarth</b><a href="/browse/"><span class="ic ic-languages" aria-hidden="true"></span><span data-i18n="nav.languages">Languages</span></a><a href="/countries/"><span class="ic ic-countries" aria-hidden="true"></span><span data-i18n="nav.countries">Countries</span></a>
+        {[HELP, CONTACT].map((l) => <a href={l.href}><span data-i18n={l.key}>{l.label}</span></a>)}
+        <a href={DONATE.href} target="_blank" rel="noopener"><span data-i18n={DONATE.key}>{DONATE.label}</span> <span class="ic ic-open" aria-hidden="true"></span></a>
+        <a href={PROMOTION.href}><span data-i18n={PROMOTION.key}>{PROMOTION.label}</span></a></div>
+      <div class="fcol"><b data-i18n="footer.about">About</b><span class="muted" data-i18n="footer.ministry">A ministry of SIL Global</span>
+        {ABOUT_LINKS.map((l) => <a href={l.href}><span data-i18n={l.key}>{l.label}</span></a>)}</div>
       <div class="fcol icon-switch"><b id="icon-set-label">Icon set</b>
         <select id="icon-set-picker" aria-labelledby="icon-set-label">
           {iconSets.map((id) => <option value={id}>{ICON_SETS[id].label}</option>)}

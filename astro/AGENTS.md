@@ -23,27 +23,28 @@ content/countries.json + scripts/data/ne_110m_countries.geojson + map-points.jso
 
 **Source of truth = the consolidated JSON dump** (`data/scripture.json`), one pre-joined object from the API (see `scripts/README-dump.md`). Top-level keys are row ordinals; the real language key is `relationships.idx`. `extract.mjs` (the projector) builds asset URLs from basenames as `scriptureearth.org/data/<iso>/<PDF|audio|video>/<file>`. The dump's shape has changed several times; the projector tolerates every shape seen so far (`linkRows()`, `playlistItems()`), and `SE_STRICT=1` audits a new dump.
 
-**Build:** `getCollection('languages'|'countries')` → English HTML. Language `id` = `String(idx)`; country `id` = `code`. Internal key is `idx`; vanity slug is `iso[-rod[-var]]` (ISO is not unique; dump may suffix `-{idx}`).
+**Build:** `getCollection('languages'|'countries')` → English HTML. Language `id` = `String(idx)`; country `id` = `code`. Internal key is `idx`; vanity slug is `iso[-rod[-var]]`, lowercase (ISO is not unique; dump may suffix `-{idx}`). Deaf languages with the placeholder ISO `qqq` show their ROD code as the SLI (Sign Language Indicator, `identity.code`) and use slug `sgn-<rod>`.
 
 **Client search (home only):** lazy MiniSearch on first query, 120ms debounce, fetch `/search-index.txt` (columnar `\x1f` / tab / newline). Decode looks wrong (`length < 100`) → `/search-index.fallback.txt`. Prefix + fuzzy 0.2 + AND, cap 300. Then `window.__seApplyI18n(results)`. Header form `GET /?q=` is **not** read; only `#q` on the hero form searches.
 
 **i18n:** sync boot in `src/layouts/Base.astro` (`?lang=` → `localStorage se-loc` → first supported entry of `navigator.languages`, matched on the primary subtag like the legacy PHP's Accept-Language walk → `eng`). Bundled `src/scripts/i18n.js` fetches `/i18n/chrome.<loc>.json`, `names.<loc>.json`, `autonyms.json` with `?v=` from `src/lib/i18nVersion.ts`. Name chain: locale names → autonyms → baked English. The 15 locales come from `public/i18n/locales.json`, imported by both `Base.astro` and `i18n.js`. RTL: `arb`, `fas`.
 
-**Redirects:** `public/_redirects` (path-only, first-match-wins) + `functions/index.php.js` (query-string `/index.php` only; imports the generated `content/lang-map.json` for `?idx=`/`?iso=` lookups — extract before deploy). Functions run **before** `_redirects`. Shared-ISO `?iso=` → `/language/` chooser page. Vanity `/:iso` → `/language/<same>/` 301. Guard `200` rewrites for real routes/assets **above** the ISO catch-all. HTTP/www: Cloudflare dashboard, not this repo. Details: `REDIRECTS.md`.
+**Redirects:** `public/_redirects` (path-only, first-match-wins) + `functions/*.php.js` (one route per legacy entry point: `/index.php`, `00<loc>.php`, alias index files like `00i-Scripture_Index.php`; query-string deep links; logic in `functions-lib/legacy-redirect.js`, which `functions-lib/route.js` binds to the generated `content/lang-map.json` for `?idx=`/`?iso=` lookups — extract before deploy). Locale entry points carry `?lang=<loc>` onto the target. Every `.php` row in `_redirects` that targets the home page needs a route file. Functions run **before** `_redirects`. Shared-ISO `?iso=` → `/language/` chooser page. Unknown ISO/idx/ROD → the 404 page with a 404 status, never a redirect home. Vanity `/:iso` → `/language/<same>/` 301. Guard `200` rewrites for real routes/assets **above** the ISO catch-all. HTTP/www: Cloudflare dashboard, not this repo. Details: `REDIRECTS.md`.
 
 ## Key Directories
 
 | Path | Role |
 |---|---|
-| `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/` |
+| `src/pages/` | Routes: `/`, `/browse/`, `/language/[slug]/`, `/countries/`, `/country/[code]/`; site-menu pages `/help/`, `/about/` (+ `partners/`, `terms/`, `privacy/`), `/contact/`, `/promotion/` (layout `src/layouts/Prose.astro`, English bodies) |
 | `src/layouts/Base.astro` | Chrome, locale boot, header search |
-| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`) |
+| `src/components/` | `LangCard.astro`, `ResourceRow.astro`, `WorldMap.astro` (home map; its CSS lives here, not `site.css`), `SiteMenu.astro` (header ☰: a `<details>` disclosure, works without JS; a tiny inline script adds light-dismiss; links from `src/lib/siteLinks.ts`, shared with the footer) |
 | `src/lib/ui.ts` | Shared vocab: `GROUPS` vs `PILLS`, action labels |
 | `src/scripts/` | Client bundles: `search.js`, `i18n.js`, `browse.js`, `geo-suggest.js`, `world-map.js` (hashed Vite bundles; never inline) |
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
 | `scripts/` | Projector (`extract.mjs`), dump fetch, search-index encoder, precompress, size bench, i18n/geo generators |
 | `public/i18n/` | Chrome + names catalogs (committed) |
-| `functions/` | Pages Function for `/index.php` |
+| `functions/` | Pages Function routes for the legacy `.php` entry points |
+| `functions-lib/` | Shared legacy-redirect resolver + its `node:test` tests (`pnpm run test:redirects`) |
 | `bench/` | Search-index encoding bake-off + `SIZE-BENCH-SPEC.md` |
 | `content/` | Generated catalog JSON (gitignored) |
 
@@ -65,6 +66,8 @@ pnpm run setup:data
 SE_KEY=… pnpm run build:fresh   # fetch:dump → extract (project) → astro build
 #   or step by step:
 SE_KEY=… pnpm run fetch:dump    # www.scriptureearth.org/api/db_dump.php?v=1&key=… → data/scripture.json
+#   (or put SE_KEY=… uncommented in <se.datadir>/config.env and drop the prefix)
+pnpm run audit:fields           # dump fields extract.mjs doesn't read (new link types etc.)
 pnpm run build:dump             # extract.mjs && build_search_index.mjs, then astro build
 
 # Build from an existing data/scripture.json (skip fetch)
@@ -82,7 +85,7 @@ pnpm run deploy          # current dist/ only (still runs predeploy)
 
 CI: three workflows share the composite action `.github/actions/build-site` (pnpm install → `fetch:dump` → `build:dump`).
 - `deploy.yml` — push to `main`: build, then publish to Cloudflare Pages **only if** `CLOUDFLARE_API_TOKEN` + `CLOUDFLARE_ACCOUNT_ID` secrets exist (else build-only).
-- `preview.yml` — PRs to `main` touching `astro/**`: per-branch Pages preview + PR comment; self-gates on secrets.
+- `preview.yml` — PRs to `main` touching `astro/**`: per-branch Pages preview + PR comment; self-gates on secrets. Also runs `dump_fields.mjs` (unused dump fields → job summary + warnings) and its tests.
 - `size-benchmark.yml` — PRs to `main` touching `astro/**`: size regression gate + sticky comment.
 
 `secrets.SE_KEY` is all that's required for a build — the endpoint (`/api/db_dump.php` on `www.scriptureearth.org`, `v=1`) is the built-in default; `vars.SE_DUMP_PATH`/`vars.SE_BASE`/`vars.SE_DUMP_URL` are optional overrides. See `deploy.md` and `scripts/README-dump.md`. Key is env-only (`SE_KEY`); never cached.
@@ -96,7 +99,8 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 - Language pages list "Similar languages": entries sharing the ISO code (`getStaticPaths` in `language/[slug].astro`). Private-use codes (`qaa`–`qtz`, e.g. `qqq` = 18 unrelated sign languages) never group.
 - Cards: `<a class="lang" href="…">`. i18n chrome: `data-i18n`, placeholders `data-i18n-ph`, aria-labels `data-i18n-label`, names `data-i18n-name={idx}`.
 - Collection data typed as `any`. Home MiniSearch lives in an Astro `<script>` (processed); browse facets are `is:inline`.
-- CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`.
+- CSS: logical properties for RTL; light theme only. Mobile ≤760px hides `nav.main`; its links move into the ☰ panel (`.mobile-only`), and the ☰ button sits beside the search on header row 2.
+- Site menu/footer links live in `src/lib/siteLinks.ts`; add a link there, not in markup. Promotion originals stay on the legacy host (see `CURRENT-ISSUES.md`).
 - Adding a top-level dotted file under `public/` needs a `_redirects` `200` guard or `/:iso` swallows it.
 - Logos: `public/*.jxl` are lossless JPEG XL (`cjxl in.png out.jxl -d 0 -e 11 --allow_expert_options`, libjxl ≥0.11), served via `<picture>`: `.jxl` → `.webp` → lossless `.png` `<img>` for old browsers. Lossless AVIF tested 40–110% larger, so no AVIF. New `.jxl` files need a `_headers` `Content-Type: image/jxl` entry and a `_redirects` guard.
 - Changing chrome keys: update `scripts/i18n/en.json` (English master, not copied to public) **and** every `public/i18n/chrome.<loc>.json`. Adding a UI locale: an entry in `public/i18n/locales.json` (`bcp` is what browser languages match against) + catalogs.
@@ -117,7 +121,7 @@ CI: three workflows share the composite action `.github/actions/build-site` (pnp
 | `scripts/gen_map.mjs` | `content/countries.json` → `content/world-map.svg` (home map; run by `extract`, or `pnpm run gen:map`) |
 | `scripts/precompress_dist.mjs` | In-place brotli on `dist/search-index.txt` + `_headers` |
 | `scripts/build_sizes.mjs`, `scripts/check_sizes.mjs` | Size-regression gate (`bench/SIZE-BENCH-SPEC.md`) |
-| `public/_redirects`, `functions/index.php.js`, `src/pages/language/index.astro` | Legacy URL map (+ bundled `content/lang-map.json`, + shared-ISO chooser) |
+| `public/_redirects`, `functions/*.php.js`, `functions-lib/`, `src/pages/language/index.astro` | Legacy URL map (+ bundled `content/lang-map.json`, + shared-ISO chooser) |
 | `public/_headers` | Long-cache `/_astro/*` and `/i18n/*` only |
 
 Known gaps / fidelity notes live in `CURRENT-ISSUES.md`; outstanding asks to the API developer in `DUMP-API-REQUESTS.md`. Other docs: `README.md`, `deploy.md`, `REDIRECTS.md`, `bench/README.md`.
@@ -140,6 +144,7 @@ Automated gates:
 pnpm run bench:search-index   # encoding bake-off; hash mismatch → exit 1 (needs content/search-index.json)
 pnpm run bench:size           # cold-load size diff vs production sizes.json (needs dist/)
 SE_STRICT=1 pnpm run extract  # dump-shape audit; not in CI
+pnpm run audit:fields         # unused/new dump fields; when extract.mjs starts reading a field, add it to FIELDS in scripts/dump_fields.mjs
 ```
 
-Untested in-repo: pages/components, i18n.js, `_redirects` / Pages Function, precompress fallback path, slug collision logic.
+Untested in-repo: pages/components, i18n.js, `_redirects` ordering and Pages routing (the resolver itself is tested: `pnpm run test:redirects`), precompress fallback path, slug collision logic.
