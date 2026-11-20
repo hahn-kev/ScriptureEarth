@@ -34,5 +34,6 @@ export const AUTONYM_DESIGNS = [
   { key: 'c', label: 'Native + romanization', note: 'The first native name, followed by its romanization in small italics when the data has one.' },
   { key: 'd', label: 'Inline after the name', note: 'The first native name on the same line as the English name, cut off with an ellipsis when it is long.' },
   { key: 'e', label: 'Autonym as the title', note: 'The native name becomes the card title, and the English name moves to the line below.' },
+  { key: 'f', label: 'Title + romanization', note: 'Like E, with the romanization after the native name in smaller text, and the English name below in larger bold text.' },
 ] as const;
 export const DEFAULT_AUTONYM_DESIGN = 'c';
