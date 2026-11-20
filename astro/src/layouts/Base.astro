@@ -3,6 +3,8 @@ import locales from '../../public/i18n/locales.json';
 import { I18N_VERSION } from '../lib/i18nVersion';
 import { DEFAULT_SET, ICON_SETS } from '../lib/icons.mjs';
 import SiteMenu from '../components/SiteMenu.astro';
+import AutonymSwitcher from '../components/AutonymSwitcher.astro';
+import { AUTONYM_DESIGNS, DEFAULT_AUTONYM_DESIGN } from '../lib/autonym';
 import { ABOUT_LINKS, CONTACT, DONATE, HELP, PROMOTION } from '../lib/siteLinks';
 import '../styles/site.css';
 import '../styles/icons.css';
@@ -72,6 +74,20 @@ const iconSets = Object.keys(ICON_SETS);
       window.__seSetIcons(saved || defaultIconSet);
     })();
   </script>
+  <!-- Temporary (autonym card design review): ?autonym= → localStorage se-autonym → default. -->
+  <script is:inline define:vars={{ autonymKeys: AUTONYM_DESIGNS.map((d) => d.key), defaultAutonym: DEFAULT_AUTONYM_DESIGN }}>
+    (function () {
+      window.__seSetAutonym = function (k) {
+        if (autonymKeys.indexOf(k) === -1) k = defaultAutonym;
+        document.documentElement.setAttribute('data-autonym', k);
+        return k;
+      };
+      var k = new URLSearchParams(location.search).get('autonym');
+      if (k && autonymKeys.indexOf(k) !== -1) { try { localStorage.setItem('se-autonym', k); } catch (e) {} }
+      else { try { k = localStorage.getItem('se-autonym'); } catch (e) {} }
+      window.__seSetAutonym(k);
+    })();
+  </script>
   <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
@@ -139,5 +155,6 @@ const iconSets = Object.keys(ICON_SETS);
       });
     })();
   </script>
+  <AutonymSwitcher />
 </body>
 </html>

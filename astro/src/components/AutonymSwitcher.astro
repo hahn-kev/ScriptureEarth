@@ -1,0 +1,94 @@
+---
+// Temporary: a bar for comparing autonym card designs during review. Base.astro sets
+// html[data-autonym] before paint from ?autonym= or localStorage; this bar changes it.
+// Delete this component (and the head script in Base.astro) once a design is chosen.
+import { AUTONYM_DESIGNS } from '../lib/autonym';
+---
+<nav class="aw" aria-label="Autonym card designs">
+  <div class="aw-in">
+    <div class="aw-head">
+      <span class="aw-eyebrow">Autonym card design</span>
+      <span class="aw-note" id="aw-note"></span>
+      <button type="button" class="aw-hide" id="aw-hide" aria-expanded="true">Hide</button>
+    </div>
+    <div class="aw-btns" id="aw-btns" role="radiogroup" aria-label="Design">
+      {AUTONYM_DESIGNS.map((v) => (
+        <button type="button" role="radio" data-k={v.key} data-note={v.note}>
+          <b>{v.key === 'none' ? '–' : v.key.toUpperCase()}</b><span>{v.label}</span>
+        </button>
+      ))}
+    </div>
+  </div>
+</nav>
+
+<script is:inline>
+  (function () {
+    var root = document.documentElement;
+    var bar = document.querySelector('.aw');
+    // Only on pages with language cards that have an autonym, and on home (search results).
+    if (!document.querySelector('.lang .auto') && !document.getElementById('q')) { bar.hidden = true; document.body.classList.add('aw-off'); return; }
+    var btns = [].slice.call(bar.querySelectorAll('[data-k]'));
+    var note = document.getElementById('aw-note');
+    var hide = document.getElementById('aw-hide');
+    function show(k) {
+      btns.forEach(function (b) {
+        var on = b.getAttribute('data-k') === k;
+        b.setAttribute('aria-checked', String(on));
+        if (on) note.textContent = b.getAttribute('data-note');
+      });
+    }
+    function set(k) {
+      k = window.__seSetAutonym(k);
+      show(k);
+      try { localStorage.setItem('se-autonym', k); } catch (e) {}
+      var u = new URL(location.href);
+      u.searchParams.set('autonym', k);
+      history.replaceState(history.state, '', u);
+    }
+    btns.forEach(function (b) { b.addEventListener('click', function () { set(b.getAttribute('data-k')); }); });
+    document.addEventListener('keydown', function (e) {
+      if (e.altKey || e.ctrlKey || e.metaKey || (e.target.closest && e.target.closest('input,textarea,select'))) return;
+      if (e.key !== 'ArrowLeft' && e.key !== 'ArrowRight') return;
+      var keys = btns.map(function (b) { return b.getAttribute('data-k'); });
+      var i = keys.indexOf(root.getAttribute('data-autonym'));
+      set(keys[(i + (e.key === 'ArrowRight' ? 1 : keys.length - 1)) % keys.length]);
+    });
+    function collapse(c) {
+      bar.classList.toggle('min', c);
+      hide.textContent = c ? 'Designs' : 'Hide';
+      hide.setAttribute('aria-expanded', String(!c));
+      try { localStorage.setItem('se-autonym-bar', c ? 'min' : ''); } catch (e) {}
+    }
+    hide.addEventListener('click', function () { collapse(!bar.classList.contains('min')); });
+    var min = null;
+    try { min = localStorage.getItem('se-autonym-bar'); } catch (e) {}
+    collapse(min === 'min');
+    show(root.getAttribute('data-autonym'));
+  })();
+</script>
+
+<style is:global>
+  body { padding-block-end: 8rem; }
+  .aw {
+    position: fixed; inset: auto 0 0; z-index: 50;
+    background: #1d2b36; color: #f4f7f9;
+    box-shadow: 0 -4px 20px rgb(0 0 0 / 0.18);
+    padding: 0.7rem max(16px, env(safe-area-inset-right, 0px)) max(0.7rem, env(safe-area-inset-bottom, 0px)) max(16px, env(safe-area-inset-left, 0px));
+    font: 14px/1.4 system-ui, sans-serif;
+  }
+  .aw-in { max-width: 72rem; margin: 0 auto; display: flex; flex-direction: column; gap: 0.55rem; }
+  .aw-head { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: baseline; }
+  .aw-eyebrow { text-transform: uppercase; letter-spacing: 0.08em; font-size: 0.72rem; font-weight: 600; color: #a9b8c3; }
+  .aw-note { flex: 1; min-width: 0; }
+  .aw button { font: inherit; color: inherit; background: #2a3b48; border: 1px solid transparent; border-radius: 6px; padding: 0.4rem 0.7rem; cursor: pointer; }
+  .aw button:hover { border-color: #a9b8c3; }
+  .aw button:focus-visible { outline: 2px solid #f4f7f9; outline-offset: 2px; }
+  .aw-btns { display: flex; flex-wrap: wrap; gap: 0.4rem; }
+  .aw-btns button { display: flex; gap: 0.45rem; align-items: baseline; }
+  .aw-btns button[aria-checked="true"] { background: #f4f7f9; color: #1d2b36; }
+  .aw-hide { padding: 0.15rem 0.6rem !important; font-size: 0.8rem !important; }
+  .aw.min { inset: auto max(16px, env(safe-area-inset-right, 0px)) max(16px, env(safe-area-inset-bottom, 0px)) auto; padding: 0.4rem; border-radius: 8px; }
+  .aw.min .aw-btns, .aw.min .aw-eyebrow, .aw.min .aw-note { display: none; }
+  body:has(.aw.min), body.aw-off { padding-block-end: 0; }
+  @media (max-width: 560px) { .aw-btns button span { display: none; } .aw-btns button { padding: 0.4rem 0.85rem; } }
+</style>

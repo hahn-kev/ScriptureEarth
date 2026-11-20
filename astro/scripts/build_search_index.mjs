@@ -16,6 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const SOURCE_PATH = path.join(__dirname, '..', 'content', 'search-index.json');
+const LANGUAGES_PATH = path.join(__dirname, '..', 'content', 'languages.json');
 const OUT_PATH = path.join(__dirname, '..', 'public', 'search-index.txt');
 
 const RECORD_SEP = '\x1f';
@@ -97,9 +98,26 @@ async function main() {
   // an older decoder simply ignores it.
   const vnCol = records.map((r) => r.vn || '').join(RECORD_SEP);
 
-  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol, vnCol];
+  // Autonym for result cards: the position of the autonym in that record's nms (extract.mjs
+  // already adds it there so it is searchable), so the text isn't shipped twice. Empty when
+  // there is none or it is the English name. Read from languages.json so search-index.json
+  // (and the bench/ harness that hashes it) keeps its shape.
+  const autonymByIdx = new Map(
+    JSON.parse(await readFile(LANGUAGES_PATH, 'utf8')).map((d) => [d.idx, d.names?.autonym || '']),
+  );
+  let withAutonym = 0;
+  const auCol = records
+    .map((r) => {
+      const a = autonymByIdx.get(r.idx);
+      const i = a ? r.nms.indexOf(a) : -1;
+      if (i >= 0) withAutonym++;
+      return i >= 0 ? String(i) : '';
+    })
+    .join(RECORD_SEP);
+
+  const lines = [headerLine, idxCol, codeCol, slugCol, nmCol, nmsCol, altCol, ccCol, rCol, vnCol, auCol];
   await writeFile(OUT_PATH, lines.join(LINE_SEP), 'utf8');
-  console.error(`  search-index.txt        ${records.length}  ${Math.round((await import('node:fs')).statSync(OUT_PATH).size / 1024)} KB`);
+  console.error(`  search-index.txt        ${records.length} (${withAutonym} with autonym)  ${Math.round((await import('node:fs')).statSync(OUT_PATH).size / 1024)} KB`);
 }
 
 main();
