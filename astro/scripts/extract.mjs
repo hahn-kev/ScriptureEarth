@@ -20,6 +20,8 @@ const DATA = dataPaths();
 const SRC = process.env.SE_JSON || DATA.json;
 const OUT = path.join(HERE, '..', 'content');
 const ASSET_BASE = 'https://scriptureearth.org';
+// The Scripture Earth iOS app (loads iOS asset packages; see the /ios/ page).
+const IOS_APP_STORE = 'https://apps.apple.com/us/app/scripture-earth/id1580089704';
 const PLAYLIST_CACHE = DATA.playlistCache;
 
 // language_name locale keys → our locale codes.
@@ -490,11 +492,24 @@ for (const e of entries) {
   }
 
   // apps. se_apps sections are { <Platform>: { 0: { title, url } } }.
+  // iOS_Asset_Package rows are language packages for the Scripture Earth iOS app (a Scripture
+  // App Builder "container app"). Their URL is usually asset://… (Scriptoria swaps https for
+  // asset so the app catches the tap), which does nothing in a normal browser. They go to the
+  // /ios/ app-mode page (the legacy ?asset=1 view) via `ios` below; the language page shows
+  // the App Store link instead, as the legacy page did.
   const apps = r.se_apps || {};
+  const ios = [];
   for (const [section, data] of Object.entries(apps)) {
+    const isPkg = /asset/i.test(section);
     const platform = /ios|apple|asset/i.test(section) ? 'res.iosApp' : 'res.androidApp';
     for (const app of linkRows(data)) {
       const u = appUrl(iso, url(app));
+      if (isPkg) {
+        if (u) ios.push({ url: u, title: t(app.title) || null });
+        // One App Store link per language, however many packages it has.
+        if (!R.app.some((x) => x.url === IOS_APP_STORE)) R.app.push(res('app', 'app', 'App', L(null, platform), 'App Store', IOS_APP_STORE, true));
+        continue;
+      }
       R.app.push(res('app', 'app', 'App', L(app.title, platform), 'Scripture App Builder', u, ext(u)));
     }
   }
@@ -587,6 +602,7 @@ for (const e of entries) {
     countries,
     availability: avail,
     resources: R,
+    ...(ios.length ? { ios } : {}),
   });
 
   search.push({
@@ -672,6 +688,7 @@ function auditData(ents, langs) {
     ['watch',            (r) => linkRows(r.watch).length, (d) => some(d.resources.watch, (x) => !isPlaylist(x) && x.kind !== 'viewer' && !x.meta?.direct && x.source !== 'Faith Comes By Hearing')],
     ['buy',              (r) => linkRows(r.buy).length, (d) => d.resources.buy.length > 0],
     ['se_apps',          anyApp, (d) => some(d.resources.app, (x) => x.kind === 'app')],
+    ['se_apps.ios_asset', (r) => Object.entries(r.se_apps || {}).some(([k, sec]) => /asset/i.test(k) && linkRows(sec).length), (d) => (d.ios || []).length > 0],
     ['dl.playlist_video', (r) => playlistItems(r.se_download_media?.playlist_video).length, (d) => some(d.resources.watch, (x) => x.meta?.zipUrl || x.zipMissing)],
     // other titles: emitted = a row whose URL is one of this language's other-title files.
     ...['text', 'audio', 'video'].map((k) => [`other_${k}`, (r) => otherTitles(r)[k].length,

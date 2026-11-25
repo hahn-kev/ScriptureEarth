@@ -6,8 +6,9 @@ import { ABOUT_LINKS, CONTACT, DONATE, HELP, PROMOTION } from '../lib/siteLinks'
 import '../styles/site.css';
 import '../styles/icons.css';
 
-interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; }
-const { title, lang = 'en', dir = 'ltr' } = Astro.props;
+// bare: no site header/footer (the /ios/ app-mode page, shown inside the iOS app).
+interface Props { title: string; lang?: string; dir?: 'ltr' | 'rtl'; bare?: boolean; noindex?: boolean; }
+const { title, lang = 'en', dir = 'ltr', bare = false, noindex = false } = Astro.props;
 // Build timestamp — baked into every page, shown in the footer. The visible text is
 // date-only ISO (YYYY-MM-DD, locale-neutral); the full UTC instant goes in a title
 // attribute so a dev can hover to see exactly when the deployed build ran.
@@ -52,6 +53,7 @@ const buildDate = buildTimestamp.slice(0, 10);
   <style is:global>[data-i18n-pending] [data-i18n],[data-i18n-pending] [data-i18n-name]{visibility:hidden}</style>
   <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>{title}</title>
+  {noindex && <meta name="robots" content="noindex" />}
   <link rel="icon" href="/favicon.ico" sizes="any" />
   {/* Home-screen install (Android "Install app", iOS "Add to Home Screen"). Manifest
       + icons only: no service worker, so nothing is cached offline. Chrome fetches the
@@ -63,6 +65,7 @@ const buildDate = buildTimestamp.slice(0, 10);
   <script>import '../scripts/i18n.js';</script>
 </head>
 <body>
+  {!bare && <Fragment>
   <div class="hairline"></div>
   <header class="site"><div class="shell site-inner">
     <a class="brand" href="/">
@@ -85,9 +88,11 @@ const buildDate = buildTimestamp.slice(0, 10);
     </select></label>
     <SiteMenu />
   </div></header>
+  </Fragment>}
 
   <slot />
 
+  {!bare && (
   <footer class="site"><div class="shell">
     <div class="fin">
       <div class="fcol"><b>ScriptureEarth</b><a href="/browse/"><span class="ic ic-languages" aria-hidden="true"></span><span data-i18n="nav.languages">Languages</span></a><a href="/countries/"><span class="ic ic-countries" aria-hidden="true"></span><span data-i18n="nav.countries">Countries</span></a>
@@ -107,5 +112,6 @@ const buildDate = buildTimestamp.slice(0, 10);
       <span class="updated" title={buildTimestamp}><span data-i18n="footer.updated">Last updated</span> <time datetime={buildDate}>{buildDate}</time></span>
     </div>
   </div></footer>
+  )}
 </body>
 </html>
