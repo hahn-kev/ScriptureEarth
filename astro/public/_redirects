@@ -32,6 +32,8 @@
 /contact/*         /contact/:splat           200
 /promotion         /promotion/               301
 /promotion/*       /promotion/:splat         200
+/ios               /ios/                     301
+/ios/*             /ios/:splat               200
 
 # Known top-level static assets (contain '.'/'-', would otherwise be eaten by /:iso)
 /favicon.ico       /favicon.ico              200

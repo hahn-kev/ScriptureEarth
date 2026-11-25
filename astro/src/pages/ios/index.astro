@@ -1,0 +1,157 @@
+---
+// /ios/ — app mode for the Scripture Earth iOS app (the legacy site's ?asset=1 view).
+//
+// The iOS app is a Scripture App Builder "container app": it opens a web page and catches
+// taps on links to iOS asset packages (asset://… URLs, which Scriptoria sends to Scripture
+// Earth when it publishes a package; see api/add_resource.php in the legacy site). The old
+// site showed that page as 00<loc>.php?asset=1: no site header, menus or footer, and only
+// languages that have an "iOS Asset Package". Legacy ?asset=1 links redirect here
+// (functions-lib/legacy-redirect.js), keeping the language they named:
+//   ?l=<slug>   one language        ?iso=<iso>  every entry for a shared ISO
+//   ?cc=<CC>    one country
+// The list is baked in (small: only languages with packages) and filtered in the browser.
+import { getCollection } from 'astro:content';
+import Base from '../../layouts/Base.astro';
+import locales from '../../../public/i18n/locales.json';
+
+const langs = (await getCollection('languages'))
+  .map((c) => c.data as any)
+  .filter((d) => Array.isArray(d.ios) && d.ios.length)
+  .sort((a, b) => a.names.localized.eng.localeCompare(b.names.localized.eng, 'en'));
+
+const countryNames = new Map<string, string>();
+for (const d of langs) for (const c of d.countries) if (!countryNames.has(c.code)) countryNames.set(c.code, c.name_eng);
+const countries = [...countryNames.entries()].sort((a, b) => a[1].localeCompare(b[1], 'en'));
+
+// Accent- and case-folded search text: English name, alternate names, code, countries.
+const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+const keyOf = (d: any) => fold([d.names.localized.eng, d.names.autonym || '', ...d.names.alt_names, d.identity.code, d.identity.iso,
+  d.identity.variant_name || '', ...d.countries.map((c: any) => c.name_eng)].join(' '));
+// "asset://host/…/asset-package" has no useful file name; the legacy page named the download
+// after the URL's last path segment, so keep doing that.
+const dlName = (u: string) => u.split('?')[0].split('/').filter(Boolean).pop() || 'asset-package';
+---
+<Base title="ScriptureEarth for iOS" bare noindex>
+  <main class="ios shell">
+    <div class="ios-top">
+      <label class="locale-wrap"><span class="ic ic-locale" aria-hidden="true"></span><select class="locale-pick" id="locale-picker" aria-label="Language">
+        {Object.entries(locales).map(([code, meta]: [string, any]) => <option value={code}>{meta.label}</option>)}
+      </select></label>
+    </div>
+
+    <h1 data-i18n="ios.title">Add a language to the app</h1>
+    <p class="muted" data-i18n="ios.hint">Find your language, then tap it to download it into the Scripture Earth app.</p>
+
+    <div class="ios-find">
+      <input id="ios-q" type="search" autocomplete="off" placeholder="Search by language, code, or country…" data-i18n-ph="search.ph" />
+      <select id="ios-cc" aria-label="Country" data-i18n-label="nav.countries">
+        <option value="" data-i18n="ios.allCountries">All countries</option>
+        {countries.map(([code, name]) => <option value={code} data-i18n-country={code}>{name}</option>)}
+      </select>
+    </div>
+
+    <div id="geo-suggest" class="geo-suggest" hidden data-geo-only={countries.map(([c]) => c).join(' ')} data-geo-href="/ios/?cc={cc}" data-geo-key="se-geo-hide-ios"></div>
+
+    <p id="ios-pick" class="ios-pick" hidden><span data-i18n="ios.showing">Showing one language.</span> <a href="/ios/" id="ios-all" data-i18n="ios.showAll">Show all languages</a></p>
+    <p id="ios-none" class="ios-none" hidden data-i18n="ios.none">No language package for the iOS app matches.</p>
+
+    {/* Same card as the search results (LangCard / search.js card()), but the card is a
+        download link to one package, and its pill says what tapping it does. */}
+    <ul class="lang-grid ios-list" id="ios-list">
+      {langs.map((d) => d.ios.map((p: any) => (
+        <li data-k={keyOf(d)} data-slug={d.identity.slug} data-iso={String(d.identity.iso).toLowerCase()} data-cc={d.countries.map((c: any) => c.code).join(' ')}>
+          <a class="lang" href={p.url} download={dlName(p.url)}>
+            <div class="top"><span class="code">{d.identity.code ?? d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
+            {d.identity.variant_name && <div class="variant">{d.identity.variant_name}</div>}
+            {d.countries.length > 0 && <div class="where">{d.countries.map((c: any, i: number) => (<>{i > 0 && ', '}<span data-i18n-country={c.code}>{c.name_eng}</span></>))}</div>}
+            {p.title && <div class="pkg">{p.title}</div>}
+            <div class="pills"><span class="pill" data-r="app"><span data-i18n="ios.download">Download</span></span></div>
+          </a>
+        </li>
+      )))}
+    </ul>
+
+    <p class="muted ios-foot"><span data-i18n="ios.appNote">This page is for the Scripture Earth app for iPhone and iPad.</span> <a href="https://apps.apple.com/us/app/scripture-earth/id1580089704" target="_blank" rel="noopener" data-i18n="ios.getApp">Get the app</a></p>
+  </main>
+
+  <script>
+    const list = document.getElementById('ios-list')!;
+    const rows = [...list.querySelectorAll<HTMLLIElement>('li')];
+    const q = document.getElementById('ios-q') as HTMLInputElement;
+    const cc = document.getElementById('ios-cc') as HTMLSelectElement;
+    const none = document.getElementById('ios-none')!;
+    const pick = document.getElementById('ios-pick')!;
+    const fold = (s: string) => s.normalize('NFD').replace(/\p{M}/gu, '').toLowerCase();
+
+    // Deep link from a legacy ?asset=1 URL: ?l=<slug>, ?iso=<iso> or ?cc=<CC>.
+    const params = new URLSearchParams(location.search);
+    const slug = (params.get('l') || '').toLowerCase();
+    const iso = (params.get('iso') || '').toLowerCase();
+    if (params.get('cc')) cc.value = params.get('cc')!.toUpperCase();
+    let only = slug || iso ? (r: HTMLLIElement) => (slug ? r.dataset.slug === slug : r.dataset.iso === iso) : null;
+    if (only) {
+      pick.hidden = false;
+      const lang = params.get('lang');
+      if (lang) (document.getElementById('ios-all') as HTMLAnchorElement).href = `/ios/?lang=${encodeURIComponent(lang)}`;
+      document.getElementById('ios-all')!.addEventListener('click', (e) => {
+        e.preventDefault();
+        only = null;
+        pick.hidden = true;
+        history.replaceState(null, '', location.pathname + (params.get('lang') ? `?lang=${params.get('lang')}` : ''));
+        filter();
+      });
+    }
+
+    function filter() {
+      // Words must all match, against the English key plus whatever the row shows now
+      // (localized names after the i18n script has run).
+      const words = fold(q.value.trim()).split(/\s+/).filter(Boolean);
+      const c = cc.value;
+      let shown = 0;
+      for (const r of rows) {
+        const hay = r.dataset.k + ' ' + fold(r.textContent || '');
+        const ok = (!only || only(r)) && (!c || (r.dataset.cc || '').split(' ').includes(c)) && words.every((w) => hay.includes(w));
+        r.hidden = !ok;
+        if (ok) shown++;
+      }
+      none.hidden = shown > 0;
+    }
+    let t: number | undefined;
+    q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(filter, 80); });
+    cc.addEventListener('change', () => { filter(); markGeo(); });
+
+    // "Browsing from X?" suggestion (shared with the home page): a tap sets the country
+    // filter here instead of opening the country page.
+    const geoMount = document.getElementById('geo-suggest')!;
+    const markGeo = () => geoMount.querySelectorAll<HTMLAnchorElement>('a.facet').forEach((a) => a.classList.toggle('on', a.dataset.cc === cc.value));
+    geoMount.addEventListener('geo-shown', markGeo);
+    geoMount.addEventListener('click', (e) => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('a.facet');
+      if (!a?.dataset.cc) return;
+      e.preventDefault();
+      cc.value = cc.value === a.dataset.cc ? '' : a.dataset.cc;
+      filter();
+      markGeo();
+    });
+    filter();
+  </script>
+  <script>import '../../scripts/geo-suggest.js';</script>
+</Base>
+
+<style>
+  .ios { padding-block: 1rem 2.5rem; }
+  .ios h1, .ios > p, .ios-find { max-width: 44rem; }
+  .ios-top { display: flex; justify-content: flex-end; }
+  .ios h1 { font-size: 1.35rem; margin: .75rem 0 .25rem; }
+  .ios-find { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
+  .ios-find input { flex: 1 1 14rem; min-width: 0; font: inherit; padding: .6rem .75rem; border: 1px solid #c9ced6; border-radius: .5rem; }
+  .ios-find select { flex: 0 1 12rem; min-width: 0; font: inherit; padding: .55rem .5rem; border: 1px solid #c9ced6; border-radius: .5rem; background: #fff; }
+  .ios-list { list-style: none; margin: 0; padding: 0; }
+  .ios-list li { display: grid; }
+  .ios-list li[hidden] { display: none; }
+  .ios-list .lang { color: inherit; text-decoration: none; }
+  .ios-list .pkg { color: var(--text); font-size: .9rem; line-height: 1.3; }
+  .ios-pick, .ios-none { margin: .25rem 0 1rem; }
+  .ios-none { color: #a0262f; }
+  .ios-foot { margin-top: 2rem; font-size: .9rem; }
+</style>

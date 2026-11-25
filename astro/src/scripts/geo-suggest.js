@@ -4,10 +4,18 @@
 // that share the timezone. Self-contained — names and the browseable-country set
 // come from geo.json, so it needs neither a rendered list nor the (lazy) search
 // index. Progressive enhancement: absent JS, the page renders untouched.
+//
+// The mount can narrow it (used by the /ios/ app page):
+//   data-geo-only="MX GT …"  suggest only these countries
+//   data-geo-href="/ios/?cc={cc}"  where a country links to (default /country/{cc}/)
+//   data-geo-key="…"  its own "dismissed" flag, so hiding it on one page leaves the others
+// Each country link carries data-cc, so a page can catch the click and filter in place.
 import geo from '../data/geo.json';
 
-const HIDE_KEY = 'se-geo-hide';
-const known = (code) => Boolean(geo.names[code]);
+let hideKey = 'se-geo-hide';
+let only = null;
+let hrefTpl = '/country/{cc}/';
+const known = (code) => Boolean(geo.names[code]) && (!only || only.has(code));
 
 function regionCountry(langs) {
   for (const l of langs) {
@@ -26,7 +34,10 @@ function regionCountry(langs) {
 function run() {
   const mount = document.getElementById('geo-suggest');
   if (!mount) return;
-  try { if (localStorage.getItem(HIDE_KEY) === '1') return; } catch { /* private mode */ }
+  if (mount.dataset.geoOnly !== undefined) only = new Set(mount.dataset.geoOnly.split(/\s+/).filter(Boolean));
+  if (mount.dataset.geoHref) hrefTpl = mount.dataset.geoHref;
+  if (mount.dataset.geoKey) hideKey = mount.dataset.geoKey;
+  try { if (localStorage.getItem(hideKey) === '1') return; } catch { /* private mode */ }
 
   let zone = '';
   try { zone = Intl.DateTimeFormat().resolvedOptions().timeZone || ''; } catch { /* very old browser */ }
@@ -61,7 +72,8 @@ function run() {
 function facet(code, cls) {
   const a = document.createElement('a');
   a.className = 'facet' + (cls ? ' ' + cls : '');
-  a.href = `/country/${code}/`;
+  a.href = hrefTpl.replace('{cc}', code);
+  a.dataset.cc = code;
   a.textContent = geo.names[code];
   return a;
 }
@@ -94,7 +106,7 @@ function render(mount, primary, nearby) {
   x.addEventListener('click', () => {
     mount.hidden = true;
     mount.dataset.geoShown = '0';
-    try { localStorage.setItem(HIDE_KEY, '1'); } catch { /* private mode */ }
+    try { localStorage.setItem(hideKey, '1'); } catch { /* private mode */ }
   });
   card.appendChild(x);
 
@@ -102,6 +114,7 @@ function render(mount, primary, nearby) {
   mount.hidden = false;
   mount.dataset.geoShown = '1';
   if (typeof window.__seApplyI18n === 'function') window.__seApplyI18n(mount);
+  mount.dispatchEvent(new CustomEvent('geo-shown', { bubbles: true }));
 }
 
 if (document.readyState === 'loading') {

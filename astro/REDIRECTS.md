@@ -36,6 +36,10 @@ The resolver (`functions-lib/legacy-redirect.js`, bound to the map by `functions
 - `?iso=`/`?name=` (+ `rod`/`ROD_Code`, `var`/`Variant_Code`) → `/language/<slug>/` (301) when that slug exists, **404** when a ROD/variant is given that the ISO doesn't have (default ROD `00000` counts as no ROD); bare `?iso=` with one entry → its slug (301); an ISO shared by several entries → `/language/?iso=<iso>` (302, chooser page); unknown ISO → **404**.  *(L3/L6 iso-form)*
 - no recognized query → `/` (301). That URL was the old home page, and it still is with unrelated
   params (`?fbclid=`, `?utm_*=`), so this is not a fallback for broken links.
+- `asset=1` (the Scripture Earth iOS app's mode) sends each of the targets above to the app page
+  `/ios/` instead, always with **302** because the app's start URL is fixed in its build: a language →
+  `/ios/?l=<slug>`, a shared ISO → `/ios/?iso=<iso>`, a country → `/ios/?cc=<CC>`, anything else →
+  `/ios/`. Unknown languages are still **404**. See the header of `src/pages/ios/index.astro`.
 
 **Broken links are 404, never a redirect.** A link naming a language the catalog doesn't have used to
 get "The ISO language code is not found" on the old site. Here the Function answers it in place with

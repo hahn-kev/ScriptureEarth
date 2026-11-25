@@ -28,10 +28,26 @@ const isSlug = (map, s) => {
 const MISSING_PATH = '/legacy/not-found/';
 export const NOT_FOUND = Object.freeze({ notFound: true });
 
+// ?asset=1 was the legacy "iOS app mode": the Scripture Earth iOS app (a Scripture App
+// Builder container app) opens 00<loc>.php?asset=1 and catches taps on iOS asset-package
+// links. That view now lives at /ios/ (src/pages/ios/index.astro). An asset=1 request goes
+// there, keeping the language or country it named, as a 302: the app's start URL is baked
+// into its build, and the target may still change.
+//   /language/<slug>/ -> /ios/?l=<slug>     /language/?iso=<iso> -> /ios/?iso=<iso>
+//   /country/<CC>/    -> /ios/?cc=<CC>      anything else        -> /ios/
+function toIos(path) {
+  let m;
+  if ((m = path.match(/^\/language\/([^/?]+)\/$/))) return `/ios/?l=${m[1]}`;
+  if ((m = path.match(/^\/language\/\?iso=([^&]+)$/))) return `/ios/?iso=${m[1]}`;
+  if ((m = path.match(/^\/country\/([^/?]+)\/$/))) return `/ios/?cc=${m[1]}`;
+  return '/ios/';
+}
+
 // -> { path, status } for the redirect this legacy request should get, or NOT_FOUND.
 export function resolveLegacy(q, map, lang = null) {
   const withLang = (path) => (lang ? `${path}${path.includes('?') ? '&' : '?'}lang=${lang}` : path);
-  const to = (path, status) => ({ path: withLang(path), status });
+  const asset = q.get('asset') === '1';
+  const to = (path, status) => (asset ? { path: withLang(toIos(path)), status: 302 } : { path: withLang(path), status });
 
   // L7 — country deep link: ?sortby=country&name=<CC>  (name=all -> whole grid)
   if (q.get('sortby') === 'country') {

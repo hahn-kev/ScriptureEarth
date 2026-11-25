@@ -60,6 +60,19 @@ test('idx and country deep links', () => {
 
 // The old site answered these with "The ISO language code is not found"; a redirect to the
 // home page or a nearby language would hide the broken link.
+test('asset=1 (the iOS app mode) goes to /ios/, keeping the language or country', () => {
+  assert.equal(go('asset=1', 'eng'), '302 /ios/?lang=eng'); // the app's start page
+  assert.equal(go('asset=1'), '302 /ios/'); // index.php?asset=1
+  assert.equal(go('iso=ngu&asset=1', 'eng'), '302 /ios/?l=ngu&lang=eng');
+  assert.equal(go('iso=tzo&rod=02641&asset=1', 'spa'), '302 /ios/?l=tzo-02641&lang=spa');
+  assert.equal(go('iso=tzo&asset=1', 'eng'), '302 /ios/?iso=tzo&lang=eng'); // shared ISO
+  assert.equal(go('idx=533&asset=1'), '302 /ios/?l=tzo-02641');
+  assert.equal(go('sortby=country&name=MX&asset=1', 'eng'), '302 /ios/?cc=MX&lang=eng');
+  assert.equal(go('sortby=country&name=all&asset=1', 'eng'), '302 /ios/?lang=eng');
+  assert.equal(go('iso=zzz&asset=1', 'eng'), '404'); // unknown language: still a 404
+  assert.equal(go('iso=ngu&asset=0', 'eng'), '301 /language/ngu/?lang=eng'); // asset=0 = normal site
+});
+
 test('links to a language the catalog does not have are 404, not a redirect', () => {
   assert.equal(go('iso=zzz', 'eng'), '404'); // unknown ISO
   assert.equal(go('iso=ngu&rod=99999', 'eng'), '404'); // ROD that does not exist for a known ISO
