@@ -39,7 +39,7 @@ export const ICONS = {
   apple: 'logos:apple',
   print: 'fluent:print-24-regular',
   // floating Feedback button (src/components/FeedbackButton.astro)
-  feedback: 'chat-24',
+  feedback: 'comment-24',
 };
 
 /**
