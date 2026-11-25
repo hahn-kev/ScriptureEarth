@@ -1,10 +1,13 @@
-// Soft-launch feedback: validation + D1 insert for functions/api/feedback.js.
+// Soft-launch feedback: validation + hand-off to a Google Sheet for functions/api/feedback.js.
 // Pure functions so `node --test functions-lib/` (pnpm run test:redirects) covers them.
 //
-// Storage is a Cloudflare D1 database bound to the Pages project as FEEDBACK_DB
-// (Pages → Settings → Bindings). Schema: functions-lib/feedback.sql. With no binding the
-// endpoint answers 503 and the dialog offers the contact email instead, so the button is
-// safe to ship before the database exists.
+// Storage is a Google Sheet. An Apps Script web app bound to the sheet
+// (feedback-sheet/Code.gs) appends one row per message. The Pages project needs two
+// environment variables (Pages → Settings → Variables and Secrets):
+//   FEEDBACK_SHEET_URL     the web app's /exec URL
+//   FEEDBACK_SHEET_SECRET  the same value as the script property SECRET (type: Secret)
+// With either missing the endpoint answers 503 and the dialog offers the contact email
+// instead, so the button is safe to ship before the sheet exists. See feedback-sheet/README.md.
 
 export const KINDS = ['problem', 'idea', 'other'];
 export const LIMITS = { message: 4000, email: 254, page: 2048, locale: 8, ua: 512 };
@@ -50,27 +53,43 @@ const json = (status, data) =>
     headers: { 'Content-Type': 'application/json; charset=utf-8', 'Cache-Control': 'no-store' },
   });
 
+/**
+ * Send one validated row to the Apps Script web app. Apps Script answers a POST with a 302
+ * to a googleusercontent.com URL that holds the script's output; fetch follows it.
+ * A Google sign-in page (HTML) instead of JSON means the web app is not open to "Anyone".
+ */
+export async function sendToSheet(env, row, fetchImpl = fetch) {
+  const r = await fetchImpl(env.FEEDBACK_SHEET_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ secret: env.FEEDBACK_SHEET_SECRET, ...row }),
+    redirect: 'follow',
+  });
+  let data = null;
+  try { data = await r.json(); } catch { /* sign-in page or error page */ }
+  return !!(r.ok && data && data.ok);
+}
+
 /** Pages Function handler factory (POST only; Pages answers 405 for other methods). */
-export function makeFeedbackHandler() {
+export function makeFeedbackHandler(fetchImpl = (...a) => fetch(...a)) {
   return async ({ request, env }) => {
     if (!sameOrigin(request)) return json(403, { ok: false, error: 'origin' });
-    const db = env && env.FEEDBACK_DB;
-    if (!db) return json(503, { ok: false, error: 'not_configured' });
+    if (!env || !env.FEEDBACK_SHEET_URL || !env.FEEDBACK_SHEET_SECRET) return json(503, { ok: false, error: 'not_configured' });
     if (Number(request.headers.get('Content-Length') || 0) > 16384) return json(413, { ok: false, error: 'too_large' });
     let body;
     try { body = await request.json(); } catch { return json(400, { ok: false, error: 'bad_body' }); }
     const v = validateFeedback(body);
     // Pretend a bot succeeded so it does not retry with another value.
     if (!v.ok) return v.error === 'spam' ? json(200, { ok: true }) : json(400, v);
-    const r = v.row;
-    const ua = clip(request.headers.get('User-Agent'), LIMITS.ua);
-    const country = (request.cf && request.cf.country) || '';
-    await db
-      .prepare(
-        'INSERT INTO feedback (created_at, kind, message, email, page, locale, width, user_agent, country) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-      )
-      .bind(new Date().toISOString(), r.kind, r.message, r.email, r.page, r.locale, r.width, ua, country)
-      .run();
-    return json(200, { ok: true });
+    const row = {
+      ...v.row,
+      created_at: new Date().toISOString(),
+      user_agent: clip(request.headers.get('User-Agent'), LIMITS.ua),
+      country: (request.cf && request.cf.country) || '',
+    };
+    let saved = false;
+    try { saved = await sendToSheet(env, row, fetchImpl); } catch { /* network */ }
+    // 502: the dialog then offers the contact email with the message pre-filled.
+    return saved ? json(200, { ok: true }) : json(502, { ok: false, error: 'store_failed' });
   };
 }

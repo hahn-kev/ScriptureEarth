@@ -2,8 +2,8 @@
 // Soft-launch feedback: a floating button (bottom inline-end corner). Only the button is baked
 // into every page; the dialog, its CSS and its logic load on the first click
 // (src/scripts/feedback-dialog.js, a lazy Vite chunk), so cold-load size barely moves.
-// The form POSTs JSON to FEEDBACK.endpoint (functions/api/feedback.js → D1). If that fails
-// (no database bound yet, offline), the dialog shows the contact email with the message
+// The form POSTs JSON to FEEDBACK.endpoint (functions/api/feedback.js → Google Sheet). If that fails
+// (sheet not set up yet, offline), the dialog shows the contact email with the message
 // pre-filled in a mailto link. Turn the button off with FEEDBACK.enabled in siteLinks.ts.
 import { CONTACT_EMAIL, FEEDBACK } from '../lib/siteLinks';
 ---

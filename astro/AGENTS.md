@@ -43,8 +43,9 @@ content/countries.json + scripts/data/ne_110m_countries.geojson + map-points.jso
 | `src/content.config.ts` | File loaders over `content/*.json` — no Zod |
 | `scripts/` | Projector (`extract.mjs`), dump fetch, search-index encoder, precompress, size bench, i18n/geo generators |
 | `public/i18n/` | Chrome + names catalogs (committed) |
-| `functions/` | Pages Function routes for the legacy `.php` entry points, plus `api/feedback.js` (Feedback button → D1 `FEEDBACK_DB`) |
-| `functions-lib/` | Shared legacy-redirect resolver, feedback validation (`feedback.js`, schema `feedback.sql`) + their `node:test` tests (`pnpm run test:redirects`) |
+| `functions/` | Pages Function routes for the legacy `.php` entry points, plus `api/feedback.js` (Feedback button → Google Sheet via the Apps Script in `feedback-sheet/`) |
+| `functions-lib/` | Shared legacy-redirect resolver, feedback validation + sheet hand-off (`feedback.js`) + their `node:test` tests (`pnpm run test:redirects`) |
+| `feedback-sheet/` | Apps Script (`Code.gs`) for the feedback Google Sheet + setup and Workspace test steps (`README.md`) |
 | `preview/` | Live one-language preview server for database editors (Node + Dockerfile; not part of the site build). See `preview/README.md` |
 | `bench/` | Search-index encoding bake-off + `SIZE-BENCH-SPEC.md` |
 | `content/` | Generated catalog JSON (gitignored) |

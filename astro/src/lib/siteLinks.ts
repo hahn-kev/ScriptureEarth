@@ -29,7 +29,7 @@ export const CONTACT_EMAIL = 'info@ScriptureEarth.org';
 
 // Floating "Feedback" button for the soft launch (src/components/FeedbackButton.astro).
 // Set enabled: false to remove it from every page. The endpoint is the Pages Function
-// functions/api/feedback.js, which saves to the D1 database bound as FEEDBACK_DB.
+// functions/api/feedback.js, which appends a row to a Google Sheet (feedback-sheet/README.md).
 export const FEEDBACK = { enabled: true, endpoint: '/api/feedback' };
 
 /** True when `href` is the page at `path` (both trailing-slash paths). */

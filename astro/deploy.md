@@ -61,33 +61,25 @@ First-time only, if recreating the project:
   `functions-lib/`. Functions are **scoped to those 17 paths** plus `/api/feedback` (below), so every
   other path is served as a pure static file and is not counted as a Functions invocation.
 - **`functions/api/feedback.js`** — `POST /api/feedback` from the floating **Feedback** button (soft
-  launch). Saves each message to a D1 database bound as `FEEDBACK_DB`. See "Feedback database" below.
+  launch). Sends each message to a Google Sheet through an Apps Script web app. See "Feedback sheet" below.
 - **`public/_headers`** — immutable caching for `/_astro/*` and `/i18n/*`; `precompress_dist.mjs` appends
   the `Content-Encoding: br` rule for the search index.
 
-## Feedback database (one-time setup)
+## Feedback sheet (one-time setup)
 
 The floating **Feedback** button (`src/components/FeedbackButton.astro`, on every page) posts to
-`/api/feedback`. Until the binding exists the endpoint answers 503 and the dialog shows the contact email
-with the message pre-filled, so it is safe to deploy first.
+`/api/feedback`. The Function sends each message to an Apps Script web app that adds a row to a Google
+Sheet. It needs two Pages variables (Settings → Variables and Secrets):
 
-```bash
-pnpm exec wrangler d1 create se-feedback
-pnpm exec wrangler d1 execute se-feedback --remote --file functions-lib/feedback.sql
-```
+| name | kind | value |
+|---|---|---|
+| `FEEDBACK_SHEET_URL` | plain text | the web app's `/exec` URL |
+| `FEEDBACK_SHEET_SECRET` | secret | the script property `SECRET` |
 
-Then in the dashboard: Pages → `se-proto-en` → Settings → Bindings → add **D1 database**, variable name
-`FEEDBACK_DB`, database `se-feedback`, for Production (and Preview, if previews should save too). Redeploy.
-
-Read the messages:
-
-```bash
-pnpm exec wrangler d1 execute se-feedback --remote --command "SELECT id, created_at, kind, message, email, page, locale FROM feedback ORDER BY id DESC LIMIT 50"
-```
-
-Each row has the message, the kind (problem / idea / other), the optional email, the page path, UI locale,
-viewport width, user agent and Cloudflare's country code. To remove the button, set
-`FEEDBACK.enabled = false` in `src/lib/siteLinks.ts`.
+Until both exist the endpoint answers 503 and the dialog shows the contact email with the message
+pre-filled, so it is safe to deploy first. Script, setup and the Workspace test steps:
+`feedback-sheet/README.md`. To remove the button, set `FEEDBACK.enabled = false` in
+`src/lib/siteLinks.ts`.
 
 ## Go-live checklist (Cloudflare dashboard, not this repo)
 - Add the custom domain to the Pages project (Pages → Custom domains).
