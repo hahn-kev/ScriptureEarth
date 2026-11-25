@@ -50,19 +50,22 @@ const dlName = (u: string) => u.split('?')[0].split('/').filter(Boolean).pop() |
       </select>
     </div>
 
+    <div id="geo-suggest" class="geo-suggest" hidden data-geo-only={countries.map(([c]) => c).join(' ')} data-geo-href="/ios/?cc={cc}" data-geo-key="se-geo-hide-ios"></div>
+
     <p id="ios-pick" class="ios-pick" hidden><span data-i18n="ios.showing">Showing one language.</span> <a href="/ios/" id="ios-all" data-i18n="ios.showAll">Show all languages</a></p>
     <p id="ios-none" class="ios-none" hidden data-i18n="ios.none">No language package for the iOS app matches.</p>
 
-    <ul class="ios-list" id="ios-list">
+    {/* Same card as the search results (LangCard / search.js card()), but the card is a
+        download link to one package, and its pill says what tapping it does. */}
+    <ul class="lang-grid ios-list" id="ios-list">
       {langs.map((d) => d.ios.map((p: any) => (
         <li data-k={keyOf(d)} data-slug={d.identity.slug} data-iso={String(d.identity.iso).toLowerCase()} data-cc={d.countries.map((c: any) => c.code).join(' ')}>
-          <a class="ios-pkg" href={p.url} download={dlName(p.url)}>
-            <span class="ic ic-app" aria-hidden="true"></span>
-            <span class="ios-txt">
-              <span class="ios-nm"><span data-i18n-name={d.idx}>{d.names.localized.eng}</span>{d.identity.variant_name && <span class="variant"> ({d.identity.variant_name})</span>} <span class="code">[{d.identity.code}]</span></span>
-              {p.title && <span class="ios-title">{p.title}</span>}
-              <span class="ios-where">{d.countries.map((c: any, i: number) => <Fragment>{i > 0 && ', '}<span data-i18n-country={c.code}>{c.name_eng}</span></Fragment>)}</span>
-            </span>
+          <a class="lang" href={p.url} download={dlName(p.url)}>
+            <div class="top"><span class="code">{d.identity.code ?? d.identity.iso}</span><span class="nm" data-i18n-name={String(d.idx)}>{d.names.localized.eng}</span></div>
+            {d.identity.variant_name && <div class="variant">{d.identity.variant_name}</div>}
+            {d.countries.length > 0 && <div class="where">{d.countries.map((c: any, i: number) => (<>{i > 0 && ', '}<span data-i18n-country={c.code}>{c.name_eng}</span></>))}</div>}
+            {p.title && <div class="pkg">{p.title}</div>}
+            <div class="pills"><span class="pill" data-r="app"><span data-i18n="ios.download">Download</span></span></div>
           </a>
         </li>
       )))}
@@ -115,29 +118,39 @@ const dlName = (u: string) => u.split('?')[0].split('/').filter(Boolean).pop() |
     }
     let t: number | undefined;
     q.addEventListener('input', () => { clearTimeout(t); t = window.setTimeout(filter, 80); });
-    cc.addEventListener('change', filter);
+    cc.addEventListener('change', () => { filter(); markGeo(); });
+
+    // "Browsing from X?" suggestion (shared with the home page): a tap sets the country
+    // filter here instead of opening the country page.
+    const geoMount = document.getElementById('geo-suggest')!;
+    const markGeo = () => geoMount.querySelectorAll<HTMLAnchorElement>('a.facet').forEach((a) => a.classList.toggle('on', a.dataset.cc === cc.value));
+    geoMount.addEventListener('geo-shown', markGeo);
+    geoMount.addEventListener('click', (e) => {
+      const a = (e.target as Element).closest<HTMLAnchorElement>('a.facet');
+      if (!a?.dataset.cc) return;
+      e.preventDefault();
+      cc.value = cc.value === a.dataset.cc ? '' : a.dataset.cc;
+      filter();
+      markGeo();
+    });
     filter();
   </script>
+  <script>import '../../scripts/geo-suggest.js';</script>
 </Base>
 
 <style>
-  .ios { max-width: 44rem; padding-block: 1rem 2.5rem; }
+  .ios { padding-block: 1rem 2.5rem; }
+  .ios h1, .ios > p, .ios-find { max-width: 44rem; }
   .ios-top { display: flex; justify-content: flex-end; }
   .ios h1 { font-size: 1.35rem; margin: .75rem 0 .25rem; }
   .ios-find { display: flex; flex-wrap: wrap; gap: .5rem; margin: 1rem 0; }
   .ios-find input { flex: 1 1 14rem; min-width: 0; font: inherit; padding: .6rem .75rem; border: 1px solid #c9ced6; border-radius: .5rem; }
   .ios-find select { flex: 0 1 12rem; min-width: 0; font: inherit; padding: .55rem .5rem; border: 1px solid #c9ced6; border-radius: .5rem; background: #fff; }
-  .ios-list { list-style: none; margin: 0; padding: 0; display: grid; gap: .5rem; }
+  .ios-list { list-style: none; margin: 0; padding: 0; }
+  .ios-list li { display: grid; }
   .ios-list li[hidden] { display: none; }
-  .ios-pkg { display: flex; gap: .75rem; align-items: flex-start; padding: .75rem .9rem; border: 1px solid #dde1e7; border-radius: .6rem; color: inherit; text-decoration: none; background: #fff; }
-  .ios-pkg:hover, .ios-pkg:focus-visible { border-color: #2a6fdb; }
-  .ios-pkg .ic { inline-size: 1.5rem; block-size: 1.5rem; flex: none; margin-block-start: .1rem; }
-  .ios-txt { display: grid; gap: .15rem; min-width: 0; }
-  .ios-nm { font-weight: 600; }
-  .ios-nm .code { font-weight: 400; color: #5b6370; }
-  .ios-nm .variant { font-weight: 400; }
-  .ios-title { color: #333; }
-  .ios-where { color: #5b6370; font-size: .9rem; }
+  .ios-list .lang { color: inherit; text-decoration: none; }
+  .ios-list .pkg { color: var(--text); font-size: .9rem; line-height: 1.3; }
   .ios-pick, .ios-none { margin: .25rem 0 1rem; }
   .ios-none { color: #a0262f; }
   .ios-foot { margin-top: 2rem; font-size: .9rem; }
