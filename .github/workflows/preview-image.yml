@@ -1,0 +1,99 @@
+name: Preview image
+
+# Builds the editor preview server (astro/preview/, see astro/preview/README.md) as a
+# Docker image and publishes it to GitHub's container registry:
+#
+#   ghcr.io/<owner>/scriptureearth-preview
+#
+#   push to main (astro/** changed)   → :latest and :sha-<short sha>
+#   PR from this repo that changes
+#     the image's own files            → :pr-<number>   (to test before merging)
+#   workflow_dispatch on a branch      → :<branch>
+#
+# PRs from forks build only (no push). Uses GITHUB_TOKEN; no secrets needed.
+# The image holds no API key: SE_KEY is set when the container runs.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'astro/**'
+      - '.github/workflows/preview-image.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'astro/preview/**'
+      - 'astro/.dockerignore'
+      - 'astro/package.json'
+      - 'astro/pnpm-lock.yaml'
+      - 'astro/pnpm-workspace.yaml'
+      - '.github/workflows/preview-image.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  packages: write
+
+concurrency:
+  group: preview-image-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+env:
+  IMAGE: ghcr.io/${{ github.repository_owner }}/scriptureearth-preview
+  # Push everything except PRs from forks (their token cannot write packages).
+  PUSH: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+
+jobs:
+  image:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v4
+
+      - name: Log in to ghcr.io
+        if: env.PUSH == 'true'
+        uses: docker/login-action@v4
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Tags and labels
+        id: meta
+        uses: docker/metadata-action@v6
+        with:
+          images: ${{ env.IMAGE }}
+          tags: |
+            type=raw,value=latest,enable={{is_default_branch}}
+            type=sha,enable={{is_default_branch}}
+            type=ref,event=pr
+            type=ref,event=branch,enable=${{ github.event_name == 'workflow_dispatch' }}
+          labels: |
+            org.opencontainers.image.title=ScriptureEarth editor preview
+            org.opencontainers.image.description=Renders one language's page of the new ScriptureEarth site from the live database. See astro/preview/README.md.
+
+      - name: Build and push
+        uses: docker/build-push-action@v7
+        with:
+          context: astro
+          file: astro/preview/Dockerfile
+          platforms: linux/amd64
+          push: ${{ env.PUSH == 'true' }}
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha,scope=preview-image
+          cache-to: type=gha,scope=preview-image,mode=max
+
+      - name: Summary
+        env:
+          TAGS: ${{ steps.meta.outputs.tags }}
+        run: |
+          {
+            if [ "$PUSH" = "true" ]; then echo "### Published"; else echo "### Built (not pushed)"; fi
+            echo '```'
+            echo "$TAGS"
+            echo '```'
+          } >> "$GITHUB_STEP_SUMMARY"

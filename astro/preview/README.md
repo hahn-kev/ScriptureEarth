@@ -37,12 +37,36 @@ The key never shows in logs or error pages.
 The server sends `idx=<idx>` to `db_dump.php` and then keeps only the entry whose
 `relationships.idx` matches. So:
 
-- **Before** `db_dump.php` supports `idx`, the preview still works, but each preview
-  downloads the full dump (slower).
-- **After** `db_dump.php` supports `idx` (same JSON shape, one entry), each preview
-  downloads only that language. See `DUMP-API-REQUESTS.md`.
+- `db_dump.php` on scriptureearth.org supports `idx` (since 2026-11), so each preview
+  downloads only that language.
+- An API without `idx` still works, but each preview then downloads the full dump
+  (slower).
 
-## Build and run
+## Published image
+
+CI (`.github/workflows/preview-image.yml`) publishes the image to GitHub's container
+registry:
+
+- `ghcr.io/hahn-kev/scriptureearth-preview:latest` after each push to `main` that changes
+  `astro/` (also tagged `sha-<short sha>`).
+- `ghcr.io/hahn-kev/scriptureearth-preview:pr-<number>` for a PR that changes the image's
+  own files, to test it before merging.
+
+The image is for `linux/amd64` and is about 190 MB to download (about 870 MB on disk).
+It holds no API key. If the package is private, log in first with a GitHub token that
+has `read:packages`: `docker login ghcr.io -u <github user>`.
+
+```bash
+docker run -d --name se-preview --restart unless-stopped -p 8081:8080 \
+  -e SE_KEY=… -e SE_BASE=https://www.scriptureearth.org \
+  ghcr.io/hahn-kev/scriptureearth-preview:latest
+# then open http://<host>:8081/preview/<idx>/
+```
+
+To update: `docker pull ghcr.io/hahn-kev/scriptureearth-preview:latest`, then remove and
+start the container again.
+
+## Build and run from source
 
 From the `astro/` folder:
 
@@ -65,9 +89,7 @@ the PHP container, so the API call stays on the server:
 
 ```yaml
   preview:
-    build:
-      context: ./astro            # path to this repo's astro/ folder
-      dockerfile: preview/Dockerfile
+    image: ghcr.io/hahn-kev/scriptureearth-preview:latest
     restart: always
     environment:
       - SE_KEY=${SE_PREVIEW_KEY}  # an api_users key
@@ -75,6 +97,10 @@ the PHP container, so the API call stays on the server:
     ports:
       - 9002:8080
 ```
+
+To build it on the server from source instead, replace `image:` with
+`build: { context: ./astro, dockerfile: preview/Dockerfile }` (the path to this repo's
+`astro/` folder).
 
 Then publish it on a path or subdomain of the SE site in the web server config (for
 example `preview.scriptureearth.org`).
@@ -96,5 +122,5 @@ to the preview, for example:
   CPU), so do not expose it where crawlers or the whole internet can hammer it, or put it
   behind the web server's basic auth.
 - `GET /healthz` returns `ok` (used by the Docker health check).
-- The image is large (about 1.7 GB), because it installs all dev dependencies, wrangler
-  included. The extract step needs `d3-geo`, a dev dependency.
+- The image installs all dev dependencies, wrangler included, because the extract step
+  needs `d3-geo`, a dev dependency.

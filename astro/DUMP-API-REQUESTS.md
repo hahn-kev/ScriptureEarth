@@ -49,18 +49,18 @@ Still open / to confirm:
   - **Coverage:** in the legacy SQLite snapshot, 936 languages have an SAB reader (785 local,
     158 external), but the dump's `se_sab` lists files for only 114.
 
-## New (2026-11): `idx` filter for the editor preview
+## Done (2026-11): `idx` filter for the editor preview
 
-The live editor preview (`preview/`, see `preview/README.md`) builds one language at a
-time. Please accept an optional `idx` parameter:
+Added to `db_dump.php` in November 2026 (with an `iso` filter too). The live editor
+preview (`preview/`, see `preview/README.md`) builds one language at a time and uses it:
 
 ```
 GET /api/db_dump.php?v=1&idx=1234&key=…
 ```
 
 It should return the **same JSON shape** as the full dump, with only the entry whose
-`relationships.idx` is 1234 (and `{}` when there is none). Until this exists, the preview
-downloads the full dump and filters it itself, which works but is slow.
+`relationships.idx` is 1234 (and `{}` when there is none). Against an API without the
+filter, the preview downloads the full dump and filters it itself, which is slow.
 
 ## Columns at a glance
 
