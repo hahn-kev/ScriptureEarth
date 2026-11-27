@@ -37,3 +37,4 @@ tmp/
 # server files). Keep the preview server's own.
 !/preview/Dockerfile
 !/.dockerignore
+!/preview/compose.yaml

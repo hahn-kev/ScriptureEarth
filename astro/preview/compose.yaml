@@ -1,0 +1,19 @@
+# Runs the editor preview server from the published image on any Docker host.
+#
+#   1. Put this file and .env (copied from .env.example) in one folder on the server.
+#   2. Set SE_KEY in .env (an api_users key for db_dump.php).
+#   3. docker compose up -d
+#   4. Open http://<server>:8080/preview/<idx>/
+#
+# Update to the newest image:  docker compose pull && docker compose up -d
+services:
+  preview:
+    image: ghcr.io/hahn-kev/scriptureearth-preview:${PREVIEW_TAG:-latest}
+    restart: unless-stopped
+    environment:
+      SE_KEY: ${SE_KEY:?set SE_KEY in .env}
+      SE_BASE: ${SE_BASE:-https://www.scriptureearth.org}
+      SE_SITE_URL: ${SE_SITE_URL:-https://se-proto-en.pages.dev}
+    ports:
+      # Use "127.0.0.1:8080:8080" when a reverse proxy on the same host serves it.
+      - "${PREVIEW_PORT:-8080}:8080"
