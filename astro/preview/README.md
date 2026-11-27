@@ -66,6 +66,13 @@ docker run -d --name se-preview --restart unless-stopped -p 8081:8080 \
 To update: `docker pull ghcr.io/hahn-kev/scriptureearth-preview:latest`, then remove and
 start the container again.
 
+### Docker Compose on any server
+
+`preview/compose.yaml` runs the published image on its own. Copy it and
+`preview/.env.example` (as `.env`) to a folder on the server, set `SE_KEY` in `.env`, then
+run `docker compose up -d`. Set `PREVIEW_TAG=pr-<number>` in `.env` to test a PR's image.
+To update: `docker compose pull && docker compose up -d`.
+
 ## Build and run from source
 
 From the `astro/` folder:
